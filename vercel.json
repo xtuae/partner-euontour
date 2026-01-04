@@ -1,18 +1,39 @@
 {
+    "framework": "vite",
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist",
     "rewrites": [
         {
-            "source": "/api/:match*",
-            "destination": "/api/:match*"
+            "source": "/api/auth/:path*",
+            "destination": "/api/auth"
+        },
+        {
+            "source": "/api/agency/:path*",
+            "destination": "/api/agency"
+        },
+        {
+            "source": "/api/wallet/:path*",
+            "destination": "/api/wallet"
+        },
+        {
+            "source": "/api/deposits/:path*",
+            "destination": "/api/deposits"
+        },
+        {
+            "source": "/api/bookings/:path*",
+            "destination": "/api/bookings"
+        },
+        {
+            "source": "/api/admin/:path*",
+            "destination": "/api/admin"
+        },
+        {
+            "source": "/api/super-admin/:path*",
+            "destination": "/api/super-admin"
         },
         {
             "source": "/(.*)",
             "destination": "/index.html"
         }
-    ],
-    "functions": {
-        "api/**/*.ts": {
-            "memory": 1024,
-            "maxDuration": 10
-        }
-    }
+    ]
 }
