@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
-import { requireAuth } from './_middleware/auth';
+import { requireAuth } from './_middleware/auth.js';
 
 export const config = {
     runtime: 'nodejs',

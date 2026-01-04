@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '@/lib/db';
-import { requireAuth } from './_middleware/auth';
+import { db } from '../src/lib/db/index.js';
+import { requireAuth } from './_middleware/auth.js';
 
 export const config = {
     runtime: 'nodejs',

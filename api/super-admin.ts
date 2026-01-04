@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { requireAuth } from './_middleware/auth';
-import { db } from '@/lib/db';
-import { prisma } from '@/lib/db/prisma';
-import { LedgerType } from '@/lib/types'; // Or prisma client
-import { logAudit } from '@/lib/audit';
+import { requireAuth } from './_middleware/auth.js';
+import { db } from '../src/lib/db/index.js';
+import { prisma } from '../src/lib/db/prisma.js';
+import { LedgerType } from '../src/lib/types.js'; // Or prisma client
+import { logAudit } from '../src/lib/audit.js';
 
 export const config = {
     runtime: 'nodejs',

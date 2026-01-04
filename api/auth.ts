@@ -2,13 +2,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { parse, serialize } from 'cookie';
-import { UserRole } from '@/lib/types';
-import { db } from '@/lib/db';
-import { prisma } from '@/lib/db/prisma';
-import { loginSchema } from '@/lib/validators/auth';
-import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '@/features/auth/jwt';
-import { checkRateLimit } from '@/lib/rate-limit';
-import { sendEmail } from '@/lib/email';
+import { UserRole } from '../src/lib/types.js';
+import { db } from '../src/lib/db/index.js';
+import { prisma } from '../src/lib/db/prisma.js';
+import { loginSchema } from '../src/lib/validators/auth.js';
+import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '../src/features/auth/jwt.js';
+import { checkRateLimit } from '../src/lib/rate-limit.js';
+import { sendEmail } from '../src/lib/email.js';
 
 export const config = {
     runtime: 'nodejs',
