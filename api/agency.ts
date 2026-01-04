@@ -4,7 +4,7 @@ import { db } from '@/lib/db';
 import { requireAuth } from './_middleware/auth';
 
 export const config = {
-    runtime: 'nodejs18.x',
+    runtime: 'nodejs',
     maxDuration: 10
 };
 

@@ -8,7 +8,7 @@ import { LedgerType } from '@/lib/types'; // Or prisma client
 import { logAudit } from '@/lib/audit';
 
 export const config = {
-    runtime: 'nodejs18.x',
+    runtime: 'nodejs',
     maxDuration: 10
 };
 
