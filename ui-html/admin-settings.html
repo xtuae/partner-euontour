@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EuOnTour - System Configuration</title>
+    <!-- 
+      NOTE: For production, use a build process (PostCSS/Tailwind CLI). 
+      CDN is for preview only.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#B11226',     /* Primary Actions */
+                            black: '#1A1A1A',   /* Headings */
+                            dark: '#4B4B4B',    /* Secondary Text */
+                            gray: '#E5E7EB',    /* Borders */
+                            light: '#F5F5F5',   /* Section Backgrounds */
+                            hover: '#8E0E1E',   /* Darker Red for hover */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function saveSettings(sectionId) {
+            // Visual feedback
+            const btn = document.getElementById('btn-save-' + sectionId);
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Saving...
+            `;
+            btn.disabled = true;
+
+            setTimeout(() => {
+                btn.innerHTML = `<svg class="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Saved`;
+                btn.classList.remove('bg-brand-red', 'hover:bg-brand-hover');
+                btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.classList.add('bg-brand-red', 'hover:bg-brand-hover');
+                    btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                }, 2000);
+            }, 800);
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom Toggle Switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #B11226;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #B11226;
+        }
+    </style>
+</head>
+<body class="bg-brand-light text-brand-black antialiased h-screen flex overflow-hidden">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 hidden lg:hidden transition-opacity" aria-hidden="true"></div>
+
+    <!-- Sidebar (Super Admin - Dark Theme) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-brand-black text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <!-- Sidebar Header / Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-gray-800 bg-brand-black">
+             <div class="flex items-center space-x-2">
+                 <svg class="h-6 w-6 text-brand-red" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                 </svg>
+                 <span class="text-lg font-bold text-white tracking-tight">EuOnTour</span>
+             </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <a href="super-admin-home.html" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Overview
+            </a>
+            
+            <a href="admin-agencies.html" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                Agencies
+            </a>
+
+            <!-- System Settings (Active) -->
+            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium bg-brand-red text-white rounded-md">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                System Settings
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-gray-800">
+             <div class="flex items-center">
+                 <div class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold text-xs">SA</div>
+                 <div class="ml-3">
+                     <p class="text-sm font-medium text-white">Super Admin</p>
+                     <p class="text-xs text-gray-400">System Manager</p>
+                 </div>
+             </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 lg:pl-64 transition-all duration-300">
+        
+        <!-- Top Header -->
+        <header class="h-16 bg-white border-b border-brand-gray flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10">
+            <div class="flex items-center">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-red mr-3">
+                    <span class="sr-only">Open sidebar</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <h1 class="text-xl font-semibold text-brand-black">System Configuration</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="relative ml-3">
+                    <button class="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red">
+                        <span class="sr-only">Open user menu</span>
+                        <div class="h-8 w-8 rounded-full bg-brand-black flex items-center justify-center text-white font-bold overflow-hidden border border-gray-600">
+                            SA
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Scrollable Area -->
+        <main class="flex-1 overflow-y-auto bg-brand-light p-4 sm:p-6 lg:p-8">
+
+            <div class="max-w-5xl mx-auto space-y-8">
+
+                <!-- 7.1 SYSTEM SETTINGS -->
+                <section class="bg-white rounded-lg border border-brand-gray shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-brand-gray bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <h2 class="text-lg font-medium text-brand-black">Operational Rules</h2>
+                            <p class="mt-1 text-sm text-gray-500">Configure global rules for bookings, deposits, and verifications.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            
+                            <!-- Min Wallet Balance -->
+                            <div class="sm:col-span-3">
+                                <label for="min-balance" class="block text-sm font-medium text-gray-700">Minimum Wallet Balance (€)</label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <span class="text-gray-500 sm:text-sm">€</span>
+                                    </div>
+                                    <input type="number" name="min-balance" id="min-balance" class="block w-full rounded-md border-brand-gray pl-7 focus:border-brand-red focus:ring-brand-red sm:text-sm border py-2" value="100.00">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Agencies below this amount cannot book.</p>
+                            </div>
+
+                            <!-- Booking Cutoff -->
+                            <div class="sm:col-span-3">
+                                <label for="booking-cutoff" class="block text-sm font-medium text-gray-700">Booking Cutoff Time (Hours)</label>
+                                <div class="mt-1">
+                                    <input type="number" name="booking-cutoff" id="booking-cutoff" class="block w-full rounded-md border-brand-gray shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm border py-2 px-3" value="24">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500">Minimum hours before travel date to allow booking.</p>
+                            </div>
+
+                            <!-- Deposit Approval Rules -->
+                            <div class="sm:col-span-3">
+                                <label for="deposit-rules" class="block text-sm font-medium text-gray-700">Deposit Approval Mode</label>
+                                <select id="deposit-rules" name="deposit-rules" class="mt-1 block w-full rounded-md border-brand-gray shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm border py-2 px-3">
+                                    <option value="manual">Manual Approval Always</option>
+                                    <option value="auto-low">Auto-approve &lt; €500</option>
+                                    <option value="auto-trusted">Auto-approve Trusted Agencies</option>
+                                </select>
+                            </div>
+
+                            <!-- Verification Requirement -->
+                            <div class="sm:col-span-3 flex items-center h-full pt-6">
+                                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" name="require-verification" id="require-verification" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                                    <label for="require-verification" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                                </div>
+                                <label for="require-verification" class="text-sm font-medium text-gray-700">Enforce Verification for Booking</label>
+                            </div>
+
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-brand-gray flex justify-end">
+                            <button type="button" id="btn-save-system" onclick="saveSettings('system')" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-red hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red transition-colors">
+                                Save System Settings
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7.2 EMAIL & NOTIFICATION SETTINGS -->
+                <section class="bg-white rounded-lg border border-brand-gray shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-brand-gray bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <h2 class="text-lg font-medium text-brand-black">Email & Notifications</h2>
+                            <p class="mt-1 text-sm text-gray-500">Manage transactional emails and sender configuration.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                            
+                            <!-- Sender Settings -->
+                            <div class="sm:col-span-3">
+                                <label for="sender-name" class="block text-sm font-medium text-gray-700">Sender Name</label>
+                                <input type="text" name="sender-name" id="sender-name" class="mt-1 block w-full rounded-md border-brand-gray shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm border py-2 px-3" value="EuOnTour Reservations">
+                            </div>
+
+                            <div class="sm:col-span-3">
+                                <label for="sender-email" class="block text-sm font-medium text-gray-700">Sender Email</label>
+                                <input type="email" name="sender-email" id="sender-email" class="mt-1 block w-full rounded-md border-brand-gray shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm border py-2 px-3" value="noreply@euontour.com">
+                            </div>
+
+                            <!-- Notification Toggles -->
+                            <div class="sm:col-span-6 border-t border-gray-100 pt-4 mt-2">
+                                <h3 class="text-sm font-medium text-gray-900 mb-4">Active Notifications</h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-gray-700">Booking Confirmations</span>
+                                            <span class="text-xs text-gray-500">Sent to agency upon booking</span>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" id="toggle-booking" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                                            <label for="toggle-booking" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-gray-700">Deposit Alerts</span>
+                                            <span class="text-xs text-gray-500">Sent when deposit status changes</span>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" id="toggle-deposit" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                                            <label for="toggle-deposit" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-gray-700">Low Balance Warnings</span>
+                                            <span class="text-xs text-gray-500">Sent when wallet dips below limit</span>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" id="toggle-balance" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer" checked/>
+                                            <label for="toggle-balance" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-medium text-gray-700">Marketing / News</span>
+                                            <span class="text-xs text-gray-500">General system announcements</span>
+                                        </div>
+                                        <div class="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                                            <input type="checkbox" id="toggle-marketing" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                            <label for="toggle-marketing" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-brand-gray flex justify-between items-center">
+                            <button type="button" class="text-sm text-brand-dark hover:text-brand-black underline">Send Test Email</button>
+                            <button type="button" id="btn-save-email" onclick="saveSettings('email')" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-red hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red transition-colors">
+                                Save Configuration
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

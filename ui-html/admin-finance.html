@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EuOnTour - Financial Control</title>
+    <!-- 
+      NOTE: For production, use a build process (PostCSS/Tailwind CLI). 
+      CDN is for preview only.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#B11226',     /* Primary Actions */
+                            black: '#1A1A1A',   /* Headings */
+                            dark: '#4B4B4B',    /* Secondary Text */
+                            gray: '#E5E7EB',    /* Borders */
+                            light: '#F5F5F5',   /* Section Backgrounds */
+                            hover: '#8E0E1E',   /* Darker Red for hover */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function openConfirmModal(event) {
+            event.preventDefault();
+            // Get form values for preview
+            const agency = document.getElementById('agency-select').value;
+            const type = document.getElementById('adjustment-type').value;
+            const amount = document.getElementById('amount').value;
+            
+            // Update Modal Content
+            document.getElementById('modal-agency').textContent = agency || 'Selected Agency';
+            document.getElementById('modal-type').textContent = type === 'credit' ? 'Credit (Add Funds)' : 'Debit (Remove Funds)';
+            document.getElementById('modal-amount').textContent = '€ ' + (amount || '0.00');
+            document.getElementById('modal-amount').className = type === 'credit' ? 'text-lg font-bold text-green-600' : 'text-lg font-bold text-brand-red';
+
+            // Show Modal
+            document.getElementById('confirmation-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmation-modal').classList.add('hidden');
+        }
+
+        function submitAdjustment() {
+            alert('Transaction Processed & Logged.');
+            closeConfirmModal();
+            document.getElementById('adjustment-form').reset();
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-brand-light text-brand-black antialiased h-screen flex overflow-hidden">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 hidden lg:hidden transition-opacity" aria-hidden="true"></div>
+
+    <!-- Sidebar (Super Admin - Dark Theme) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-brand-black text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <!-- Sidebar Header / Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-gray-800 bg-brand-black">
+             <div class="flex items-center space-x-2">
+                 <svg class="h-6 w-6 text-brand-red" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                 </svg>
+                 <span class="text-lg font-bold text-white tracking-tight">EuOnTour</span>
+             </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <a href="super-admin-home.html" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Overview
+            </a>
+            
+            <a href="admin-agencies.html" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                Agencies
+            </a>
+
+            <a href="admin-verification.html" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Verifications
+            </a>
+
+            <!-- Finance (Active) -->
+            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium bg-brand-red text-white rounded-md">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Finance
+            </a>
+
+            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                System Settings
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-gray-800">
+             <div class="flex items-center">
+                 <div class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold text-xs">SA</div>
+                 <div class="ml-3">
+                     <p class="text-sm font-medium text-white">Super Admin</p>
+                     <p class="text-xs text-gray-400">System Manager</p>
+                 </div>
+             </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 lg:pl-64 transition-all duration-300">
+        
+        <!-- Top Header -->
+        <header class="h-16 bg-white border-b border-brand-gray flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10">
+            <div class="flex items-center">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-red mr-3">
+                    <span class="sr-only">Open sidebar</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-brand-black mr-3">Financial Control</h1>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-sm text-gray-500">System Time: 14:30 UTC</span>
+            </div>
+        </header>
+
+        <!-- Main Content Scrollable Area -->
+        <main class="flex-1 overflow-y-auto bg-brand-light p-4 sm:p-6 lg:p-8">
+
+            <div class="max-w-6xl mx-auto space-y-8">
+
+                <!-- 4.1 System Wallet Overview -->
+                <section>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-medium text-brand-black">System Wallet Overview</h2>
+                        <button class="text-sm text-brand-red hover:underline">Download Report</button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        
+                        <!-- Total Funds Held -->
+                        <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6">
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide truncate">Total Funds Held</dt>
+                            <dd class="mt-2 text-2xl font-bold text-brand-black">€ 1,245,890.00</dd>
+                            <dd class="mt-1 text-xs text-green-600 flex items-center">
+                                <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12 7l-5 5 1.5 1.5L12 10l3.5 3.5L17 12l-5-5z" clip-rule="evenodd"/></svg>
+                                Current Liability
+                            </dd>
+                        </div>
+
+                        <!-- Total Credited -->
+                        <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6">
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide truncate">Total Credited (YTD)</dt>
+                            <dd class="mt-2 text-2xl font-bold text-green-700">€ 5,890,200.00</dd>
+                            <dd class="mt-1 text-xs text-gray-400">
+                                All time deposits
+                            </dd>
+                        </div>
+
+                        <!-- Total Debited -->
+                        <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6">
+                            <dt class="text-xs font-medium text-gray-500 uppercase tracking-wide truncate">Total Debited (YTD)</dt>
+                            <dd class="mt-2 text-2xl font-bold text-brand-red">€ 4,644,310.00</dd>
+                            <dd class="mt-1 text-xs text-gray-400">
+                                Bookings & Withdrawals
+                            </dd>
+                        </div>
+
+                        <!-- Pending Deposits -->
+                        <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6 bg-yellow-50 border-yellow-100">
+                            <dt class="text-xs font-medium text-yellow-800 uppercase tracking-wide truncate">Pending Deposits Value</dt>
+                            <dd class="mt-2 text-2xl font-bold text-yellow-900">€ 12,450.00</dd>
+                            <dd class="mt-1 text-xs text-yellow-700">
+                                8 transactions waiting
+                            </dd>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- 4.2 Manual Wallet Adjustments -->
+                <section>
+                    <div class="bg-white rounded-lg border border-brand-gray shadow-sm overflow-hidden">
+                        <div class="px-6 py-4 border-b border-brand-gray bg-gray-50">
+                            <h2 class="text-lg font-medium text-brand-black">Manual Wallet Adjustment</h2>
+                            <p class="mt-1 text-sm text-gray-500">Perform manual credit or debit operations on specific agency wallets. All actions are logged.</p>
+                        </div>
+                        
+                        <div class="p-6">
+                            <form id="adjustment-form" onsubmit="openConfirmModal(event)" class="max-w-2xl">
+                                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                    
+                                    <!-- Agency Select -->
+                                    <div class="sm:col-span-6">
+                                        <label for="agency-select" class="block text-sm font-medium text-gray-700">Select Agency</label>
+                                        <div class="mt-1">
+                                            <select id="agency-select" name="agency-select" required class="block w-full rounded-md border-brand-gray shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm py-2 px-3 border">
+                                                <option value="">-- Search Agency --</option>
+                                                <option value="Dream Travels Ltd. (AG-88210)">Dream Travels Ltd. (AG-88210) - Bal: € 2,450.00</option>
+                                                <option value="Global Tours Inc. (AG-88215)">Global Tours Inc. (AG-88215) - Bal: € 0.00</option>
+                                                <option value="Sky High Travels (AG-88190)">Sky High Travels (AG-88190) - Bal: € 120.00</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Adjustment Type -->
+                                    <div class="sm:col-span-3">
+                                        <label for="adjustment-type" class="block text-sm font-medium text-gray-700">Transaction Type</label>
+                                        <div class="mt-1">
+                                            <select id="adjustment-type" name="adjustment-type" required class="block w-full rounded-md border-brand-gray shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm py-2 px-3 border">
+                                                <option value="credit">Credit (Add Funds)</option>
+                                                <option value="debit">Debit (Remove Funds)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Amount -->
+                                    <div class="sm:col-span-3">
+                                        <label for="amount" class="block text-sm font-medium text-gray-700">Amount (€)</label>
+                                        <div class="mt-1 relative rounded-md shadow-sm">
+                                            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                                <span class="text-gray-500 sm:text-sm">€</span>
+                                            </div>
+                                            <input type="number" name="amount" id="amount" required min="0.01" step="0.01" class="block w-full rounded-md border-brand-gray pl-7 focus:border-brand-red focus:ring-brand-red sm:text-sm py-2 border" placeholder="0.00">
+                                        </div>
+                                    </div>
+
+                                    <!-- Reason / Reference -->
+                                    <div class="sm:col-span-6">
+                                        <label for="reason" class="block text-sm font-medium text-gray-700">Reason / Internal Reference</label>
+                                        <div class="mt-1">
+                                            <textarea id="reason" name="reason" rows="3" required class="block w-full rounded-md border-brand-gray shadow-sm focus:border-brand-red focus:ring-brand-red sm:text-sm p-2 border" placeholder="e.g. Correction for transaction #TR-998..."></textarea>
+                                        </div>
+                                        <p class="mt-2 text-xs text-gray-500">
+                                            <span class="font-bold text-red-600">* Warning:</span> This action is irreversible and will be immediately reflected in the agency's dashboard.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-6 flex justify-end">
+                                    <button type="button" class="bg-white py-2 px-4 border border-brand-gray rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red mr-3">
+                                        Reset
+                                    </button>
+                                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-brand-red hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red">
+                                        Review Transaction
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recent Admin Log (Context) -->
+                <section>
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">Recent Manual Adjustments</h3>
+                    <div class="bg-white rounded-lg border border-brand-gray shadow-sm overflow-hidden">
+                        <table class="min-w-full divide-y divide-brand-gray">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Agency</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase pl-8">Admin</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-brand-gray">
+                                <tr>
+                                    <td class="px-6 py-3 text-sm text-gray-500">Oct 26, 14:00</td>
+                                    <td class="px-6 py-3 text-sm font-medium text-brand-black">Sky High Travels</td>
+                                    <td class="px-6 py-3 text-sm text-gray-500">Correction (Credit)</td>
+                                    <td class="px-6 py-3 text-sm text-right font-medium text-green-600">+ € 50.00</td>
+                                    <td class="px-6 py-3 text-sm text-gray-500 pl-8">Super Admin</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-3 text-sm text-gray-500">Oct 25, 09:30</td>
+                                    <td class="px-6 py-3 text-sm font-medium text-brand-black">Dream Travels Ltd.</td>
+                                    <td class="px-6 py-3 text-sm text-gray-500">Fee Adjustment (Debit)</td>
+                                    <td class="px-6 py-3 text-sm text-right font-medium text-red-600">- € 15.00</td>
+                                    <td class="px-6 py-3 text-sm text-gray-500 pl-8">Finance Team</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeConfirmModal()"></div>
+
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-yellow-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Confirm Wallet Adjustment</h3>
+                            <div class="mt-4 bg-gray-50 rounded-md p-4 space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Agency:</span>
+                                    <span class="font-medium text-gray-900" id="modal-agency">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Action:</span>
+                                    <span class="font-medium text-gray-900" id="modal-type">-</span>
+                                </div>
+                                <div class="flex justify-between border-t border-gray-200 pt-2 mt-2">
+                                    <span class="text-gray-500 font-medium">Total Amount:</span>
+                                    <span id="modal-amount">-</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-4">
+                                By confirming, this transaction will be processed immediately and logged in the system audit trail.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-brand-red text-base font-medium text-white hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red sm:ml-3 sm:w-auto sm:text-sm" onclick="submitAdjustment()">
+                        Confirm Transaction
+                    </button>
+                    <button type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-gray sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm" onclick="closeConfirmModal()">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EuOnTour - Security Settings</title>
+    <!-- 
+      NOTE: For production, use a build process (PostCSS/Tailwind CLI). 
+      CDN is for preview only.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#B11226',     /* Primary Actions */
+                            black: '#1A1A1A',   /* Headings */
+                            dark: '#4B4B4B',    /* Secondary Text */
+                            gray: '#E5E7EB',    /* Borders */
+                            light: '#F5F5F5',   /* Section Backgrounds */
+                            hover: '#8E0E1E',   /* Darker Red for hover */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-brand-light text-brand-black antialiased h-screen flex overflow-hidden">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 hidden lg:hidden transition-opacity" aria-hidden="true"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-brand-gray transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <!-- Sidebar Header / Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-brand-gray">
+             <div class="flex items-center space-x-2">
+                 <!-- Logo Image from Assets -->
+                 <img src="assets/logo.webp" alt="EuOnTour Logo" class="h-8 w-auto" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                 <!-- Fallback SVG -->
+                 <svg class="h-6 w-6 text-brand-red hidden" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                 </svg>
+                 <span class="text-lg font-bold text-brand-black tracking-tight">EuOnTour</span>
+             </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            <!-- Dashboard -->
+            <a href="dashboard-shell.html" class="group flex items-center px-3 py-2 text-sm font-medium text-brand-dark hover:bg-gray-50 hover:text-brand-black rounded-md border-l-4 border-transparent transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-brand-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Dashboard
+            </a>
+            <!-- Wallet -->
+            <a href="wallet.html" class="group flex items-center px-3 py-2 text-sm font-medium text-brand-dark hover:bg-gray-50 hover:text-brand-black rounded-md border-l-4 border-transparent transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-brand-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                Wallet
+            </a>
+            <!-- Deposits -->
+            <a href="deposits.html" class="group flex items-center px-3 py-2 text-sm font-medium text-brand-dark hover:bg-gray-50 hover:text-brand-black rounded-md border-l-4 border-transparent transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-brand-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Deposits
+            </a>
+            <!-- Tours -->
+            <a href="tours.html" class="group flex items-center px-3 py-2 text-sm font-medium text-brand-dark hover:bg-gray-50 hover:text-brand-black rounded-md border-l-4 border-transparent transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-brand-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Tours
+            </a>
+            <!-- Bookings -->
+            <a href="bookings.html" class="group flex items-center px-3 py-2 text-sm font-medium text-brand-dark hover:bg-gray-50 hover:text-brand-black rounded-md border-l-4 border-transparent transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-brand-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Bookings
+            </a>
+            <!-- Notifications -->
+            <a href="notifications.html" class="group flex items-center px-3 py-2 text-sm font-medium text-brand-dark hover:bg-gray-50 hover:text-brand-black rounded-md border-l-4 border-transparent transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-brand-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                Notifications
+            </a>
+            <!-- Settings (Active State) -->
+            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium bg-red-50 text-brand-red rounded-md border-l-4 border-brand-red">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-brand-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Settings
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-brand-gray">
+             <div class="flex items-center">
+                 <div class="h-8 w-8 rounded-full bg-brand-red flex items-center justify-center text-white font-semibold text-xs">
+                     AA
+                 </div>
+                 <div class="ml-3">
+                     <p class="text-sm font-medium text-brand-black">Agency Admin</p>
+                     <p class="text-xs text-brand-dark">View Profile</p>
+                 </div>
+             </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 lg:pl-64 transition-all duration-300">
+        
+        <!-- Top Header -->
+        <header class="h-16 bg-white border-b border-brand-gray flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10">
+            <div class="flex items-center">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-red mr-3">
+                    <span class="sr-only">Open sidebar</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div class="flex flex-col">
+                    <h1 class="text-xl font-semibold text-brand-black">Session & Security</h1>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button class="text-sm text-brand-dark hover:text-brand-black font-medium">Back to General Settings</button>
+            </div>
+        </header>
+
+        <!-- Main Content Scrollable Area -->
+        <main class="flex-1 overflow-y-auto bg-brand-light p-4 sm:p-6 lg:p-8">
+
+            <div class="max-w-4xl mx-auto space-y-8">
+
+                <!-- 1. Active Sessions List -->
+                <div class="bg-white rounded-lg border border-brand-gray shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-brand-gray flex justify-between items-center">
+                        <div>
+                            <h2 class="text-lg font-medium text-brand-black">Active Sessions</h2>
+                            <p class="mt-1 text-sm text-brand-dark">Manage devices where you are currently logged in.</p>
+                        </div>
+                        <button class="inline-flex items-center px-3 py-1.5 border border-brand-gray shadow-sm text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red">
+                            <svg class="-ml-1 mr-1 h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Log Out All Devices
+                        </button>
+                    </div>
+                    
+                    <ul class="divide-y divide-brand-gray">
+                        
+                        <!-- Current Session -->
+                        <li class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <!-- Desktop Icon -->
+                                        <div class="h-10 w-10 rounded-full bg-green-50 flex items-center justify-center">
+                                            <svg class="h-6 w-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="flex items-center">
+                                            <p class="text-sm font-medium text-brand-black">Chrome on Windows</p>
+                                            <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                Current Session
+                                            </span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-0.5">Paris, France &bull; 192.168.1.45</p>
+                                        <p class="text-xs text-green-600 mt-1">Active Now</p>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex-shrink-0">
+                                    <!-- Log out current (disabled visual) -->
+                                    <span class="text-xs text-gray-400 italic">This device</span>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- Other Session 1 -->
+                        <li class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <!-- Mobile Icon -->
+                                        <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                            <svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm font-medium text-brand-black">Safari on iPhone 14 Pro</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Paris, France &bull; 192.168.1.102</p>
+                                        <p class="text-xs text-gray-500 mt-1">Last active: 2 hours ago</p>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex-shrink-0">
+                                    <button class="text-sm font-medium text-brand-red hover:text-brand-hover focus:outline-none">
+                                        Revoke
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
+
+                        <!-- Other Session 2 -->
+                        <li class="px-6 py-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        <!-- Desktop Icon -->
+                                        <div class="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
+                                            <svg class="h-6 w-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <p class="text-sm font-medium text-brand-black">Firefox on MacOS</p>
+                                        <p class="text-xs text-gray-500 mt-0.5">Lyon, France &bull; 203.0.113.1</p>
+                                        <p class="text-xs text-gray-500 mt-1">Last active: 3 days ago</p>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex-shrink-0">
+                                    <button class="text-sm font-medium text-brand-red hover:text-brand-hover focus:outline-none">
+                                        Revoke
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
+
+                    </ul>
+                </div>
+
+                <!-- 2. Login History & Security Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- Login History -->
+                    <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6">
+                        <h3 class="text-sm font-semibold text-brand-black uppercase tracking-wide mb-4">Last Login Activity</h3>
+                        <div class="flow-root">
+                            <ul class="-mb-8">
+                                <!-- Event 1 -->
+                                <li>
+                                    <div class="relative pb-8">
+                                        <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                        <div class="relative flex space-x-3">
+                                            <div>
+                                                <span class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center ring-8 ring-white">
+                                                    <svg class="h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                            <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                                <div>
+                                                    <p class="text-sm text-gray-500">Successful login from <span class="font-medium text-gray-900">192.168.1.45</span></p>
+                                                </div>
+                                                <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                                    <time datetime="2020-09-20">Just now</time>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <!-- Event 2 -->
+                                <li>
+                                    <div class="relative pb-8">
+                                        <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                        <div class="relative flex space-x-3">
+                                            <div>
+                                                <span class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center ring-8 ring-white">
+                                                    <svg class="h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                            <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                                <div>
+                                                    <p class="text-sm text-gray-500">Successful login from <span class="font-medium text-gray-900">192.168.1.102</span></p>
+                                                </div>
+                                                <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                                    <time datetime="2020-09-22">2h ago</time>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <!-- Event 3 (Failed Attempt) -->
+                                <li>
+                                    <div class="relative pb-8">
+                                        <div class="relative flex space-x-3">
+                                            <div>
+                                                <span class="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center ring-8 ring-white">
+                                                    <svg class="h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                            <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                                <div>
+                                                    <p class="text-sm text-gray-500">Failed login attempt from <span class="font-medium text-gray-900">45.22.19.112</span></p>
+                                                </div>
+                                                <div class="text-right text-sm whitespace-nowrap text-gray-500">
+                                                    <time datetime="2020-09-28">5 days ago</time>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Additional Security Actions -->
+                    <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6">
+                        <h3 class="text-sm font-semibold text-brand-black uppercase tracking-wide mb-4">Account Security</h3>
+                        <p class="text-sm text-gray-500 mb-6">Review additional security settings to keep your account safe.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                <div>
+                                    <p class="text-sm font-medium text-brand-black">Two-Factor Authentication</p>
+                                    <p class="text-xs text-gray-500">Add an extra layer of security.</p>
+                                </div>
+                                <button class="text-sm text-brand-red font-medium hover:text-brand-hover">Enable</button>
+                            </div>
+
+                            <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                                <div>
+                                    <p class="text-sm font-medium text-brand-black">Password Expiry</p>
+                                    <p class="text-xs text-gray-500">Force password change every 90 days.</p>
+                                </div>
+                                <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                    <input type="checkbox" name="toggle" id="toggle" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                    <label for="toggle" class="toggle-label block overflow-hidden h-5 rounded-full bg-gray-300 cursor-pointer"></label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 pt-6 border-t border-brand-gray">
+                             <button class="w-full inline-flex justify-center items-center px-4 py-2 border border-brand-gray shadow-sm text-sm font-medium rounded-md text-red-600 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                <svg class="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                Deactivate Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

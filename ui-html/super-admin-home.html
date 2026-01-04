@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EuOnTour - Super Admin Dashboard</title>
+    <!-- 
+      NOTE: For production, use a build process (PostCSS/Tailwind CLI). 
+      CDN is for preview only.
+    -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#B11226',     /* Primary Actions */
+                            black: '#1A1A1A',   /* Headings */
+                            dark: '#4B4B4B',    /* Secondary Text */
+                            gray: '#E5E7EB',    /* Borders */
+                            light: '#F5F5F5',   /* Section Backgrounds */
+                            hover: '#8E0E1E',   /* Darker Red for hover */
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    }
+                }
+            }
+        }
+        
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-brand-light text-brand-black antialiased h-screen flex overflow-hidden">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" onclick="toggleMobileSidebar()" class="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 hidden lg:hidden transition-opacity" aria-hidden="true"></div>
+
+    <!-- Sidebar (Super Admin - Dark Theme) -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-brand-black text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col">
+        <!-- Sidebar Header / Logo -->
+        <div class="h-16 flex items-center px-6 border-b border-gray-800 bg-brand-black">
+             <div class="flex items-center space-x-2">
+                 <!-- Fallback SVG -->
+                 <svg class="h-6 w-6 text-brand-red" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                 </svg>
+                 <span class="text-lg font-bold text-white tracking-tight">EuOnTour</span>
+             </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            
+            <!-- Dashboard (Active) -->
+            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium bg-brand-red text-white rounded-md">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                Overview
+            </a>
+
+            <!-- Agencies -->
+            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                Agencies
+            </a>
+
+            <!-- Verifications -->
+            <a href="admin-verification.html" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Verifications
+                <span class="ml-auto bg-gray-700 py-0.5 px-2 rounded-full text-xs font-bold text-white group-hover:bg-gray-600">4</span>
+            </a>
+
+            <!-- Finance -->
+            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Finance
+            </a>
+
+            <!-- System Settings -->
+            <a href="#" class="group flex items-center px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white rounded-md transition-colors">
+                <svg class="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                System Settings
+            </a>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-gray-800">
+             <div class="flex items-center">
+                 <div class="h-8 w-8 rounded-full bg-gray-700 flex items-center justify-center text-white font-semibold text-xs">
+                     SA
+                 </div>
+                 <div class="ml-3">
+                     <p class="text-sm font-medium text-white">Super Admin</p>
+                     <p class="text-xs text-gray-400">System Manager</p>
+                 </div>
+             </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Wrapper -->
+    <div class="flex-1 flex flex-col min-w-0 lg:pl-64 transition-all duration-300">
+        
+        <!-- Top Header -->
+        <header class="h-16 bg-white border-b border-brand-gray flex items-center justify-between px-4 sm:px-6 lg:px-8 z-10">
+            
+            <!-- Left: Mobile Menu Button & Page Title -->
+            <div class="flex items-center">
+                <button onclick="toggleMobileSidebar()" class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-red mr-3">
+                    <span class="sr-only">Open sidebar</span>
+                    <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+                <div class="flex items-center">
+                    <h1 class="text-xl font-semibold text-brand-black mr-3">Super Admin Dashboard</h1>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                        System Overview
+                    </span>
+                </div>
+            </div>
+
+            <!-- Right: Actions & Profile -->
+            <div class="flex items-center space-x-4">
+                
+                <!-- Notification Bell -->
+                <button class="p-1 rounded-full text-gray-400 hover:text-brand-red focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red">
+                    <span class="sr-only">View notifications</span>
+                    <div class="relative">
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-brand-red ring-2 ring-white"></span>
+                    </div>
+                </button>
+
+                <!-- Profile Dropdown Trigger -->
+                <div class="relative ml-3">
+                    <button class="flex items-center max-w-xs text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red">
+                        <span class="sr-only">Open user menu</span>
+                        <div class="h-8 w-8 rounded-full bg-brand-black flex items-center justify-center text-white font-bold overflow-hidden border border-gray-600">
+                            SA
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Scrollable Area -->
+        <main class="flex-1 overflow-y-auto bg-brand-light p-4 sm:p-6 lg:p-8">
+            
+            <!-- Summary Metrics Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-8">
+                
+                <!-- 1. Pending Verifications (Critical) -->
+                <div class="bg-white rounded-lg border-l-4 border-brand-red shadow-sm p-6 relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Pending Verifications</p>
+                            <p class="mt-2 text-3xl font-bold text-brand-black">4</p>
+                        </div>
+                        <div class="p-2 bg-red-50 rounded-lg">
+                            <svg class="h-6 w-6 text-brand-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="admin-verification.html" class="text-sm font-medium text-brand-red hover:text-brand-hover flex items-center">
+                            Review Applications <svg class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 2. Pending Deposits (Critical) -->
+                <div class="bg-white rounded-lg border-l-4 border-brand-red shadow-sm p-6 relative overflow-hidden">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Pending Deposits</p>
+                            <p class="mt-2 text-3xl font-bold text-brand-black">12</p>
+                        </div>
+                        <div class="p-2 bg-red-50 rounded-lg">
+                            <svg class="h-6 w-6 text-brand-red" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <a href="#" class="text-sm font-medium text-brand-red hover:text-brand-hover flex items-center">
+                            Approve Transactions <svg class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 3. System Balance (Neutral) -->
+                <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">System-Wide Balance</p>
+                            <p class="mt-2 text-3xl font-bold text-brand-black">€ 1.2M</p>
+                        </div>
+                        <div class="p-2 bg-gray-100 rounded-lg">
+                            <svg class="h-6 w-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-sm text-green-600 font-medium flex items-center">
+                            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                            +8.2% this month
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 4. Total Agencies -->
+                <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Agencies</p>
+                            <p class="mt-2 text-3xl font-bold text-brand-black">256</p>
+                        </div>
+                        <div class="p-2 bg-gray-100 rounded-lg">
+                            <svg class="h-6 w-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center text-sm text-gray-500">
+                        <span class="font-medium text-brand-black mr-1">12</span> new this week
+                    </div>
+                </div>
+
+                <!-- 5. Verified Agencies -->
+                <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Verified Agencies</p>
+                            <p class="mt-2 text-3xl font-bold text-brand-black">240</p>
+                        </div>
+                        <div class="p-2 bg-gray-100 rounded-lg">
+                            <svg class="h-6 w-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-sm text-gray-500">
+                            <span class="font-medium text-brand-black">93%</span> verification rate
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 6. Total Bookings -->
+                <div class="bg-white rounded-lg border border-brand-gray shadow-sm p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Bookings</p>
+                            <p class="mt-2 text-3xl font-bold text-brand-black">15.4k</p>
+                        </div>
+                        <div class="p-2 bg-gray-100 rounded-lg">
+                            <svg class="h-6 w-6 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span class="text-sm text-green-600 font-medium flex items-center">
+                            <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                            +120 today
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Recent Activity Placeholder Table (Visual completeness) -->
+            <div class="bg-white rounded-lg border border-brand-gray shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-brand-gray flex justify-between items-center">
+                    <h3 class="text-lg font-medium text-brand-black">Recent System Activity</h3>
+                    <a href="#" class="text-sm font-medium text-brand-red hover:text-brand-hover">View All Logs</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-brand-gray">
+                        <thead class="bg-brand-light">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-brand-dark uppercase tracking-wider">Agency</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-brand-dark uppercase tracking-wider">Action</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-brand-dark uppercase tracking-wider">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-brand-gray">
+                            <tr>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-brand-black">Dream Travels Ltd.</td>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">Submitted verification documents</td>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm text-right text-gray-400">10 mins ago</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-brand-black">Global Tours Inc.</td>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">New Booking #BK-7890</td>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm text-right text-gray-400">32 mins ago</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm font-medium text-brand-black">Sky High Travels</td>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm text-gray-500">Deposit of € 500.00 Pending</td>
+                                <td class="px-6 py-3 whitespace-nowrap text-sm text-right text-gray-400">1 hour ago</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>

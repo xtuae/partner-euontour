@@ -1,0 +1,63 @@
+{
+    "info": {
+        "name": "EuOnTour API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Auth - Login",
+            "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/auth/login",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{ \"email\": \"test@agency.com\", \"password\": \"password123\" }",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Wallet - Ledger",
+            "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/wallet/ledger"
+            }
+        },
+        {
+            "name": "Deposit - Submit",
+            "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/deposits",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{ \"amount\": 1000, \"bankReference\": \"ABC123\" }",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Booking - Create",
+            "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/bookings",
+                "body": {
+                    "mode": "raw",
+                    "raw": "{ \"tourId\": \"UUID\", \"travelDate\": \"2026-01-20\" }",
+                    "options": {
+                        "raw": {
+                            "language": "json"
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}
