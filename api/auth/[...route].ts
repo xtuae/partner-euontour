@@ -69,8 +69,8 @@ async function login(req: VercelRequest, res: VercelResponse) {
 
         const accessTokenCookie = serialize('auth_token', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 15 * 60,
             path: '/',
         });
@@ -255,8 +255,8 @@ async function register(req: VercelRequest, res: VercelResponse) {
 
         const accessTokenCookie = serialize('auth_token', accessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 15 * 60,
             path: '/',
         });
