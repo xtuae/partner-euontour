@@ -92,9 +92,9 @@ async function login(req: VercelRequest, res: VercelResponse) {
 
         return res.status(200).json({ success: true, user: { id: user.id, email: user.email, role: user.role, agency } });
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Login error:', error);
-        return res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({ error: 'Internal server error', message: error.message, stack: error.stack });
     }
 }
 
