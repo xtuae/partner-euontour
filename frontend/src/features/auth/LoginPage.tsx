@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Button } from '../../app/components/ui/Button';
 import { Input } from '../../app/components/ui/Input';
 import { Label } from '../../app/components/ui/Label';
+import logo from '../../assets/logo.webp';
 
 export function LoginPage() {
     const { login } = useAuth();
@@ -21,8 +22,22 @@ export function LoginPage() {
         setIsLoading(true);
 
         try {
-            await login(email, password);
-            navigate('/');
+            const user = await login(email, password);
+
+            // Redirect based on role
+            switch (user.role) {
+                case 'AGENCY':
+                    navigate('/agency/dashboard');
+                    break;
+                case 'ADMIN':
+                    navigate('/admin/dashboard');
+                    break;
+                case 'SUPER_ADMIN':
+                    navigate('/super-admin/dashboard'); // Assuming this exists or map correctly
+                    break;
+                default:
+                    navigate('/'); // Fallback
+            }
         } catch (err: any) {
             setError(err.message || 'Login failed');
         } finally {
@@ -39,10 +54,8 @@ export function LoginPage() {
                     <div className="text-center mb-8">
                         <div className="flex items-center justify-center mb-4">
                             {/* Logo Fallback */}
-                            <div className="h-10 w-10 text-brand-red">
-                                <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
-                                </svg>
+                            <div className="h-12 w-auto">
+                                <img src={logo} alt="EuOnTour Logo" className="h-full w-auto object-contain" />
                             </div>
                         </div>
                         <h1 className="text-xl font-semibold text-brand-black">Partner Login</h1>
@@ -125,9 +138,9 @@ export function LoginPage() {
                 <div className="px-6 py-4 bg-brand-light border-t border-brand-gray rounded-b-lg text-center">
                     <p className="text-sm text-brand-dark">
                         Don't have an account?{' '}
-                        <button className="font-medium text-brand-red hover:text-brand-hover">
-                            Contact Admin
-                        </button>
+                        <Link to="/register" className="font-medium text-brand-red hover:text-brand-hover">
+                            Create an account
+                        </Link>
                     </p>
                 </div>
             </div>

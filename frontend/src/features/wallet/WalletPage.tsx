@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
 import { Badge } from '../../app/components/ui/Badge';
 import { Button } from '../../app/components/ui/Button';
@@ -19,7 +20,7 @@ export function WalletPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch('/api/wallet/balance')
+        apiFetch('/api/wallet/balance')
             .then(res => res.json())
             .then(data => {
                 setBalance(Number(data.balance));

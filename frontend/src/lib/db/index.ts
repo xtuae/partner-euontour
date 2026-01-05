@@ -26,7 +26,7 @@ export const db = {
             // Mock transaction just executes callback with same mock db
             return callback(createDB(null));
         }
-        return prisma.$transaction(async (tx) => {
+        return prisma.$transaction(async (tx: any) => {
             return callback(createDB(tx));
         });
     }

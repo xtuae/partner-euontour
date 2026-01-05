@@ -12,6 +12,7 @@ import {
     CreditCard
 } from 'lucide-react';
 import { cn } from '../utils/cn';
+import logo from '../../assets/logo.webp';
 
 export function Sidebar() {
     const { user, logout } = useAuth();
@@ -60,6 +61,12 @@ export function Sidebar() {
             roles: [ROLES.AGENCY],
         },
         {
+            label: 'Agency Verifications',
+            href: '/super-admin/agency-verifications',
+            icon: CheckCircle, // Reusing CheckCircle or import ShieldCheck
+            roles: [ROLES.SUPER_ADMIN],
+        },
+        {
             label: 'Settings',
             href: user?.role === ROLES.SUPER_ADMIN ? '/super-admin/settings' : '/agency/settings',
             icon: Settings,
@@ -74,9 +81,7 @@ export function Sidebar() {
             {/* Sidebar Header / Logo */}
             <div className="h-16 flex items-center px-6 border-b border-brand-gray">
                 <div className="flex items-center space-x-2">
-                    <div className="h-8 w-8 rounded-full bg-brand-red flex items-center justify-center text-white font-bold text-lg">
-                        E
-                    </div>
+                    <img src={logo} alt="EuOnTour" className="h-8 w-auto" />
                     <span className="text-lg font-bold text-brand-black tracking-tight">EuOnTour</span>
                 </div>
             </div>

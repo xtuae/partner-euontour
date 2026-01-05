@@ -7,7 +7,7 @@
     },
     "scripts": {
         "build": "tsc -p tsconfig.json",
-        "dev": "vercel dev",
+        "dev:server": "vercel dev",
         "postinstall": "prisma generate"
     },
     "dependencies": {

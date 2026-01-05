@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiFetch } from '../../lib/api-client';
 import {
     Wallet,
     MapPin,
@@ -12,7 +13,7 @@ export function AgencyDashboard() {
     const [balance, setBalance] = useState<number | null>(null);
 
     useEffect(() => {
-        fetch('/api/wallet/balance')
+        apiFetch('/api/wallet/balance')
             .then(res => res.json())
             .then(data => setBalance(Number(data.balance)))
             .catch(console.error);

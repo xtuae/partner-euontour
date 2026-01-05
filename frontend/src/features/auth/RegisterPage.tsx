@@ -5,6 +5,7 @@ import { Eye, EyeOff, AlertCircle, Building2 } from 'lucide-react';
 import { Button } from '../../app/components/ui/Button';
 import { Input } from '../../app/components/ui/Input';
 import { Label } from '../../app/components/ui/Label';
+import logo from '../../assets/logo.webp';
 
 export function RegisterPage() {
     const { register } = useAuth();
@@ -38,6 +39,9 @@ export function RegisterPage() {
         <div className="min-h-screen bg-brand-light flex items-center justify-center p-4">
             <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
                 <div className="text-center mb-8">
+                    <div className="flex justify-center mb-4">
+                        <img src={logo} alt="EuOnTour" className="h-12 w-auto" />
+                    </div>
                     <h1 className="text-3xl font-bold text-brand-black mb-2">Partner Registration</h1>
                     <p className="text-brand-dark">Join EuOnTour as an Agency Partner</p>
                 </div>

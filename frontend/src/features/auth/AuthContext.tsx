@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { apiFetch } from '../../lib/api-client';
 import type { ROLES } from './types';
 
 interface User {
@@ -15,7 +16,7 @@ interface User {
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
-    login: (email: string, password: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<User>;
     register: (email: string, password: string, agencyName: string) => Promise<void>;
     logout: () => Promise<void>;
 }
@@ -28,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const checkAuth = async () => {
         try {
-            const res = await fetch('/api/auth/me');
+            const res = await apiFetch('/api/auth/me');
             if (res.ok) {
                 const data = await res.json();
                 setUser(data.user);
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Silent refresh every 14 minutes
         const interval = setInterval(async () => {
             try {
-                await fetch('/api/auth/refresh', { method: 'POST' });
+                await apiFetch('/api/auth/refresh', { method: 'POST' });
             } catch (error) {
                 // Ignore, will be handled by next sensitive call
             }
@@ -57,10 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return () => clearInterval(interval);
     }, []);
 
-    const login = async (email: string, password: string): Promise<void> => {
-        const res = await fetch('/api/auth/login', {
+    const login = async (email: string, password: string): Promise<User> => {
+        const res = await apiFetch('/api/auth/login', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password }),
         });
 
@@ -71,12 +71,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const data = await res.json();
         setUser(data.user);
+        return data.user;
     };
 
     const register = async (email: string, password: string, agencyName: string): Promise<void> => {
-        const res = await fetch('/api/auth/register', {
+        const res = await apiFetch('/api/auth/register', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, agencyName }),
         });
 
@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const logout = async () => {
-        await fetch('/api/auth/logout', { method: 'POST' });
+        await apiFetch('/api/auth/logout', { method: 'POST' });
         setUser(null);
     };
 

@@ -1,5 +1,5 @@
 import './styles/globals.css'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './features/auth/AuthContext';
 import { ProtectedRoute } from './app/guards/ProtectedRoute';
 import { ROLES } from './features/auth/types';
@@ -13,11 +13,20 @@ import { DepositPage } from './features/wallet/DepositPage';
 import { AppLayout } from './app/layouts/AppLayout';
 import { AgencyDashboard } from './features/agency/AgencyDashboard';
 import { UnauthorizedPage } from './pages/Unauthorized';
-
+import { BookingPage } from './features/agency/BookingPage';
+import { ToursPage } from './features/agency/ToursPage';
+import { SettingsPage } from './features/agency/SettingsPage';
+import { NotificationsPage } from './features/notifications/NotificationsPage';
+import { AdminDashboard } from './features/admin/AdminDashboard';
+import { AdminDepositsPage } from './features/admin/AdminDepositsPage';
+import { AdminVerificationPage } from './features/admin/AdminVerificationPage';
+import { AdminSettingsPage } from './features/admin/AdminSettingsPage';
+import { SuperAdminVerificationList } from './features/admin/SuperAdminVerificationList';
+import { SuperAdminVerificationDetail } from './features/admin/SuperAdminVerificationDetail';
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
@@ -37,20 +46,21 @@ function App() {
                 <Route path="dashboard" element={<AgencyDashboard />} />
                 <Route path="wallet" element={<WalletPage />} />
                 <Route path="deposits" element={<DepositPage />} />
-                <Route path="tours" element={<PlaceholderPage title="Tours" />} />
-                <Route path="bookings" element={<PlaceholderPage title="Bookings" />} />
+                <Route path="tours" element={<ToursPage />} />
+                <Route path="bookings" element={<BookingPage />} />
                 <Route path="verification" element={<PlaceholderPage title="Verification" />} />
-                <Route path="notifications" element={<PlaceholderPage title="Notifications" />} />
-                <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+                <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="settings" element={<SettingsPage />} />
                 <Route path="security" element={<PlaceholderPage title="Security" />} />
                 <Route path="support" element={<PlaceholderPage title="Support" />} />
               </Route>
 
+
               {/* Admin Routes */}
               <Route path="/admin" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]} />}>
-                <Route path="dashboard" element={<PlaceholderPage title="Admin Dashboard" />} />
-                <Route path="deposits" element={<PlaceholderPage title="Admin Deposits" />} />
-                <Route path="verification" element={<PlaceholderPage title="Verification Review" />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="deposits" element={<AdminDepositsPage />} />
+                <Route path="verification" element={<AdminVerificationPage />} />
                 <Route path="agencies/:id" element={<PlaceholderPage title="Agency Details" />} />
                 <Route path="finance" element={<PlaceholderPage title="Finance" />} />
                 <Route path="users" element={<PlaceholderPage title="Users" />} />
@@ -59,19 +69,19 @@ function App() {
 
               {/* Super Admin Routes */}
               <Route path="/super-admin" element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]} />}>
-                <Route path="dashboard" element={<PlaceholderPage title="Super Admin Dashboard" />} />
-                <Route path="agencies" element={<PlaceholderPage title="All Agencies" />} />
-                <Route path="finance" element={<PlaceholderPage title="Global Finance" />} />
-                <Route path="admins" element={<PlaceholderPage title="Manage Admins" />} />
-                <Route path="settings" element={<PlaceholderPage title="Platform Settings" />} />
+                {/* Reuse Admin components for now or create specific ones */}
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="agency-verifications" element={<SuperAdminVerificationList />} />
+                <Route path="agency-verifications/:agencyId" element={<SuperAdminVerificationDetail />} />
+                <Route path="deposits" element={<AdminDepositsPage />} />
+                <Route path="settings" element={<AdminSettingsPage />} />
                 <Route path="audit" element={<PlaceholderPage title="Global Audit" />} />
               </Route>
-
             </Route>
           </Route>
         </Routes>
       </AuthProvider>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

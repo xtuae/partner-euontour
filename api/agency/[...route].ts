@@ -8,18 +8,7 @@ import { requireAuth } from '../_middleware/auth.js';
 import { handleCors } from '../../src/lib/cors.js';
 
 async function handler(req: VercelRequest, res: VercelResponse, user: { userId: string, role: string }) {
-    if (handleCors(req, res)) return; // This might be tricky with middleware, let's check
-    // Wait, the middleware wraps this handler. The middleware needs to handle CORS or pass it through.
-    // Ideally, middleware calls next(), but here it calls handler.
-    // If middleware is used, middleware should handle CORS or allow OPTIONS to pass.
-
-    // Let's modify the handler to assume middleware might have run, OR better:
-    // Modify requireAuth middleware to handle CORS too?
-    // OR put handleCors inside handler. But handler is called AFTER auth check in requireAuth.
-    // OPTIONS request won't have auth headers usually, so requireAuth might fail it.
-
-    // We should move CORS to the middleware or wrapper, BUT updating every file's default export is easier if consistent.
-    // However, `requiresAuth` wrapper needs to allow OPTIONS without auth.
+    // requireAuth handles CORS.
 
     const url = req.url || '';
 

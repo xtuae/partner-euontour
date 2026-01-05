@@ -13,6 +13,15 @@ import { sendEmail } from '../../src/lib/email.js';
 
 import { handleCors } from '../../src/lib/cors.js';
 
+const COOKIE_OPTIONS = {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none' as const,
+    path: '/',
+    domain: process.env.COOKIE_DOMAIN || undefined
+};
+
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (handleCors(req, res)) return;
 
@@ -68,19 +77,13 @@ async function login(req: VercelRequest, res: VercelResponse) {
         });
 
         const accessTokenCookie = serialize('auth_token', accessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
+            ...COOKIE_OPTIONS,
             maxAge: 15 * 60,
-            path: '/',
         });
 
         const refreshTokenCookie = serialize('refresh_token', refreshToken, {
-            httpOnly: true,
-            secure: true, // Required for SameSite=None
-            sameSite: 'none', // Allow cross-origin cookies
+            ...COOKIE_OPTIONS,
             maxAge: 7 * 24 * 60 * 60,
-            path: '/',
         });
 
         res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
@@ -114,19 +117,13 @@ async function logout(req: VercelRequest, res: VercelResponse) {
     }
 
     const accessTokenCookie = serialize('auth_token', '', {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
+        ...COOKIE_OPTIONS,
         maxAge: -1,
-        path: '/',
     });
 
     const refreshTokenCookie = serialize('refresh_token', '', {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'none',
+        ...COOKIE_OPTIONS,
         maxAge: -1,
-        path: '/',
     });
 
     res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);
@@ -157,11 +154,8 @@ async function refresh(req: VercelRequest, res: VercelResponse) {
         const newAccessToken = signToken({ userId: user.id, role: user.role });
 
         const accessTokenCookie = serialize('auth_token', newAccessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
+            ...COOKIE_OPTIONS,
             maxAge: 15 * 60,
-            path: '/',
         });
 
         res.setHeader('Set-Cookie', accessTokenCookie);
@@ -254,19 +248,13 @@ async function register(req: VercelRequest, res: VercelResponse) {
         const accessToken = signToken({ userId: user.id, role: user.role });
 
         const accessTokenCookie = serialize('auth_token', accessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
+            ...COOKIE_OPTIONS,
             maxAge: 15 * 60,
-            path: '/',
         });
 
         const refreshTokenCookie = serialize('refresh_token', refreshTokenRecord.token, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
+            ...COOKIE_OPTIONS,
             maxAge: 7 * 24 * 60 * 60,
-            path: '/',
         });
 
         res.setHeader('Set-Cookie', [accessTokenCookie, refreshTokenCookie]);

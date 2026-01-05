@@ -5,7 +5,7 @@ import { handleCors } from '../../src/lib/cors.js';
 
 
 async function handler(req: VercelRequest, res: VercelResponse, user: { userId: string, role: string }) {
-    await handleCors(req, res);
+    // requireAuth handles CORS.
     // Router for wallet. Currently only balance.
     // If we add ledger, we can route here.
     // Default to balance if path is root /api/wallet or /api/wallet/balance

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiFetch } from '../../lib/api-client';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
@@ -18,9 +19,8 @@ export function DepositPage() {
         setLoading(true);
 
         try {
-            const res = await fetch('/api/deposits/create', {
+            const res = await apiFetch('/api/deposits/create', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     amount: parseFloat(amount),
                     proofUrl: proofUrl || 'https://example.com/mock-receipt.pdf' // Mock if empty
@@ -30,7 +30,7 @@ export function DepositPage() {
             if (!res.ok) throw new Error('Failed');
 
             setSuccess(true);
-            setTimeout(() => navigate('/wallet'), 2000);
+            setTimeout(() => navigate('/agency/wallet'), 2000);
         } catch (err) {
             alert('Deposit failed');
             setLoading(false);
