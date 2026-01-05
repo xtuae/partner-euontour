@@ -7,10 +7,6 @@ import { prisma } from '../src/lib/db/prisma.js';
 import { LedgerType } from '../src/lib/types.js'; // Or prisma client
 import { logAudit } from '../src/lib/audit.js';
 
-export const config = {
-    runtime: 'nodejs',
-    maxDuration: 10
-};
 
 async function handler(req: VercelRequest, res: VercelResponse, user: { userId: string, role: string }) {
     const url = req.url || '';

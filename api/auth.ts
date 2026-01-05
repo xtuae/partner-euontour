@@ -10,10 +10,6 @@ import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '..
 import { checkRateLimit } from '../src/lib/rate-limit.js';
 import { sendEmail } from '../src/lib/email.js';
 
-export const config = {
-    runtime: 'nodejs',
-    maxDuration: 10
-};
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     const url = req.url || '';

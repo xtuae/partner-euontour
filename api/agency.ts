@@ -3,10 +3,6 @@ import { z } from 'zod';
 import { db } from '../src/lib/db/index.js';
 import { requireAuth } from './_middleware/auth.js';
 
-export const config = {
-    runtime: 'nodejs',
-    maxDuration: 10
-};
 
 async function handler(req: VercelRequest, res: VercelResponse, user: { userId: string, role: string }) {
     const url = req.url || '';
