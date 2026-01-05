@@ -2,13 +2,13 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { parse, serialize } from 'cookie';
-import { UserRole } from '../src/lib/types.js';
-import { db } from '../src/lib/db/index.js';
-import { prisma } from '../src/lib/db/prisma.js';
-import { loginSchema } from '../src/lib/validators/auth.js';
-import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '../src/lib/auth/jwt.js';
-import { checkRateLimit } from '../src/lib/rate-limit.js';
-import { sendEmail } from '../src/lib/email.js';
+import { UserRole } from '../../src/lib/types.js';
+import { db } from '../../src/lib/db/index.js';
+import { prisma } from '../../src/lib/db/prisma.js';
+import { loginSchema } from '../../src/lib/validators/auth.js';
+import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '../../src/lib/auth/jwt.js';
+import { checkRateLimit } from '../../src/lib/rate-limit.js';
+import { sendEmail } from '../../src/lib/email.js';
 
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
