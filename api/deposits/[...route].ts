@@ -1,9 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import { requireAuth } from '../_middleware/auth.js';
+import { handleCors } from '../../src/lib/cors.js';
 
 
 async function handler(req: VercelRequest, res: VercelResponse, user: { userId: string, role: string }) {
+    handleCors(req, res);
     // /api/deposits
     if (req.method === 'GET') return listDeposits(req, res, user);
     if (req.method === 'POST') return createDeposit(req, res, user);

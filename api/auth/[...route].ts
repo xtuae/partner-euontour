@@ -11,7 +11,11 @@ import { checkRateLimit } from '../../src/lib/rate-limit.js';
 import { sendEmail } from '../../src/lib/email.js';
 
 
+import { handleCors } from '../../src/lib/cors.js';
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+    if (handleCors(req, res)) return;
+
     const url = req.url || '';
 
     if (url.includes('/api/auth/login')) return login(req, res);

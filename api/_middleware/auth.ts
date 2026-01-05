@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { verifyToken } from '../../src/lib/auth/jwt.js';
+import { handleCors } from '../../src/lib/cors.js';
 
 export type AuthenticatedRequest = VercelRequest & {
     user?: {
@@ -14,6 +15,8 @@ type HandlerWithUser = (req: AuthenticatedRequest, res: VercelResponse, user: { 
 
 export function requireAuth(handler: HandlerWithUser, allowedRoles?: string[]) {
     return async (req: VercelRequest, res: VercelResponse) => {
+        if (handleCors(req, res)) return;
+
         // 1. Get Token from Cookie
         const cookieHeader = req.headers.cookie || '';
         const match = cookieHeader.match(/auth_token=([^;]+)/);

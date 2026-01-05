@@ -1,9 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db } from '../../src/lib/db/index.js';
 import { requireAuth } from '../_middleware/auth.js';
+import { handleCors } from '../../src/lib/cors.js';
 
 
 async function handler(req: VercelRequest, res: VercelResponse, user: { userId: string, role: string }) {
+    await handleCors(req, res);
     // Router for wallet. Currently only balance.
     // If we add ledger, we can route here.
     // Default to balance if path is root /api/wallet or /api/wallet/balance
