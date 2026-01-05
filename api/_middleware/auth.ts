@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyToken } from '../../frontend/src/features/auth/jwt.js';
+import { verifyToken } from '../../src/lib/auth/jwt.js';
 
 export type AuthenticatedRequest = VercelRequest & {
     user?: {

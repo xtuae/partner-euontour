@@ -4,7 +4,7 @@ interface EmailParams {
     body: string; // Plain text or HTML
 }
 
-import { sendEmailBrevo } from './email/brevo';
+import { sendEmailBrevo } from './email/brevo.js';
 
 /**
  * Sends an email asynchronously.

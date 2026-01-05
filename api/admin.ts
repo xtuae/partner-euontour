@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import { requireAuth } from './_middleware/auth.js';
-import { logAudit } from '../frontend/src/lib/audit.js';
+import { logAudit } from '../src/lib/audit.js';
 
 export const config = {
     runtime: 'nodejs',
