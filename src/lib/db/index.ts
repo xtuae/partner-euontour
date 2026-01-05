@@ -1,7 +1,7 @@
 // src/lib/db/index.ts
-import { prisma } from './prisma';
-import { PrismaUserRepository, PrismaAgencyRepository, PrismaWalletRepository, PrismaBookingRepository, PrismaDepositRepository, PrismaTourRepository, PrismaRefreshTokenRepository } from './prisma-repos';
-import * as mockRepos from './mock-repos';
+import { prisma } from './prisma.js';
+import { PrismaUserRepository, PrismaAgencyRepository, PrismaWalletRepository, PrismaBookingRepository, PrismaDepositRepository, PrismaTourRepository, PrismaRefreshTokenRepository } from './prisma-repos.js';
+import * as mockRepos from './mock-repos.js';
 // import { IUserRepository, IAgencyRepository, IWalletRepository, IBookingRepository, IDepositRepository, ITourRepository } from './repository';
 
 // Config

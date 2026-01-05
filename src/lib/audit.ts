@@ -1,4 +1,4 @@
-import { prisma } from './db/prisma';
+import { prisma } from './db/prisma.js';
 
 const USE_MOCK_DB = process.env.USE_MOCK_DB === 'true';
 

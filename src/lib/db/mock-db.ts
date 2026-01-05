@@ -1,4 +1,4 @@
-import { User, Agency, WalletLedger, Tour, Booking, Deposit, UserRole, LedgerType, RefreshToken } from '../types';
+import { User, Agency, WalletLedger, Tour, Booking, Deposit, UserRole, LedgerType, RefreshToken } from '../types.js';
 
 class MockDB {
     public users: User[] = [];

@@ -1,4 +1,4 @@
-import { User, Agency, WalletLedger, Booking, Deposit, Tour, RefreshToken } from '../types';
+import { User, Agency, WalletLedger, Booking, Deposit, Tour, RefreshToken } from '../types.js';
 
 export interface IUserRepository {
     findByEmail(email: string): Promise<User | null>;

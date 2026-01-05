@@ -1,6 +1,6 @@
-import { IUserRepository, IAgencyRepository, IWalletRepository, IBookingRepository, IDepositRepository, ITourRepository, IRefreshTokenRepository } from './repository';
-import { mockDb } from './mock-db';
-import { User, Agency, WalletLedger, Booking, Deposit, Tour, LedgerType, RefreshToken } from '../types';
+import { IUserRepository, IAgencyRepository, IWalletRepository, IBookingRepository, IDepositRepository, ITourRepository, IRefreshTokenRepository } from './repository.js';
+import { mockDb } from './mock-db.js';
+import { User, Agency, WalletLedger, Booking, Deposit, Tour, LedgerType, RefreshToken } from '../types.js';
 
 // Mock User Repo
 export const userRepository: IUserRepository = {

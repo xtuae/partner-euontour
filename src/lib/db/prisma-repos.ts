@@ -1,6 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
-import { IUserRepository, IAgencyRepository, IWalletRepository, IBookingRepository, IDepositRepository, ITourRepository, IRefreshTokenRepository } from './repository';
-import { User, Agency, WalletLedger, Booking, Deposit, Tour, UserRole, BookingStatus, DepositStatus, LedgerType, RefreshToken } from '../types';
+import { IUserRepository, IAgencyRepository, IWalletRepository, IBookingRepository, IDepositRepository, ITourRepository, IRefreshTokenRepository } from './repository.js';
+import { User, Agency, WalletLedger, Booking, Deposit, Tour, UserRole, BookingStatus, DepositStatus, LedgerType, RefreshToken } from '../types.js';
 
 type PrismaTx = PrismaClient | Prisma.TransactionClient;
 
