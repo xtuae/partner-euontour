@@ -77,8 +77,8 @@ async function login(req: VercelRequest, res: VercelResponse) {
 
         const refreshTokenCookie = serialize('refresh_token', refreshToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: true, // Required for SameSite=None
+            sameSite: 'none', // Allow cross-origin cookies
             maxAge: 7 * 24 * 60 * 60,
             path: '/',
         });
@@ -115,16 +115,16 @@ async function logout(req: VercelRequest, res: VercelResponse) {
 
     const accessTokenCookie = serialize('auth_token', '', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: true,
+        sameSite: 'none',
         maxAge: -1,
         path: '/',
     });
 
     const refreshTokenCookie = serialize('refresh_token', '', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: true,
+        sameSite: 'none',
         maxAge: -1,
         path: '/',
     });
@@ -158,8 +158,8 @@ async function refresh(req: VercelRequest, res: VercelResponse) {
 
         const accessTokenCookie = serialize('auth_token', newAccessToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 15 * 60,
             path: '/',
         });
@@ -263,8 +263,8 @@ async function register(req: VercelRequest, res: VercelResponse) {
 
         const refreshTokenCookie = serialize('refresh_token', refreshTokenRecord.token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            secure: true,
+            sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60,
             path: '/',
         });
