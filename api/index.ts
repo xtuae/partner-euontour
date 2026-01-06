@@ -19,49 +19,54 @@ export const config = {
 export default async function handler(req: Request) {
     // 1️⃣ CORS FIRST (ALWAYS)
     const corsResponse = handleCors(req);
-    if (corsResponse) return corsResponse;
+    // If it's an OPTIONS request, strictly return the CORS response (preflight)
+    if (corsResponse && req.method === "OPTIONS") {
+        return corsResponse;
+    }
+
+    // For non-OPTIONS, request processing continues...
 
     const url = new URL(req.url);
     const path = url.pathname.replace("/api", ""); // e.g. /auth/login
 
-    // 2️⃣ AUTH / PUBLIC ROUTES
+    let response: Response;
+
+    // Routing Logic
     if (path.startsWith("/auth")) {
-        return authRoutes(req, path);
+        response = await authRoutes(req, path);
+    } else if (path.startsWith("/agency") || path.startsWith("/admin") ||
+        path.startsWith("/super") || path.startsWith("/deposits") ||
+        path.startsWith("/bookings") || path.startsWith("/wallet") ||
+        path.startsWith("/files") || path.startsWith("/uploads")) {
+
+        // Auth check for protected routes
+        const user = await authHandler(req);
+        if (!user) {
+            response = new Response("Unauthorized", { status: 401 });
+        } else {
+            if (path.startsWith("/agency")) response = await agencyRoutes(req, path, user);
+            else if (path.startsWith("/admin")) response = await adminRoutes(req, path, user);
+            else if (path.startsWith("/super")) response = await superRoutes(req, path, user);
+            else if (path.startsWith("/deposits")) response = await depositsRoutes(req, path, user);
+            else if (path.startsWith("/bookings")) response = await bookingsRoutes(req, path, user);
+            else if (path.startsWith("/wallet")) response = await walletRoutes(req, path, user);
+            else if (path.startsWith("/files") || path.startsWith("/uploads")) response = await filesRoutes(req, path, user);
+            else response = new Response("Not Found", { status: 404 });
+        }
+    } else {
+        response = new Response("Not Found", { status: 404 });
     }
 
-    // 3️⃣ PROTECTED ROUTES
-    const user = await authHandler(req);
-    if (!user) {
-        return new Response("Unauthorized", { status: 401 });
+    // 🔐 Merge CORS headers into response (Step 3)
+    const origin = req.headers.get("origin");
+    if (origin) {
+        response.headers.set("Access-Control-Allow-Origin", origin);
+        response.headers.set("Access-Control-Allow-Credentials", "true");
+        // Ensure other basic CORS headers are present if needed, but user snippet specifically asked for these two.
+        // The handleCors helper had more in the OPTIONS response. 
+        // We trust the browser keeps the preflight options for the actual request, 
+        // but ACAO and ACAC allow the reading of the response.
     }
 
-    if (path.startsWith("/agency")) {
-        return agencyRoutes(req, path, user);
-    }
-
-    if (path.startsWith("/admin")) {
-        return adminRoutes(req, path, user);
-    }
-
-    if (path.startsWith("/super")) {
-        return superRoutes(req, path, user);
-    }
-
-    if (path.startsWith("/deposits")) {
-        return depositsRoutes(req, path, user);
-    }
-
-    if (path.startsWith("/bookings")) {
-        return bookingsRoutes(req, path, user);
-    }
-
-    if (path.startsWith("/wallet")) {
-        return walletRoutes(req, path, user);
-    }
-
-    if (path.startsWith("/files") || path.startsWith("/uploads")) {
-        return filesRoutes(req, path, user);
-    }
-
-    return new Response("Not Found", { status: 404 });
+    return response;
 }

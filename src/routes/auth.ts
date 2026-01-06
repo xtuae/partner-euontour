@@ -11,10 +11,12 @@ import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '@/
 import { checkRateLimit } from '@/lib/rate-limit.js';
 import { sendEmail, EMAIL_TEMPLATES } from '@/lib/email.js';
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const COOKIE_OPTIONS = {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none' as const,
+    secure: isProd,
+    sameSite: isProd ? 'none' as const : 'lax' as const,
     path: '/',
     domain: process.env.COOKIE_DOMAIN || undefined
 };
