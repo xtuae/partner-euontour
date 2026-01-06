@@ -1,4 +1,5 @@
-
+import { IncomingMessage, ServerResponse } from 'http';
+import { Readable } from 'stream';
 import { authHandler } from "@/lib/auth.js";
 import { handleCors } from "@/lib/cors.js";
 
@@ -13,10 +14,13 @@ import { walletRoutes } from "@/routes/wallet.js";
 import { filesRoutes } from "@/routes/files.js";
 
 export const config = {
-    runtime: 'nodejs', // or 'edge' if preferred, but nodejs for crypto/sharp
+    api: {
+        bodyParser: false,
+    },
 };
 
-export default async function handler(req: Request) {
+// --- Web API Logic (Internal) ---
+async function appHandler(req: Request): Promise<Response> {
     // 1️⃣ CORS FIRST (ALWAYS)
     const corsResponse = handleCors(req);
     // If it's an OPTIONS request, strictly return the CORS response (preflight)
@@ -25,9 +29,8 @@ export default async function handler(req: Request) {
     }
 
     // For non-OPTIONS, request processing continues...
-
     const url = new URL(req.url);
-    const path = url.pathname.replace("/api", ""); // e.g. /auth/login
+    const path = url.pathname.replace("/api", "");
 
     let response: Response;
 
@@ -39,7 +42,7 @@ export default async function handler(req: Request) {
         path.startsWith("/bookings") || path.startsWith("/wallet") ||
         path.startsWith("/files") || path.startsWith("/uploads")) {
 
-        // Auth check for protected routes
+        // Auth check
         const user = await authHandler(req);
         if (!user) {
             response = new Response("Unauthorized", { status: 401 });
@@ -57,16 +60,91 @@ export default async function handler(req: Request) {
         response = new Response("Not Found", { status: 404 });
     }
 
-    // 🔐 Merge CORS headers into response (Step 3)
+    // 🔐 Merge CORS headers into response
     const origin = req.headers.get("origin");
     if (origin) {
         response.headers.set("Access-Control-Allow-Origin", origin);
         response.headers.set("Access-Control-Allow-Credentials", "true");
-        // Ensure other basic CORS headers are present if needed, but user snippet specifically asked for these two.
-        // The handleCors helper had more in the OPTIONS response. 
-        // We trust the browser keeps the preflight options for the actual request, 
-        // but ACAO and ACAC allow the reading of the response.
+        // We can add others if needed, typically browsers need Access-Control-Allow-Methods/Headers for Preflight,
+        // but for actual responses ACAO and ACAC are critical.
     }
 
     return response;
+}
+
+// --- Node.js Adapter (Vercel Entrypoint) ---
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
+    try {
+        const protocol = req.headers['x-forwarded-proto'] || 'https';
+        const host = req.headers.host;
+        const url = new URL(req.url || '', `${protocol}://${host}`);
+
+        // Construct Web Request
+        const controller = new AbortController();
+        const { method, headers } = req;
+        const webHeaders = new Headers();
+        for (const [key, value] of Object.entries(headers)) {
+            if (Array.isArray(value)) {
+                value.forEach(v => webHeaders.append(key, v));
+            } else if (value) {
+                webHeaders.set(key, value);
+            }
+        }
+
+        const webReqInit: RequestInit = {
+            method,
+            headers: webHeaders,
+            signal: controller.signal,
+        };
+
+        if (method !== 'GET' && method !== 'HEAD') {
+            // Pass the raw stream as body (Node 18+ / Node 20+)
+            // Vercel nodejs runtime supports ReadableStream but the type definition
+            // for RequestInit might expect BodyInit. 
+            // `req` is a Readable stream. In modern Node, we can pass it directly or use Readable.toWeb(req).
+            // We cast to any to avoid TS mismatch if types are old, but runtime is Node 24.x per package.json.
+            webReqInit.body = req as any;
+            // Use "duplex: 'half'" for streaming bodies in Node fetch/Request
+            (webReqInit as any).duplex = 'half';
+        }
+
+        const webReq = new Request(url, webReqInit);
+
+        // Run Logic
+        const webRes = await appHandler(webReq);
+
+        // Write Response
+        res.statusCode = webRes.status;
+        webRes.headers.forEach((value, key) => {
+            res.setHeader(key, value);
+        });
+
+        if (webRes.body) {
+            const reader = webRes.body.getReader();
+            // Pipe Web Stream to Node Response
+            // Simplest is to iterate
+            for await (const chunk of streamAsyncIterator(reader)) {
+                res.write(chunk);
+            }
+        }
+        res.end();
+
+    } catch (e) {
+        console.error('API Adapter Error:', e);
+        res.statusCode = 500;
+        res.end('Internal Server Error');
+    }
+}
+
+// Helper to iterate readable stream
+async function* streamAsyncIterator(reader: ReadableStreamDefaultReader<Uint8Array>) {
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) return;
+            yield value;
+        }
+    } finally {
+        reader.releaseLock();
+    }
 }
