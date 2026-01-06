@@ -13,10 +13,12 @@ export async function apiFetch(endpoint: string, options: RequestInit = {}) {
 
     const url = `${API_BASE}${path}`;
 
-    const headers = {
-        'Content-Type': 'application/json',
-        ...(options.headers || {}),
-    };
+    const headers: HeadersInit = options.body instanceof FormData
+        ? { ...(options.headers || {}) } // Let browser set Content-Type for FormData
+        : {
+            'Content-Type': 'application/json',
+            ...(options.headers || {}),
+        };
 
     const config: RequestInit = {
         ...options,

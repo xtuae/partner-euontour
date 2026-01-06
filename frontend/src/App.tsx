@@ -23,6 +23,8 @@ import { AdminVerificationPage } from './features/admin/AdminVerificationPage';
 import { AdminSettingsPage } from './features/admin/AdminSettingsPage';
 import { SuperAdminVerificationList } from './features/admin/SuperAdminVerificationList';
 import { SuperAdminVerificationDetail } from './features/admin/SuperAdminVerificationDetail';
+import { ManageAgencyTours } from './features/admin/ManageAgencyTours';
+import { AdminAgencyDetailsPage } from './features/admin/AdminAgencyDetailsPage';
 
 function App() {
   return (
@@ -61,7 +63,8 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="deposits" element={<AdminDepositsPage />} />
                 <Route path="verification" element={<AdminVerificationPage />} />
-                <Route path="agencies/:id" element={<PlaceholderPage title="Agency Details" />} />
+                <Route path="agencies/:id" element={<AdminAgencyDetailsPage />} />
+                <Route path="agencies/:id/tours" element={<ManageAgencyTours />} />
                 <Route path="finance" element={<PlaceholderPage title="Finance" />} />
                 <Route path="users" element={<PlaceholderPage title="Users" />} />
                 <Route path="audit" element={<PlaceholderPage title="Audit Logs" />} />

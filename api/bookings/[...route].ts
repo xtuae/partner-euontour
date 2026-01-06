@@ -1,98 +1,169 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { z } from 'zod';
-import { db } from '../../src/lib/db/index.js';
-import { logAudit } from '../../src/lib/audit.js';
 import { requireAuth } from '../_middleware/auth.js';
-import { handleCors } from '../../src/lib/cors.js';
-import { BookingStatus, LedgerType } from '../../src/lib/types.js';
+import { prisma } from '../../src/lib/db/prisma.js';
+import { sendEmail, EMAIL_TEMPLATES } from '../../src/lib/email.js';
+import { z } from 'zod';
 
+async function handler(req: VercelRequest, res: VercelResponse, userToken: { userId: string, role: string }) {
+    if (req.method === 'GET') return listBookings(req, res, userToken);
+    if (req.method === 'POST') return createBooking(req, res, userToken);
 
-const CreateBookingSchema = z.object({
-    tourId: z.string(),
-    pax: z.number().int().positive(),
-    date: z.string(),
-});
-
-async function handler(req: VercelRequest, res: VercelResponse, user: { userId: string, role: string }) {
-    // CORS is handled by middleware but requires checking just in case of race or direct invocation?
-    // requireAuth handles it.
-    // However, user asked to strict apply to ALL.
-    // Since requireAuth wraps this, and requireAuth calls handleCors first thing, it is covered.
-    // BUT safe side: 
-    // Double check requireAuth logic.
-    if (req.method === 'GET') return listBookings(req, res, user);
-    if (req.method === 'POST') return createBooking(req, res, user);
     return res.status(405).json({ error: 'Method not allowed' });
 }
 
-async function listBookings(_req: VercelRequest, res: VercelResponse, _user: { userId: string, role: string }) {
-    return res.status(200).json({ bookings: [] });
+async function listBookings(req: VercelRequest, res: VercelResponse, userToken: { userId: string, role: string }) {
+    try {
+        let where: any = {};
+
+        if (userToken.role === 'AGENCY') {
+            const user = await prisma.user.findUnique({
+                where: { id: userToken.userId },
+                select: { agency_id: true }
+            });
+            if (!user || (!user.agency_id)) return res.status(200).json({ bookings: [] });
+            where.agency_id = user.agency_id;
+        }
+
+        const bookings = await prisma.booking.findMany({
+            where,
+            include: {
+                tour: true,
+                agency: { select: { name: true } }
+            },
+            orderBy: { created_at: 'desc' }
+        });
+
+        return res.status(200).json({ bookings });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
 }
 
-async function createBooking(req: VercelRequest, res: VercelResponse, user: { userId: string, role: string, agencyId?: string }) {
+const CreateBookingSchema = z.object({
+    tourId: z.string().uuid(),
+    travelDate: z.string().transform((str) => new Date(str)), // Validate date format
+});
+
+async function createBooking(req: VercelRequest, res: VercelResponse, userToken: { userId: string, role: string }) {
+    if (userToken.role !== 'AGENCY') {
+        return res.status(403).json({ error: 'Only agencies can perform bookings' });
+    }
+
     try {
-        // 1. Strict Role Check: Booking is for Agencies only
-        if (user.role !== 'AGENCY' || !user.agencyId) {
-            return res.status(403).json({ error: 'Only agencies can create bookings' });
+        const { tourId, travelDate } = CreateBookingSchema.parse(req.body);
+
+        const user = await prisma.user.findUnique({
+            where: { id: userToken.userId },
+            include: { agency: true }
+        });
+
+        if (!user || !user.agency) return res.status(400).json({ error: 'Agency not found' });
+
+        const agency = user.agency;
+
+        // 1. Verify Agency Status
+        if (agency.verification_status !== 'VERIFIED') {
+            return res.status(403).json({ error: 'Agency is not verified. Cannot book.' });
         }
 
-        const { tourId, pax, date } = CreateBookingSchema.parse(req.body);
-
-        // 2. Strict Verification Check
-        const agency = await db.agency.findById(user.agencyId);
-        if (!agency || agency.verification_status !== 'VERIFIED') {
-            return res.status(403).json({ error: 'Agency not verified. Cannot book tours.' });
-        }
-
-        // 3. Strict Balance Check
-        // Fetch tour for price
-        const tour = await db.tour.findById(tourId);
+        // 2. Get Tour & Price
+        const tour = await prisma.tour.findUnique({ where: { id: tourId } });
         if (!tour) return res.status(404).json({ error: 'Tour not found' });
-        if (!tour.active) return res.status(400).json({ error: 'Tour is not active' });
+        if (!tour.active) return res.status(400).json({ error: 'Tour is inactive' });
 
-        const totalAmount = tour.price * pax;
-        const currentBalance = await db.wallet.getBalance(user.agencyId);
+        // 2.5 Check Agency Assignment (NEW RULE)
+        const assignment = await prisma.agencyTour.findUnique({
+            where: {
+                agencyId_tourId: {
+                    agencyId: agency.id,
+                    tourId: tour.id
+                }
+            }
+        });
 
-        if (currentBalance < totalAmount) {
-            return res.status(400).json({
-                error: 'Insufficient wallet balance',
-                details: { required: totalAmount, available: currentBalance }
-            });
+        if (!assignment || !assignment.isActive) {
+            return res.status(403).json({ error: 'Tour not available for this agency' });
         }
 
-        // 4. Creation & Ledger Debit
-        // NOTE: In a real production system, wrap this in a db.$transaction
-        // Start with Ledger to "reserve" funds (strict safety)
-        await db.wallet.addEntry({
-            agency_id: user.agencyId,
-            amount: totalAmount,
-            type: LedgerType.DEBIT,
-            reference_type: 'BOOKING',
-            reference_id: `PENDING_BOOKING`, // Will update with ID if possible or link loosely
-            description: `Booking for Tour ${tour.name} (${date})`
+        // 3. Check Balance
+        // Use Decimal comparison
+        // prisma returns Decimal.js objects or numbers depending on config.
+        // Assuming standard prisma behavior (Decimal).
+        if (agency.wallet_balance.lessThan(tour.price)) {
+            return res.status(400).json({ error: `Insufficient wallet balance. Required: €${tour.price}, Available: €${agency.wallet_balance}` });
+        }
+
+        // 4. Transaction (Debit + Booking)
+        const booking = await prisma.$transaction(async (tx: any) => {
+            // Re-check balance with lock? 
+            // Postgres supports SELECT FOR UPDATE but via raw query or simple atomic update.
+            // Using decrement throws if goes negative constraint... assuming check above is mostly fine, atomic update handles concurrency.
+            // But prisma atomic decrement doesn't auto-check non-negative unless db constraint exists.
+            // We just verified above.
+
+            // Deduct
+            const updatedAgency = await tx.agency.update({
+                where: { id: agency.id },
+                data: {
+                    wallet_balance: { decrement: tour.price }
+                }
+            });
+
+            // Double check (if concurrent)
+            if (updatedAgency.wallet_balance.isNegative()) {
+                throw new Error("Insufficient balance (concurrent)");
+            }
+
+            // Create Booking
+            const newBooking = await tx.booking.create({
+                data: {
+                    agency_id: agency.id,
+                    tour_id: tour.id,
+                    travel_date: travelDate,
+                    amount: tour.price,
+                    status: 'CONFIRMED'
+                }
+            });
+
+            // Create Ledger
+            await tx.walletLedger.create({
+                data: {
+                    agency_id: agency.id,
+                    type: 'DEBIT',
+                    amount: tour.price,
+                    reference_type: 'BOOKING',
+                    reference_id: newBooking.id
+                }
+            });
+
+            return newBooking;
         });
 
-        const booking = await db.booking.create({
-            agency_id: user.agencyId,
-            tour_id: tourId,
-            travel_date: new Date(date),
-            amount: totalAmount,
-            status: BookingStatus.CONFIRMED
+        // Refetch agency for accurate balance
+        const finalAgency = await prisma.agency.findUnique({ where: { id: agency.id } });
+
+        await sendEmail({
+            to: agency.email,
+            ...EMAIL_TEMPLATES.BOOKING_CONFIRMED(
+                agency.name,
+                booking.id,
+                tour.name,
+                `€${tour.price}`,
+                `€${finalAgency?.wallet_balance || '0.00'}`
+            )
         });
 
-        // 5. Audit
-        logAudit({
-            actorId: user.userId,
-            action: 'BOOKING_CREATE',
-            entity: 'BOOKING',
-            entityId: booking.id,
-            details: { amount: totalAmount, pax }
-        });
+        return res.status(201).json({ success: true, booking });
 
-        return res.status(201).json({ success: true, bookingId: booking.id });
     } catch (error) {
         if (error instanceof z.ZodError) return res.status(400).json({ error: error.issues });
-        console.error(error);
+        console.error('Booking Error:', error);
+
+        if (error instanceof Error && error.message.includes('Insufficient balance')) {
+            return res.status(400).json({ error: 'Insufficient wallet balance' });
+        }
+
         return res.status(500).json({ error: 'Internal server error' });
     }
 }

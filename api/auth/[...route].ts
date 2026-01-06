@@ -2,16 +2,15 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { parse, serialize } from 'cookie';
+import crypto from 'crypto';
 import { UserRole } from '../../src/lib/types.js';
 import { db } from '../../src/lib/db/index.js';
 import { prisma } from '../../src/lib/db/prisma.js';
 import { loginSchema } from '../../src/lib/validators/auth.js';
 import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '../../src/lib/auth/jwt.js';
 import { checkRateLimit } from '../../src/lib/rate-limit.js';
-import { sendEmail } from '../../src/lib/email.js';
-
-
 import { handleCors } from '../../src/lib/cors.js';
+import { sendEmail, EMAIL_TEMPLATES } from '../../src/lib/email.js';
 
 const COOKIE_OPTIONS = {
     httpOnly: true,
@@ -34,6 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (url.includes('/api/auth/me')) return me(req, res);
     if (url.includes('/api/auth/forgot-password')) return forgotPassword(req, res);
     if (url.includes('/api/auth/reset-password')) return resetPassword(req, res);
+    if (url.includes('/api/auth/verify-email')) return verifyEmail(req, res);
 
     return res.status(404).json({ error: 'Auth endpoint not found' });
 }
@@ -212,6 +212,7 @@ async function register(req: VercelRequest, res: VercelResponse) {
         if (existingUser) return res.status(400).json({ error: 'Email already registered' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
+        const verificationToken = crypto.randomUUID();
 
         const { user, refreshTokenRecord } = await prisma.$transaction(async (tx: any) => {
             const agency = await tx.agency.create({
@@ -227,7 +228,9 @@ async function register(req: VercelRequest, res: VercelResponse) {
                     email,
                     password_hash: hashedPassword,
                     role: UserRole.AGENCY,
-                    agency_id: agency.id
+                    agency_id: agency.id,
+                    verification_token: verificationToken,
+                    verification_token_expiry: new Date(Date.now() + 24 * 60 * 60 * 1000)
                 },
                 include: { agency: true }
             });
@@ -243,6 +246,12 @@ async function register(req: VercelRequest, res: VercelResponse) {
             });
 
             return { user, refreshTokenRecord };
+        });
+
+        const verifyLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
+        await sendEmail({
+            to: email,
+            ...EMAIL_TEMPLATES.VERIFY_EMAIL(agencyName, verifyLink)
         });
 
         const accessToken = signToken({ userId: user.id, role: user.role });
@@ -347,8 +356,38 @@ async function resetPassword(req: VercelRequest, res: VercelResponse) {
 
         return res.status(200).json({ success: true, message: 'Password reset successful' });
 
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+}
+
+async function verifyEmail(req: VercelRequest, res: VercelResponse) {
+    if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+    try {
+        const { token } = req.query;
+        if (!token || typeof token !== 'string') return res.status(400).json({ error: 'Token required' });
+
+        const user = await prisma.user.findFirst({
+            where: {
+                verification_token: token,
+                verification_token_expiry: { gt: new Date() }
+            }
+        });
+
+        if (!user) return res.status(400).json({ error: 'Invalid or expired token' });
+
+        await prisma.user.update({
+            where: { id: user.id },
+            data: {
+                email_verified: true,
+                verification_token: null,
+                verification_token_expiry: null
+            }
+        });
+
+        return res.status(200).json({ success: true, message: 'Email verified successfully' });
+
     } catch (error) {
-        if (error instanceof z.ZodError) return res.status(400).json({ error: error.issues });
         console.error(error);
         return res.status(500).json({ error: 'Internal server error' });
     }

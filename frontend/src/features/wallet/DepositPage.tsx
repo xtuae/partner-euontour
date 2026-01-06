@@ -10,21 +10,27 @@ import { UploadCloud, CheckCircle } from 'lucide-react';
 export function DepositPage() {
     const navigate = useNavigate();
     const [amount, setAmount] = useState('');
-    const [proofUrl, setProofUrl] = useState(''); // In real app, this would be file upload
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
+    const [proofFile, setProofFile] = useState<File | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const res = await apiFetch('/api/deposits/create', {
+            const formData = new FormData();
+            formData.append('amount', amount);
+            if (proofFile) {
+                formData.append('proof_image', proofFile);
+            } else {
+                // Handle mock or error
+                // For now, if no file, backend might reject if not mocked
+                // We'll enforce file selection in UI or send dummy if strictly dev
+            }
+
+            const res = await apiFetch('/api/deposits/submit', { // Path updated for clarity
                 method: 'POST',
-                body: JSON.stringify({
-                    amount: parseFloat(amount),
-                    proofUrl: proofUrl || 'https://example.com/mock-receipt.pdf' // Mock if empty
-                }),
+                // Content-Type header is auto-set by fetch when body is FormData
+                body: formData as any, // TS might complain about BodyInit type mismatch in custom wrappers
             });
 
             if (!res.ok) throw new Error('Failed');
@@ -80,17 +86,12 @@ export function DepositPage() {
 
                         <div className="space-y-2">
                             <Label htmlFor="proof">Upload Proof of Payment</Label>
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors">
-                                <UploadCloud className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                                <p className="text-sm text-gray-500">
-                                    Click to upload receipt (PDF/IMG)
-                                </p>
-                                <p className="text-xs text-gray-400 mt-1">(Mock: Enter URL below for now)</p>
-                            </div>
-                            <Input
-                                placeholder="https://..."
-                                value={proofUrl}
-                                onChange={e => setProofUrl(e.target.value)}
+                            <input
+                                type="file"
+                                accept="image/*,application/pdf"
+                                onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                required
                             />
                         </div>
 
