@@ -12,6 +12,7 @@ import { checkRateLimit } from '../lib/rate-limit.js';
 import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
 
 const isProd = process.env.NODE_ENV === 'production';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_APP_URL || 'https://partners.euontour.com';
 
 const COOKIE_OPTIONS = {
     httpOnly: true,
@@ -199,7 +200,7 @@ async function register(req: Request) {
             return { user, rtRecord };
         });
 
-        const verifyLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify-email?token=${verificationToken}`;
+        const verifyLink = `${APP_URL}/verify-email?token=${verificationToken}`;
         await sendEmail({ to: email, ...EMAIL_TEMPLATES.VERIFY_EMAIL(agencyName, verifyLink) });
 
         const accessToken = signToken({ userId: result.user.id, role: result.user.role });
@@ -231,7 +232,7 @@ async function forgotPassword(req: Request) {
                 where: { email },
                 data: { resetToken, resetTokenExpiry: new Date(Date.now() + 3600000) }
             });
-            const link = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
+            const link = `${APP_URL}/reset-password?token=${resetToken}`;
             await sendEmail({ to: email, subject: 'Reset Password', body: `<a href="${link}">Reset Link</a>` });
         }
         return jsonResponse({ success: true, message: 'If account exists, link sent' });
