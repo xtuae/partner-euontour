@@ -109,34 +109,29 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         const webRes = await appHandler(webReq);
 
         // Write Response
+        // Write Response
         res.statusCode = webRes.status;
+
+        // 2. Headers (collect cookies manually)
+        const setCookies: string[] = [];
+
         webRes.headers.forEach((value, key) => {
-            if (key.toLowerCase() === 'set-cookie') return;
-            res.setHeader(key, value);
+            if (key.toLowerCase() === 'set-cookie') {
+                setCookies.push(value);
+            } else {
+                res.setHeader(key, value);
+            }
         });
 
-        // Handle Set-Cookie specifically to preserve multiple cookies
-        // Node 18+ Headers API has getSetCookie()
-        if (typeof (webRes.headers as any).getSetCookie === 'function') {
-            const cookies = (webRes.headers as any).getSetCookie();
-            if (cookies && cookies.length > 0) {
-                res.setHeader('set-cookie', cookies);
-            }
-        } else {
-            // Fallback: This usually joins with comma which breaks dates, but better than nothing
-            const cookie = webRes.headers.get('set-cookie');
-            if (cookie) res.setHeader('set-cookie', cookie);
+        // 3. Apply cookies (array is REQUIRED for Node.js to send multiple Set-Cookie headers)
+        if (setCookies.length > 0) {
+            res.setHeader('set-cookie', setCookies);
         }
 
-        if (webRes.body) {
-            const reader = webRes.body.getReader();
-            // Pipe Web Stream to Node Response
-            // Simplest is to iterate
-            for await (const chunk of streamAsyncIterator(reader)) {
-                res.write(chunk);
-            }
-        }
-        res.end();
+        // 4. Body
+        const arrayBuffer = await webRes.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        res.end(buffer);
 
     } catch (e) {
         console.error('API Adapter Error:', e);
