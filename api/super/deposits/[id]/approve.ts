@@ -31,8 +31,7 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
                     type: 'CREDIT',
                     amount: deposit.amount,
                     reference_type: 'DEPOSIT',
-                    reference_id: deposit.id,
-                    description: 'Bank transfer deposit approved'
+                    reference_id: deposit.id
                 }
             }),
             // 2. Update Agency Balance

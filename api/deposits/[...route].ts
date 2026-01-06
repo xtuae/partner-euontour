@@ -145,11 +145,7 @@ async function createDeposit(req: VercelRequest, res: VercelResponse, userToken:
         const adminLink = `${process.env.NEXT_PUBLIC_APP_URL}/admin/deposits`;
         await Promise.all(admins.map((admin: any) =>
             sendEmail({
-                name: data.name,
-                email: data.email,
-                verification_status: data.verification_status as any,
-                status: data.status as any,
-                type: data.typemail,
+                to: admin.email,
                 ...EMAIL_TEMPLATES.DEPOSIT_SUBMITTED_ADMIN(
                     agency?.name || 'Unknown Agency',
                     `€${amount}`,
