@@ -1,17 +1,17 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { Readable } from 'stream';
-import { authHandler } from "@/lib/auth.js";
-import { cors } from "@/lib/cors.js";
+import { authHandler } from "@/lib/auth";
+import { cors } from "@/lib/cors";
 
 // domain handlers
-import { authRoutes } from "@/routes/auth.js";
-import { agencyRoutes } from "@/routes/agency.js";
-import { adminRoutes } from "@/routes/admin.js";
-import { superRoutes } from "@/routes/super.js";
-import { depositsRoutes } from "@/routes/deposits.js";
-import { bookingsRoutes } from "@/routes/bookings.js";
-import { walletRoutes } from "@/routes/wallet.js";
-import { filesRoutes } from "@/routes/files.js";
+import { authRoutes } from "@/routes/auth";
+import { agencyRoutes } from "@/routes/agency";
+import { adminRoutes } from "@/routes/admin";
+import { superRoutes } from "@/routes/super";
+import { depositsRoutes } from "@/routes/deposits";
+import { bookingsRoutes } from "@/routes/bookings";
+import { walletRoutes } from "@/routes/wallet";
+import { filesRoutes } from "@/routes/files";
 
 export const config = {
     api: {
