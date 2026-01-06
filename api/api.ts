@@ -21,9 +21,8 @@ export const config = {
 
 // --- Web API Logic (Internal) ---
 async function appHandler(req: Request): Promise<Response> {
-    // 🔥 CORS MUST BE FIRST
+    // 🔴 CORS FIRST — ALWAYS
     const corsResponse = cors(req);
-    // If it's an OPTIONS request, strictly return the CORS response (preflight)
     if (corsResponse && req.method === "OPTIONS") {
         return corsResponse;
     }
@@ -33,11 +32,9 @@ async function appHandler(req: Request): Promise<Response> {
 
     let response: Response;
 
-    // PUBLIC ROUTES
     if (path.startsWith("/auth")) {
         response = await authRoutes(req, path);
     } else {
-        // 🔐 AUTH ONLY AFTER OPTIONS
         const user = await authHandler(req);
 
         if (path.startsWith("/agency")) {
@@ -59,7 +56,7 @@ async function appHandler(req: Request): Promise<Response> {
         }
     }
 
-    // 🔁 MERGE CORS HEADERS INTO FINAL RESPONSE
+    // 🔁 Ensure CORS headers on final response
     const origin = req.headers.get("origin");
     if (origin) {
         response.headers.set("Access-Control-Allow-Origin", origin);
