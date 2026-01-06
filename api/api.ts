@@ -111,8 +111,22 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         // Write Response
         res.statusCode = webRes.status;
         webRes.headers.forEach((value, key) => {
+            if (key.toLowerCase() === 'set-cookie') return;
             res.setHeader(key, value);
         });
+
+        // Handle Set-Cookie specifically to preserve multiple cookies
+        // Node 18+ Headers API has getSetCookie()
+        if (typeof (webRes.headers as any).getSetCookie === 'function') {
+            const cookies = (webRes.headers as any).getSetCookie();
+            if (cookies && cookies.length > 0) {
+                res.setHeader('set-cookie', cookies);
+            }
+        } else {
+            // Fallback: This usually joins with comma which breaks dates, but better than nothing
+            const cookie = webRes.headers.get('set-cookie');
+            if (cookie) res.setHeader('set-cookie', cookie);
+        }
 
         if (webRes.body) {
             const reader = webRes.body.getReader();
