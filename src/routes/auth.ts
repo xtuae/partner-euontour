@@ -50,7 +50,9 @@ export async function authRoutes(req: Request, path: string) {
 
 // Helpers
 function jsonResponse(data: any, status = 200, headers: HeadersInit = {}) {
-    return new Response(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json', ...headers } });
+    const responseHeaders = new Headers(headers);
+    responseHeaders.set('Content-Type', 'application/json');
+    return new Response(JSON.stringify(data), { status, headers: responseHeaders });
 }
 
 function errorResponse(error: string, status = 400) {
