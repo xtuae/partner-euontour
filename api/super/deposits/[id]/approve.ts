@@ -56,11 +56,7 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
                     actor_id: userToken.userId,
                     action: 'SUPER_ADMIN_DEPOSIT_APPROVED',
                     entity: 'DEPOSIT',
-                    entity_id: id,
-                    metadata: {
-                        depositId: deposit.id,
-                        amount: deposit.amount
-                    }
+                    entity_id: id
                 }
             })
         ]);

@@ -117,7 +117,7 @@ async function createDeposit(req: VercelRequest, res: VercelResponse, userToken:
                 proof_url: proofUrl.url,
                 thumbnail_url: proofUrl.thumbnailUrl || null,
                 status: 'PENDING_ADMIN' // Updated status
-            }
+            } as any
         });
 
         // 5. Audit Log
