@@ -9,7 +9,7 @@ import { cn } from "../../utils/cn"
 // to avoid bloating unless necessary. Use clsx/tailwind-merge which I already have.
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link';
+    variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'link' | 'destructive';
     size?: 'sm' | 'md' | 'lg' | 'icon';
 };
 
@@ -22,6 +22,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
             outline: "bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-50",
             ghost: "bg-transparent text-gray-600 hover:bg-gray-100 hover:text-gray-900",
             link: "text-brand-red underline-offset-4 hover:underline bg-transparent p-0 h-auto",
+            destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm border border-transparent",
         };
 
         const sizes = {

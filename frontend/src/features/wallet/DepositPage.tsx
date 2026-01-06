@@ -5,12 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/u
 import { Button } from '../../app/components/ui/Button';
 import { Input } from '../../app/components/ui/Input';
 import { Label } from '../../app/components/ui/Label';
-import { UploadCloud, CheckCircle } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 
 export function DepositPage() {
     const navigate = useNavigate();
     const [amount, setAmount] = useState('');
     const [proofFile, setProofFile] = useState<File | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();

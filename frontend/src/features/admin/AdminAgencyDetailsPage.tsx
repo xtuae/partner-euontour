@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
 import { Badge } from '../../app/components/ui/Badge';
 import { Input } from '../../app/components/ui/Input';
-import { Label } from '../../app/components/ui/Label';
 import { Textarea } from '../../app/components/ui/Textarea';
-import { AlertCircle, CheckCircle, Lock, Unlock, LogOut, DollarSign, Mail, ShieldAlert } from 'lucide-react';
+import { Lock, Unlock, LogOut, Mail } from 'lucide-react';
 
 // Custom Tabs for this page
 function Tabs({ defaultValue, children, className }: { defaultValue: string, children: React.ReactNode, className?: string }) {
@@ -71,7 +70,7 @@ interface AgencyProfile {
 export function AdminAgencyDetailsPage() {
     const { id } = useParams<{ id: string }>();
     const { user } = useAuth();
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     // State
     const [agency, setAgency] = useState<AgencyProfile | null>(null);
@@ -101,9 +100,29 @@ export function AdminAgencyDetailsPage() {
         }
     };
 
+    const fetchStats = async () => {
+        try {
+            const res = await apiFetch(`/api/admin/agencies/${id}/stats`);
+            if (res.ok) {
+                const data = await res.json();
+                setStats(data.stats);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     useEffect(() => {
         fetchProfile();
     }, [id]);
+
+    useEffect(() => {
+        if (agency) fetchStats();
+    }, [agency]);
+
+    useEffect(() => {
+        if (stats) console.log('Agency Stats:', stats);
+    }, [stats]);
 
     const handleStatusUpdate = async (newStatus: string) => {
         if (!confirm(`Change status to ${newStatus}?`)) return;
@@ -240,7 +259,7 @@ export function AdminAgencyDetailsPage() {
                             <CardHeader><CardTitle>Account Status</CardTitle></CardHeader>
                             <CardContent className="flex gap-4">
                                 <Button
-                                    variant={agency.status === 'SUSPENDED' ? 'default' : 'outline'}
+                                    variant={agency.status === 'SUSPENDED' ? 'primary' : 'outline'}
                                     onClick={() => handleStatusUpdate(agency.status === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED')}
                                     disabled={actionLoading}
                                 >

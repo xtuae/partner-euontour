@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
-import { CheckCircle, XCircle, RefreshCw } from 'lucide-react';
+import { RefreshCw, CheckCircle } from 'lucide-react';
 import { apiFetch } from '../../lib/api-client';
 
 interface Deposit {
@@ -43,7 +43,7 @@ export function AdminDepositsPage() {
         if (!confirm(`Are you sure you want to ${action.toLowerCase()} this deposit?`)) return;
 
         try {
-            const endpoint = action === 'VERIFY' ? '/api/admin/deposits/verify' : '/api/admin/deposits/reject'; // Assuming verify endpoint handles the logic
+            // const endpoint = action === 'VERIFY' ? '/api/admin/deposits/verify' : '/api/admin/deposits/reject';
             // Note: Verify endpoint path: /api/admin/deposits/[id]/verify -> we'll use query param or path? 
             // My backend: /api/admin/deposits/[id]/verify.ts -> /api/admin/deposits/VERIFY/verify ? No.
             // My route structure: api/admin/deposits/[id]/verify.ts

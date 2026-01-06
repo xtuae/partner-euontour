@@ -12,7 +12,7 @@ interface SystemSetting {
 
 export function AdminSettingsPage() {
     const { user } = useAuth();
-    const [loading, setLoading] = useState(true);
+    // const [loading, setLoading] = useState(true);
     const [settings, setSettings] = useState<Record<string, string>>({});
 
     useEffect(() => {
@@ -35,7 +35,7 @@ export function AdminSettingsPage() {
         } catch (error) {
             console.error(error);
         } finally {
-            setLoading(false);
+            // setLoading(false);
         }
     };
 
