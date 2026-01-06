@@ -1,9 +1,9 @@
 
-import { prisma } from '../lib/db/prisma.js';
-import { uploadFile } from '../lib/storage.js';
-import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
-import { extractTextFromImage } from '../lib/ocr.js';
-import { AuthUser, requireRole } from '../lib/auth.js';
+import { prisma } from '@/lib/db/prisma.js';
+import { uploadFile } from '@/lib/storage.js';
+import { sendEmail, EMAIL_TEMPLATES } from '@/lib/email.js';
+import { extractTextFromImage } from '@/lib/ocr.js';
+import { AuthUser, requireRole } from '@/lib/auth.js';
 import formidable from 'formidable';
 import { Readable } from 'stream';
 

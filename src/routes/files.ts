@@ -1,10 +1,10 @@
 
 import { put } from '@vercel/blob';
-import { getSignedUrl } from '@vercel/blob';
+// import { createSignedUrl } from '@vercel/blob';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
-import { prisma } from '../lib/db/prisma.js';
-import { AuthUser, requireRole } from '../lib/auth.js';
+import { prisma } from '@/lib/db/prisma.js';
+import { AuthUser, requireRole } from '@/lib/auth.js';
 
 export async function filesRoutes(req: Request, path: string, user: AuthUser) {
     // path /files
@@ -17,8 +17,9 @@ export async function filesRoutes(req: Request, path: string, user: AuthUser) {
         const pathParam = url.searchParams.get('path');
         if (!pathParam) return Response.json({ error: 'Missing path' }, { status: 400 });
 
-        const signed = await getSignedUrl({ url: pathParam, expiresIn: 300, token: process.env.BLOB_READ_WRITE_TOKEN });
-        return Response.json({ url: signed });
+        // const signed = await createSignedUrl({ pathname: pathParam, expiresIn: 300, token: process.env.BLOB_READ_WRITE_TOKEN });
+        // return Response.json({ url: signed });
+        return Response.json({ error: 'Signed URL generation not supported in this environment' }, { status: 501 });
     }
 
     // POST /files/upload

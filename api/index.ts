@@ -1,16 +1,16 @@
 
-import { authHandler } from "../src/lib/auth";
-import { handleCors } from "../src/lib/cors";
+import { authHandler } from "@/lib/auth.js";
+import { handleCors } from "@/lib/cors.js";
 
 // domain handlers
-import { authRoutes } from "../src/routes/auth";
-import { agencyRoutes } from "../src/routes/agency";
-import { adminRoutes } from "../src/routes/admin";
-import { superRoutes } from "../src/routes/super";
-import { depositsRoutes } from "../src/routes/deposits";
-import { bookingsRoutes } from "../src/routes/bookings";
-import { walletRoutes } from "../src/routes/wallet";
-import { filesRoutes } from "../src/routes/files";
+import { authRoutes } from "@/routes/auth.js";
+import { agencyRoutes } from "@/routes/agency.js";
+import { adminRoutes } from "@/routes/admin.js";
+import { superRoutes } from "@/routes/super.js";
+import { depositsRoutes } from "@/routes/deposits.js";
+import { bookingsRoutes } from "@/routes/bookings.js";
+import { walletRoutes } from "@/routes/wallet.js";
+import { filesRoutes } from "@/routes/files.js";
 
 export const config = {
     runtime: 'nodejs', // or 'edge' if preferred, but nodejs for crypto/sharp

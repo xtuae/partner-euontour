@@ -3,13 +3,13 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { parse, serialize } from 'cookie';
 import crypto from 'crypto';
-import { UserRole } from '../lib/types.js';
-import { db } from '../lib/db/index.js';
-import { prisma } from '../lib/db/prisma.js';
-import { loginSchema } from '../lib/validators/auth.js';
-import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '../lib/auth/jwt.js';
-import { checkRateLimit } from '../lib/rate-limit.js';
-import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
+import { UserRole } from '@/lib/types.js';
+import { db } from '@/lib/db/index.js';
+import { prisma } from '@/lib/db/prisma.js';
+import { loginSchema } from '@/lib/validators/auth.js';
+import { signToken, signRefreshToken, verifyToken, verifyRefreshToken } from '@/lib/auth/jwt.js';
+import { checkRateLimit } from '@/lib/rate-limit.js';
+import { sendEmail, EMAIL_TEMPLATES } from '@/lib/email.js';
 
 const COOKIE_OPTIONS = {
     httpOnly: true,

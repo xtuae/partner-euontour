@@ -1,6 +1,6 @@
 
-import { prisma } from '../lib/db/prisma.js';
-import { AuthUser, requireRole } from '../lib/auth.js';
+import { prisma } from '@/lib/db/prisma.js';
+import { AuthUser, requireRole } from '@/lib/auth.js';
 
 export async function walletRoutes(req: Request, path: string, user: AuthUser) {
     requireRole(user, ['AGENCY']);

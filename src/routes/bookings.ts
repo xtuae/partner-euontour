@@ -1,7 +1,7 @@
 
-import { prisma } from '../lib/db/prisma.js';
-import { AuthUser, requireRole } from '../lib/auth.js';
-import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
+import { prisma } from '@/lib/db/prisma.js';
+import { AuthUser, requireRole } from '@/lib/auth.js';
+import { sendEmail, EMAIL_TEMPLATES } from '@/lib/email.js';
 import { z } from 'zod';
 
 const CreateBookingSchema = z.object({ tourId: z.string().uuid(), travelDate: z.string().transform(s => new Date(s)) });
