@@ -1,27 +1,31 @@
+
 // src/lib/db/index.ts
 import { prisma } from './prisma.js';
 import { PrismaUserRepository, PrismaAgencyRepository, PrismaWalletRepository, PrismaBookingRepository, PrismaDepositRepository, PrismaTourRepository, PrismaRefreshTokenRepository } from './prisma-repos.js';
-import * as mockRepos from './mock-repos.js';
+
 // import { IUserRepository, IAgencyRepository, IWalletRepository, IBookingRepository, IDepositRepository, ITourRepository } from './repository';
 
-// Config
-const USE_MOCK_DB = process.env.USE_MOCK_DB === 'true'; // Set to false to use Real DB
+// Flag for Mock DB (Disabled)
+export const USE_MOCK_DB = false;
 
 // Factory to create DB interface from a client
 const createDB = (client: any) => ({
-    user: USE_MOCK_DB ? mockRepos.userRepository : new PrismaUserRepository(client),
-    agency: USE_MOCK_DB ? mockRepos.agencyRepository : new PrismaAgencyRepository(client),
-    wallet: USE_MOCK_DB ? mockRepos.walletRepository : new PrismaWalletRepository(client),
-    booking: USE_MOCK_DB ? mockRepos.bookingRepository : new PrismaBookingRepository(client),
-    deposit: USE_MOCK_DB ? mockRepos.depositRepository : new PrismaDepositRepository(client),
-    tour: USE_MOCK_DB ? mockRepos.tourRepository : new PrismaTourRepository(client),
-    refreshToken: USE_MOCK_DB ? mockRepos.refreshTokenRepository : new PrismaRefreshTokenRepository(client),
+    user: new PrismaUserRepository(client),
+    agency: new PrismaAgencyRepository(client),
+    wallet: new PrismaWalletRepository(client),
+    booking: new PrismaBookingRepository(client),
+    deposit: new PrismaDepositRepository(client),
+    tour: new PrismaTourRepository(client),
+    refreshToken: new PrismaRefreshTokenRepository(client),
 });
 
 // Default Global DB
 export const db = {
     ...createDB(prisma),
     $transaction: async <T>(callback: (txDb: ReturnType<typeof createDB>) => Promise<T>): Promise<T> => {
+        // Mock transaction just executes callback with same mock db
+        // Since USE_MOCK_DB is now always false, this block will not be executed.
+        // However, keeping it for future potential re-enabling of mock DB.
         if (USE_MOCK_DB) {
             // Mock transaction just executes callback with same mock db
             return callback(createDB(null));

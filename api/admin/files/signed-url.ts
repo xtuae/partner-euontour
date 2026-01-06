@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAuth } from '../../../_middleware/auth.js';
+import { requireAuth } from '../../../src/lib/auth.js';
 // @ts-ignore
 import { getSignedUrl } from '@vercel/blob';
 

@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { db } from '../../src/lib/db/index.js';
-import { requireAuth } from '../_middleware/auth.js'; // Assuming you have an auth middleware
+import { requireAuth } from '../../src/lib/auth.js'; // Assuming you have an auth middleware
 import { prisma } from '../../src/lib/db/prisma.js';
 import { UserRole, LedgerType } from '../../src/lib/types.js'; // Enum for roles
 import { handleCors } from '../../src/lib/cors.js';

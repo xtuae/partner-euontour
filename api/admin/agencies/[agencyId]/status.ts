@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAuth } from '../../_middleware/auth.js';
-import { prisma } from '../../../src/lib/db/prisma.js';
+import { requireAuth } from '../../../../src/lib/auth.js';
+import { prisma } from '../../../../src/lib/db/prisma.js';
 import { z } from 'zod';
 
 const StatusSchema = z.object({

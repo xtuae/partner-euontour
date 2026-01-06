@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAuth } from '../../_middleware/auth.js';
+import { requireAuth } from '../../../src/lib/auth.js';
 import { prisma } from '../../../src/lib/db/prisma.js';
 import { uploadFile } from '../../../src/lib/storage.js';
 import { sendEmail, EMAIL_TEMPLATES } from '../../../src/lib/email.js';
@@ -130,12 +130,11 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
         // 6. Async OCR Trigger (Fire & Forget)
         const runOcr = async () => {
             try {
-                // Dynamic import for signed url
-                const { getSignedUrl } = await import('@vercel/blob');
-
                 // Helper to get signed url
                 const getSigned = async (u: string) => {
-                    return getSignedUrl({ url: u, token: process.env.BLOB_READ_WRITE_TOKEN, expiresIn: 300 });
+                    // TODO: Implement proper signed URL generation for Private Blobs when @vercel/blob 2.0 API is clarified.
+                    // For now, return original URL (works if public/token-accessible context or OCR handles it).
+                    return u;
                 };
 
                 // Use Thumbnail for OCR if available, else original

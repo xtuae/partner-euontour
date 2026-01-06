@@ -2,7 +2,7 @@ import { put } from '@vercel/blob';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
 import { prisma } from '../../src/lib/db/prisma.js';
-import { requireAuth } from '../_middleware/auth.js';
+import { requireAuth } from '../../src/lib/auth.js';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Config

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAuth } from '../../../_middleware/auth.js';
-import { prisma } from '../../../../src/lib/db/prisma.js';
+import { requireAuth } from '../../../src/lib/auth.js';
+import { prisma } from '../../../src/lib/db/prisma.js';
 
 async function handler(req: VercelRequest, res: VercelResponse, userToken: { userId: string, role: string }) {
     if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -27,7 +27,7 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
         });
 
         // Group by Month (YYYY-MM)
-        const trends = ledger.reduce((acc, entry) => {
+        const trends = ledger.reduce((acc: any, entry: any) => {
             const month = entry.created_at.toISOString().slice(0, 7); // YYYY-MM
             if (!acc[month]) acc[month] = { month, credit: 0, debit: 0 };
 
@@ -40,7 +40,7 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
         }, {} as Record<string, { month: string, credit: number, debit: number }>);
 
         // Sort by month
-        const result = Object.values(trends).sort((a, b) => a.month.localeCompare(b.month));
+        const result = Object.values(trends).sort((a: any, b: any) => a.month.localeCompare(b.month));
 
         return res.status(200).json(result);
 

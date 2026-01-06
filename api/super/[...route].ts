@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { z } from 'zod';
 import { db } from '../../src/lib/db/index.js';
-import { requireAuth } from '../_middleware/auth.js';
+import { requireAuth } from '../../src/lib/auth.js';
 import { handleCors } from '../../src/lib/cors.js';
 import { logAudit } from '../../src/lib/audit.js';
 import { DepositStatus, LedgerType, UserRole } from '../../src/lib/types.js';

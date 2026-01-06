@@ -1,13 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { verifyToken } from '../../src/lib/auth/jwt.js';
-import { handleCors } from '../../src/lib/cors.js';
+import { verifyToken } from './auth/jwt.js';
+import { handleCors } from './cors.js';
 
 export type AuthenticatedRequest = VercelRequest & {
     user?: {
         userId: string;
         role: string;
-        // agencyId might need to be fetched if not in token, but token has role. 
-        // We'll rely on verifyToken payload structure.
     }
 };
 

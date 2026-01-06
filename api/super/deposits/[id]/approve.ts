@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAuth } from '../../../_middleware/auth.js';
+import { requireAuth } from '../../../../src/lib/auth.js';
 import { prisma } from '../../../../src/lib/db/prisma.js';
 import { sendEmail, EMAIL_TEMPLATES } from '../../../../src/lib/email.js';
 

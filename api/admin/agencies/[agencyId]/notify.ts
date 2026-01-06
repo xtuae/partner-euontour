@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAuth } from '../../_middleware/auth.js';
-import { prisma } from '../../../src/lib/db/prisma.js';
-import { sendEmail } from '../../../src/lib/email.js';
+import { requireAuth } from '../../../../src/lib/auth.js';
+import { prisma } from '../../../../src/lib/db/prisma.js';
+import { sendEmail } from '../../../../src/lib/email.js';
 import { z } from 'zod';
 
 const NotifySchema = z.object({
