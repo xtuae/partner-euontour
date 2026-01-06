@@ -356,6 +356,8 @@ async function resetPassword(req: VercelRequest, res: VercelResponse) {
 
         return res.status(200).json({ success: true, message: 'Password reset successful' });
 
+    } catch (error) {
+        console.error('Reset Password Error:', error);
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
