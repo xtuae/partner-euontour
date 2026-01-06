@@ -1,67 +1,56 @@
-import { PrismaClient, UserRole, VerificationStatus } from '@prisma/client'
+
+import { PrismaClient, UserRole } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
-    // 1. Super Admin
-    const superEmail = 'super@euontour.com'
-    const password = 'password123'
+    console.log('Cleaning database...')
+    await prisma.refreshToken.deleteMany()
+    await prisma.auditLog.deleteMany()
+    await prisma.agencyOwnerKyc.deleteMany()
+    await prisma.verificationDocument.deleteMany()
+    await prisma.walletLedger.deleteMany()
+    await prisma.deposit.deleteMany()
+    await prisma.booking.deleteMany()
+    await prisma.agencyTour.deleteMany()
+
+    // Break circular dependency if any, or just order correctly. 
+    // User points to Agency. Agency has Users.
+    // If I delete Users first, Agency relation is optional on User side so it's fine.
+    await prisma.user.deleteMany()
+    await prisma.agency.deleteMany()
+
+    console.log('Creating users...')
+
+    const password = 'C@rdlm4283'
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const superUser = await prisma.user.upsert({
-        where: { email: superEmail },
-        update: { role: UserRole.SUPER_ADMIN },
-        create: {
-            email: superEmail,
+    // 1. Super Admin (admin@euontour.com)
+    const superAdmin = await prisma.user.create({
+        data: {
+            email: 'admin@euontour.com',
             password_hash: hashedPassword,
             role: UserRole.SUPER_ADMIN,
-        },
-    })
-    console.log({ superUser })
-
-    // 2. Admin (Staff)
-    const adminEmail = 'admin@euontour.com'
-    const adminUser = await prisma.user.upsert({
-        where: { email: adminEmail },
-        update: { role: UserRole.ADMIN },
-        create: {
-            email: adminEmail,
-            password_hash: hashedPassword,
-            role: UserRole.ADMIN,
-        },
-    })
-    console.log({ adminUser })
-
-    // Create Test Agency
-    const agencyEmail = 'agency@test.com'
-
-    // Create Agency first (User has agency_id)
-    // Wait, typical flow is Signup -> User + Agency.
-    // Schema: User -> agency_id (FK). Agency -> users (Many).
-
-    // Create Agency
-    const agency = await prisma.agency.upsert({
-        where: { email: 'info@testtravels.com' },
-        update: {},
-        create: {
-            name: 'Test Travels Ltd',
-            email: 'info@testtravels.com',
-            verification_status: VerificationStatus.VERIFIED
+            email_verified: true,
+            verification_token: null
         }
     })
+    console.log('Created Super Admin:', superAdmin.email)
 
-    const agencyUser = await prisma.user.upsert({
-        where: { email: agencyEmail },
-        update: {},
-        create: {
-            email: agencyEmail,
-            role: UserRole.AGENCY,
+    // 2. Admin (support@euontour.com)
+    const admin = await prisma.user.create({
+        data: {
+            email: 'support@euontour.com',
             password_hash: hashedPassword,
-            agency_id: agency.id
-        },
+            role: UserRole.ADMIN,
+            email_verified: true,
+            verification_token: null
+        }
     })
-    console.log({ agency, agencyUser })
+    console.log('Created Admin:', admin.email)
+
+    console.log('Seeding finished.')
 }
 
 main()
