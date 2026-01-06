@@ -8,6 +8,7 @@ import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { ForgotPasswordPage } from './features/auth/ForgotPasswordPage';
 import { ResetPasswordPage } from './features/auth/ResetPasswordPage';
+import { VerifyEmailPage } from './features/auth/VerifyEmailPage';
 import { WalletPage } from './features/wallet/WalletPage';
 import { DepositPage } from './features/wallet/DepositPage';
 import { AppLayout } from './app/layouts/AppLayout';
@@ -36,6 +37,7 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
           {/* Protected Routes */}
