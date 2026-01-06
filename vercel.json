@@ -1,8 +1,0 @@
-{
-    "crons": [
-        {
-            "path": "/api/cron/admin-pending-verifications",
-            "schedule": "0 0 * * *"
-        }
-    ]
-}

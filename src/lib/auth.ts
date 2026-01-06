@@ -1,45 +1,41 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+
 import { verifyToken } from './auth/jwt.js';
-import { handleCors } from './cors.js';
 
-export type AuthenticatedRequest = VercelRequest & {
-    user?: {
-        userId: string;
-        role: string;
-    }
-};
+export interface AuthUser {
+    userId: string;
+    role: string;
+}
 
-type HandlerWithUser = (req: AuthenticatedRequest, res: VercelResponse, user: { userId: string, role: string }) => Promise<void | VercelResponse>;
+export async function authHandler(req: Request): Promise<AuthUser | null> {
+    // 1. Get Token from Cookie or Header
+    // Frontend uses cookies? `requireAuth` previously checked `req.headers.cookie`.
+    // "match = cookieHeader.match(/auth_token=([^;]+)/)"
 
-export function requireAuth(handler: HandlerWithUser, allowedRoles?: string[]) {
-    return async (req: VercelRequest, res: VercelResponse) => {
-        if (handleCors(req, res)) return;
+    // Cookie parsing in Web API:
+    const cookieHeader = req.headers.get('Cookie') || '';
+    const match = cookieHeader.match(/auth_token=([^;]+)/);
+    let token = match ? match[1] : null;
 
-        // 1. Get Token from Cookie
-        const cookieHeader = req.headers.cookie || '';
-        const match = cookieHeader.match(/auth_token=([^;]+)/);
-        const token = match ? match[1] : null;
-
-        if (!token) return res.status(401).json({ error: "Unauthorized" });
-
-        try {
-            // 2. Verify Token
-            const decoded = verifyToken(token) as { userId: string, role: string } | null;
-
-            if (!decoded) {
-                return res.status(401).json({ error: "Invalid token" });
-            }
-
-            // 3. Check Role
-            if (allowedRoles && !allowedRoles.includes(decoded.role)) {
-                return res.status(403).json({ error: "Forbidden" });
-            }
-
-            // 4. Call Handler
-            return handler(req, res, decoded);
-        } catch (error) {
-            console.error(error);
-            return res.status(401).json({ error: "Invalid token" });
+    // Fallback to Bearer Header?
+    if (!token) {
+        const authHeader = req.headers.get('Authorization');
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
         }
-    };
+    }
+
+    if (!token) return null;
+
+    try {
+        const decoded = verifyToken(token) as AuthUser | null;
+        return decoded;
+    } catch (error) {
+        return null;
+    }
+}
+
+export function requireRole(user: AuthUser, allowedRoles: string[]) {
+    if (!allowedRoles.includes(user.role)) {
+        throw new Error('Forbidden'); // Catcher should handle 403
+    }
 }
