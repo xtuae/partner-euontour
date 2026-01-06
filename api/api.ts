@@ -115,13 +115,17 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
         // 2. Headers (collect cookies manually)
         const setCookies: string[] = [];
 
+        console.log('--- DEBUG HEADERS START ---');
         webRes.headers.forEach((value, key) => {
+            console.log(`Header: ${key} = ${value}`);
             if (key.toLowerCase() === 'set-cookie') {
                 setCookies.push(value);
             } else {
                 res.setHeader(key, value);
             }
         });
+        console.log('--- DEBUG HEADERS END ---');
+        console.log('Collected Set-Cookies:', setCookies);
 
         // 3. Apply cookies (array is REQUIRED for Node.js to send multiple Set-Cookie headers)
         if (setCookies.length > 0) {
