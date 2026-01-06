@@ -36,8 +36,8 @@ export interface Agency {
     name: string;
     type: string;
     email: string;
-    status: boolean;
-    verification_status: 'VERIFIED' | 'PENDING' | 'REJECTED' | 'UNDER_REVIEW';
+    status: string; // AgencyStatus
+    verification_status: string; // VerificationStatus
     created_at: Date;
     updated_at: Date;
 }

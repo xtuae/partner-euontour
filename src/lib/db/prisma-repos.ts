@@ -68,7 +68,7 @@ export class PrismaAgencyRepository implements IAgencyRepository {
                 name: data.name,
                 email: data.email,
                 verification_status: data.verification_status as any,
-                status: data.status,
+                status: data.status as any,
                 type: data.type
             }
         });

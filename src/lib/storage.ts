@@ -67,7 +67,7 @@ export async function uploadFile(file: any, folder: string, filename?: string): 
             const thumbBuffer = canvas.toBuffer("image/jpeg");
 
             const thumbBlob = await put(`${folder}/thumb-${randomUUID()}.jpg`, thumbBuffer, {
-                access: 'private',
+                access: 'private' as any,
                 contentType: 'image/jpeg',
                 token: process.env.BLOB_READ_WRITE_TOKEN
             });
@@ -80,7 +80,7 @@ export async function uploadFile(file: any, folder: string, filename?: string): 
 
     const name = filename || `${randomUUID()}.${isImage ? 'jpg' : ext}`;
     const blob = await put(`${folder}/${name}`, finalBuffer, {
-        access: 'private',
+        access: 'private' as any,
         contentType,
         token: process.env.BLOB_READ_WRITE_TOKEN
     });

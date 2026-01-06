@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireAuth } from '../../../_middleware/auth.js';
+import { requireAuth } from '../../_middleware/auth.js';
 import { prisma } from '../../../src/lib/db/prisma.js';
 
 async function handler(req: VercelRequest, res: VercelResponse, userToken: { userId: string, role: string }) {

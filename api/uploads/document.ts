@@ -149,11 +149,11 @@ export async function POST(req: Request) {
         }
 
         // 4. Audit Log
-        if (user.userId) {
+        if ((user as any).userId) {
             await prisma.auditLog.create({
                 data: {
                     action: "DOCUMENT_UPLOADED",
-                    actor_id: user.userId,
+                    actor_id: (user as any).userId,
                     // actorRole: user.role, // Schema doesn't have actorRole in top level? 
                     // Need to check schema. earlier logs used `actor_id`.
                     // The schema has `actor` relation.

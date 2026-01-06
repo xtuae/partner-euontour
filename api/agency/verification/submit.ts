@@ -40,7 +40,7 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
         const { fields, files } = await parseForm();
 
         // Helper to get string
-        const getField = (key: string) => Array.isArray(fields[key]) ? fields[key][0] : fields[key];
+        const getField = (key: string) => Array.isArray(fields[key]) ? fields[key][0] : fields[key] || '';
         const getFile = (key: string) => Array.isArray(files[key]) ? files[key][0] : files[key];
 
         const fullName = getField('fullName');
@@ -59,7 +59,6 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
         }
 
         // 3. Upload Files
-        // Agency ID folder
         const agencyId = user.agency.id;
 
         // Business Doc
@@ -88,7 +87,7 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
         }
 
         // 4. Save to DB (Transaction)
-        await prisma.$transaction(async (tx: any) => {
+        const kycId = await prisma.$transaction(async (tx: any) => {
             // Save Business Doc
             await tx.verificationDocument.create({
                 data: {
@@ -100,7 +99,7 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
             });
 
             // Save Owner KYC
-            await tx.agencyOwnerKyc.create({
+            const kyc = await tx.agencyOwnerKyc.create({
                 data: {
                     agencyId: agencyId,
                     fullName: fullName,
@@ -124,31 +123,22 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
                 where: { id: agencyId },
                 data: { verification_status: 'UNDER_REVIEW' }
             });
+
+            return kyc.id;
         });
 
         // 6. Async OCR Trigger (Fire & Forget)
-        // Helper to run OCR safely
         const runOcr = async () => {
             try {
-                // OCR Business Doc (Use thumbnail if PDF, or URL if Image)
-                // extractTextFromImage handles the URL. If PDF, we might need thumbnail?
-                // `extractTextFromImage` implementation I wrote relies on `client.documentTextDetection(url)`.
-                // If Private Blob, we need Signed URL?
-                // YES! Google Vision cannot read Private Blob URL.
-                // We need to generate a signed URL *inside* this task or pass the buffer?
-                // Passing buffer is best if we have it, but we might have lost it (formidable temp file deleted?).
-                // Formidable files persist in temp until cleaned. 
-                // Let's generate a Signed URL for Google Vision.
-
-                // Using dynamic import for signed url to avoid circular deps if any
+                // Dynamic import for signed url
                 const { getSignedUrl } = await import('@vercel/blob');
 
-                // We need a helper to get signed url for a path/url
+                // Helper to get signed url
                 const getSigned = async (u: string) => {
                     return getSignedUrl({ url: u, token: process.env.BLOB_READ_WRITE_TOKEN, expiresIn: 300 });
                 };
 
-                // Use Thumbnail for OCR if available (likely PDF converted), else original
+                // Use Thumbnail for OCR if available, else original
                 const businessOcrSource = businessThumbnail ? await getSigned(businessThumbnail) : await getSigned(businessDocUrl);
                 const idOcrSource = idFrontThumbnail ? await getSigned(idFrontThumbnail) : await getSigned(idFrontUrl);
 
@@ -158,7 +148,7 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
                 ]);
 
                 await prisma.agencyOwnerKyc.update({
-                    where: { agencyId },
+                    where: { id: kycId },
                     data: {
                         businessOcrText: businessText,
                         ownerIdOcrText: idText,
@@ -170,7 +160,7 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
             } catch (err) {
                 console.error("OCR Background Task Failed", err);
                 await prisma.agencyOwnerKyc.update({
-                    where: { agencyId },
+                    where: { id: kycId },
                     data: { ocrStatus: 'FAILED' }
                 });
             }
@@ -180,8 +170,6 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
         queueMicrotask(runOcr);
 
         // 5. Notify Admins
-        // Find Admins (Optional: in real app, might just email a distribution list)
-        // Prompt says: "Recipients: All ADMIN + SUPER_ADMIN"
         const admins = await prisma.user.findMany({
             where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
             select: { email: true }
@@ -189,7 +177,6 @@ async function handler(req: VercelRequest, res: VercelResponse, userToken: { use
 
         const adminLink = `${process.env.NEXT_PUBLIC_APP_URL}/admin/agency-verifications`;
 
-        // Send email to each (or BCC) - Loop for now
         for (const admin of admins) {
             await sendEmail({
                 to: admin.email,

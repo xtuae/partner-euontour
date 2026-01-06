@@ -114,7 +114,8 @@ async function createDeposit(req: VercelRequest, res: VercelResponse, userToken:
                 agency_id: agencyId,
                 amount: amount,
                 bank_reference: 'UPLOADED_PROOF',
-                proof_url: proofUrl,
+                proof_url: proofUrl.url,
+                thumbnail_url: proofUrl.thumbnailUrl || null,
                 status: 'PENDING_ADMIN' // Updated status
             }
         });
@@ -144,7 +145,11 @@ async function createDeposit(req: VercelRequest, res: VercelResponse, userToken:
         const adminLink = `${process.env.NEXT_PUBLIC_APP_URL}/admin/deposits`;
         await Promise.all(admins.map((admin: any) =>
             sendEmail({
-                to: admin.email,
+                name: data.name,
+                email: data.email,
+                verification_status: data.verification_status as any,
+                status: data.status as any,
+                type: data.typemail,
                 ...EMAIL_TEMPLATES.DEPOSIT_SUBMITTED_ADMIN(
                     agency?.name || 'Unknown Agency',
                     `€${amount}`,
