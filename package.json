@@ -6,7 +6,7 @@
         "seed": "node --loader ts-node/esm prisma/seed.ts"
     },
     "engines": {
-        "node": "24.x"
+        "node": "20.x"
     },
     "scripts": {
         "build": "tsc -p tsconfig.json",
