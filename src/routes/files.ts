@@ -3,8 +3,8 @@ import { put } from '@vercel/blob';
 // import { createSignedUrl } from '@vercel/blob';
 import sharp from 'sharp';
 import { randomUUID } from 'crypto';
-import { prisma } from '@/lib/db/prisma.js';
-import { AuthUser, requireRole } from '@/lib/auth.js';
+import { prisma } from '../lib/db/prisma.js';
+import { AuthUser, requireRole } from '../lib/auth.js';
 
 export async function filesRoutes(req: Request, path: string, user: AuthUser) {
     // path /files

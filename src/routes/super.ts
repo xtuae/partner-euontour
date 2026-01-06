@@ -1,7 +1,7 @@
 
-import { prisma } from '@/lib/db/prisma.js';
-import { AuthUser, requireRole } from '@/lib/auth.js';
-import { sendEmail, EMAIL_TEMPLATES } from '@/lib/email.js';
+import { prisma } from '../lib/db/prisma.js';
+import { AuthUser, requireRole } from '../lib/auth.js';
+import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
 import { z } from 'zod';
 import * as crypto from 'crypto';
 
