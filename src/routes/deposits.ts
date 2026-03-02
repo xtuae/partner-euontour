@@ -32,7 +32,10 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
 
         if (!proof || isNaN(amount) || amount <= 0) return Response.json({ error: 'Invalid input' }, { status: 400 });
 
-        const u = await prisma.user.findUnique({ where: { id: user.userId }, select: { agency_id: true } });
+        const u = await prisma.user.findUnique({
+            where: { id: user.userId },
+            select: { agency_id: true, agency: { select: { name: true } } }
+        });
         if (!u?.agency_id) return Response.json({ error: 'Agency not found' }, { status: 400 });
 
         // Upload
@@ -48,7 +51,18 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
 
         const admins = await prisma.user.findMany({ where: { role: 'ADMIN' } });
         const adminLink = `${process.env.NEXT_PUBLIC_APP_URL}/admin/deposits`;
-        // Email loop...
+
+        await Promise.all(admins.map(admin =>
+            sendEmail({
+                to: admin.email,
+                ...EMAIL_TEMPLATES.DEPOSIT_SUBMITTED_ADMIN(
+                    u.agency?.name || 'Agency',
+                    amount.toString(),
+                    'UPLOADED_PROOF',
+                    adminLink
+                )
+            })
+        ));
 
         return Response.json({ success: true }, { status: 201 });
     }
@@ -64,11 +78,36 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
 
         if (status === 'REJECTED') {
             await prisma.deposit.update({ where: { id }, data: { status: 'REJECTED' } });
-            // Email...
+
+            // Email the agency owner
+            const owner = await prisma.user.findFirst({ where: { agency_id: d.agency_id, role: 'AGENCY' } });
+            if (owner) {
+                await sendEmail({
+                    to: owner.email,
+                    subject: 'Deposit Rejected',
+                    body: `<p>Your recent deposit of ${d.amount} has been rejected.</p><p>Reason: ${rejectionReason || 'No reason provided.'}</p>`
+                });
+            }
             return Response.json({ success: true });
         }
         if (status === 'VERIFIED') {
             await prisma.deposit.update({ where: { id }, data: { status: 'PENDING_SUPER_ADMIN' } });
+
+            // Email Super Admins
+            const superAdmins = await prisma.user.findMany({ where: { role: 'SUPER_ADMIN' } });
+            const superLink = `${process.env.NEXT_PUBLIC_APP_URL}/super-admin/deposits`;
+            await Promise.all(superAdmins.map(admin =>
+                sendEmail({
+                    to: admin.email,
+                    ...EMAIL_TEMPLATES.DEPOSIT_VERIFIED_SUPER_ADMIN(
+                        d.agency.name,
+                        d.amount.toString(),
+                        new Date().toISOString(),
+                        superLink
+                    )
+                })
+            ));
+
             return Response.json({ success: true });
         }
         return Response.json({ error: 'Invalid Status' }, { status: 400 });
@@ -86,6 +125,24 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
             prisma.deposit.update({ where: { id }, data: { status: 'APPROVED', reviewed_by: user.userId, reviewed_at: new Date() } }),
             // ...
         ]);
+
+        const updatedAgency = await prisma.agency.findUnique({ where: { id: d.agency_id } });
+        const updatedDeposit = await prisma.deposit.findUnique({ where: { id } });
+
+        // Email the agency owner
+        const owner = await prisma.user.findFirst({ where: { agency_id: d.agency_id, role: 'AGENCY' } });
+        if (owner && updatedAgency && updatedDeposit) {
+            await sendEmail({
+                to: owner.email,
+                ...EMAIL_TEMPLATES.DEPOSIT_APPROVED(
+                    d.agency.name,
+                    d.amount.toString(),
+                    updatedAgency.wallet_balance.toString(),
+                    updatedDeposit.reviewed_at?.toISOString() || new Date().toISOString()
+                )
+            });
+        }
+
         return Response.json({ success: true });
     }
 

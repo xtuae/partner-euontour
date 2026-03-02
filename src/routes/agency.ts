@@ -44,6 +44,70 @@ export async function agencyRoutes(req: Request, path: string, user: AuthUser) {
         return Response.json({ balance: agency?.wallet_balance || 0 });
     }
 
+    // Verification Status
+    if (path === '/agency/verification/status' && req.method === 'GET') {
+        const u = await prisma.user.findUnique({
+            where: { id: user.userId },
+            include: {
+                agency: {
+                    select: {
+                        verification_status: true,
+                        owner_kyc: {
+                            select: {
+                                status: true,
+                                createdAt: true,
+                                rejectionReason: true
+                            },
+                            orderBy: { createdAt: 'desc' },
+                            take: 1
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!u?.agency) return Response.json({ error: 'Agency not found' }, { status: 404 });
+
+        const kyc = u.agency.owner_kyc[0];
+        // Agency status is the master status, kyc is the submission details
+        return Response.json({
+            status: u.agency.verification_status, // APPROVED, UNVERIFIED, UNDER_REVIEW
+            submissionStatus: kyc?.status || 'NOT_SUBMITTED',
+            submittedAt: kyc?.createdAt || null,
+            reviewedAt: null, // doesn't explicitly exist in schema
+            rejectionReason: kyc?.rejectionReason || null
+        });
+    }
+
+    // Bookings (Dashboard & List)
+    if (path === '/agency/bookings' && req.method === 'GET') {
+        const u = await prisma.user.findUnique({ where: { id: user.userId }, select: { agency_id: true } });
+        if (!u?.agency_id) return Response.json({ error: 'Agency not found' }, { status: 400 });
+
+        const url = new URL(req.url);
+        const limitStr = url.searchParams.get('limit');
+        const status = url.searchParams.get('status'); // Optional filter
+
+        const where: any = { agencyId: u.agency_id };
+        if (status) {
+            where.status = status;
+        }
+
+        const [count, bookings] = await prisma.$transaction([
+            prisma.booking.count({ where }),
+            prisma.booking.findMany({
+                where: where as any,
+                take: limitStr ? parseInt(limitStr) : undefined,
+                orderBy: { created_at: 'desc' },
+                include: {
+                    tour: { select: { name: true, duration: true } }
+                }
+            })
+        ]);
+
+        return Response.json({ count, bookings });
+    }
+
     return new Response('Not Found', { status: 404 });
 }
 

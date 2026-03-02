@@ -12,6 +12,7 @@ import { depositsRoutes } from "../src/routes/deposits.js";
 import { bookingsRoutes } from "../src/routes/bookings.js";
 import { walletRoutes } from "../src/routes/wallet.js";
 import { filesRoutes } from "../src/routes/files.js";
+import { webhookRoutes } from "../src/routes/webhooks.js";
 
 export const config = {
     api: {
@@ -34,6 +35,8 @@ async function appHandler(req: Request): Promise<Response> {
 
     if (path.startsWith("/auth")) {
         response = await authRoutes(req, path);
+    } else if (path.startsWith("/webhooks")) {
+        response = await webhookRoutes(req, path);
     } else {
         const user = await authHandler(req);
 

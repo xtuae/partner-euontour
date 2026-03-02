@@ -13,6 +13,7 @@ import { WalletPage } from './features/wallet/WalletPage';
 import { DepositPage } from './features/wallet/DepositPage';
 import { AppLayout } from './app/layouts/AppLayout';
 import { AgencyDashboard } from './features/agency/AgencyDashboard';
+import { AgencyVerificationPage } from './features/agency/AgencyVerificationPage';
 import { UnauthorizedPage } from './pages/Unauthorized';
 import { BookingPage } from './features/agency/BookingPage';
 import { ToursPage } from './features/agency/ToursPage';
@@ -52,7 +53,7 @@ function App() {
                 <Route path="deposits" element={<DepositPage />} />
                 <Route path="tours" element={<ToursPage />} />
                 <Route path="bookings" element={<BookingPage />} />
-                <Route path="verification" element={<PlaceholderPage title="Verification" />} />
+                <Route path="verification" element={<AgencyVerificationPage />} />
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="security" element={<PlaceholderPage title="Security" />} />

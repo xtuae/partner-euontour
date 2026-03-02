@@ -9,7 +9,8 @@ import {
     BookOpen,
     CheckCircle,
     Bell,
-    CreditCard
+    CreditCard,
+    ShieldCheck
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import logo from '../../assets/logo.webp';
@@ -58,6 +59,12 @@ export function Sidebar() {
             label: 'Notifications',
             href: '/agency/notifications',
             icon: Bell, // Need to import Bell
+            roles: [ROLES.AGENCY],
+        },
+        {
+            label: 'Verification',
+            href: '/agency/verification',
+            icon: ShieldCheck,
             roles: [ROLES.AGENCY],
         },
         {
