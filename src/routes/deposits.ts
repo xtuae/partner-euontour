@@ -24,47 +24,89 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
 
     // POST /deposits (Submit)
     if (parts.length === 1 && req.method === 'POST') {
-        requireRole(user, ['AGENCY']); // Strict
-        // Multipart
-        const formData = await req.formData();
-        const amount = parseFloat(formData.get('amount') as string);
-        const proof = formData.get('proof_image') as File;
+        requireRole(user, ['AGENCY']);
 
-        if (!proof || isNaN(amount) || amount <= 0) return Response.json({ error: 'Invalid input' }, { status: 400 });
+        try {
+            // 1. Check for Blob Token immediately
+            if (!process.env.BLOB_READ_WRITE_TOKEN) {
+                console.error('Missing BLOB_READ_WRITE_TOKEN');
+                return Response.json({ error: 'Server configuration error' }, { status: 500 });
+            }
 
-        const u = await prisma.user.findUnique({
-            where: { id: user.userId },
-            select: { agency_id: true, agency: { select: { name: true } } }
-        });
-        if (!u?.agency_id) return Response.json({ error: 'Agency not found' }, { status: 400 });
+            const formData = await req.formData();
+            const amountRaw = formData.get('amount') as string;
+            const proof = formData.get('proof_image') as File;
 
-        // Upload
-        const { put } = await import('@vercel/blob');
-        const buf = Buffer.from(await proof.arrayBuffer());
-        const blob = await put(`deposits/${u.agency_id}/${crypto.randomUUID()}.jpg`, buf, { access: 'public', token: process.env.BLOB_READ_WRITE_TOKEN });
+            // 2. Safer number parsing
+            const amount = parseFloat(amountRaw);
 
-        const depositId = crypto.randomUUID();
-        await prisma.deposit.create({
-            data: { id: depositId, agency_id: u.agency_id, amount, bank_reference: 'UPLOADED_PROOF', proof_url: blob.url, status: 'PENDING_ADMIN' } as any
-        });
-        await prisma.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_DEPOSIT_SUBMITTED', entity: 'DEPOSIT', entity_id: depositId } });
+            if (!proof || isNaN(amount) || amount <= 0) {
+                return Response.json({ error: 'Invalid input: Amount or Proof missing' }, { status: 400 });
+            }
 
-        const admins = await prisma.user.findMany({ where: { role: 'ADMIN' } });
-        const adminLink = `${process.env.NEXT_PUBLIC_APP_URL}/admin/deposits`;
+            const u = await prisma.user.findUnique({
+                where: { id: user.userId },
+                select: { agency_id: true, agency: { select: { name: true } } }
+            });
 
-        await Promise.all(admins.map(admin =>
-            sendEmail({
-                to: admin.email,
-                ...EMAIL_TEMPLATES.DEPOSIT_SUBMITTED_ADMIN(
-                    u.agency?.name || 'Agency',
-                    amount.toString(),
-                    'UPLOADED_PROOF',
-                    adminLink
-                )
-            })
-        ));
+            if (!u?.agency_id) return Response.json({ error: 'Agency not found' }, { status: 400 });
 
-        return Response.json({ success: true }, { status: 201 });
+            // 3. Upload to Vercel Blob with Error Handling
+            const { put } = await import('@vercel/blob');
+            const buf = Buffer.from(await proof.arrayBuffer());
+            const filename = `deposits/${u.agency_id}/${crypto.randomUUID()}.jpg`;
+
+            const blob = await put(filename, buf, {
+                access: 'public',
+                token: process.env.BLOB_READ_WRITE_TOKEN
+            });
+
+            const depositId = crypto.randomUUID();
+
+            // 4. Database Write
+            await prisma.deposit.create({
+                data: {
+                    id: depositId,
+                    agency_id: u.agency_id,
+                    amount: amount, // Prisma handles Decimal conversion if type matches
+                    bank_reference: 'UPLOADED_PROOF',
+                    proof_url: blob.url,
+                    status: 'PENDING_ADMIN'
+                } as any
+            });
+
+            // 5. Audit Log
+            await prisma.auditLog.create({
+                data: {
+                    actor_id: user.userId,
+                    action: 'AGENCY_DEPOSIT_SUBMITTED',
+                    entity: 'DEPOSIT',
+                    entity_id: depositId
+                }
+            });
+
+            // 6. Email Notification
+            const admins = await prisma.user.findMany({ where: { role: 'ADMIN' } });
+            const adminLink = `${process.env.NEXT_PUBLIC_APP_URL}/admin/deposits`;
+
+            await Promise.all(admins.map(admin =>
+                sendEmail({
+                    to: admin.email,
+                    ...EMAIL_TEMPLATES.DEPOSIT_SUBMITTED_ADMIN(
+                        u.agency?.name || 'Agency',
+                        amount.toString(),
+                        'UPLOADED_PROOF',
+                        adminLink
+                    )
+                })
+            ));
+
+            return Response.json({ success: true }, { status: 201 });
+
+        } catch (error) {
+            console.error('Deposit Error:', error);
+            return Response.json({ error: 'Failed to process deposit', details: String(error) }, { status: 500 });
+        }
     }
 
     // PUT /deposits/[id]/verify (Admin)

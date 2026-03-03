@@ -22,10 +22,26 @@ export function SuperAdminVerificationList() {
 
     const fetchVerifications = async () => {
         try {
-            const res = await apiFetch('/api/super/agency-verifications');
+            // FIX 1: Point to the correct Admin endpoint (which handles verifications)
+            const res = await apiFetch('/api/admin/agency-verifications');
+
             if (res.ok) {
                 const data = await res.json();
-                setVerifications(data);
+
+                // FIX 2 & 3: Extract the array and map the nested Prisma data to the flat interface
+                const rawList = data.verifications || [];
+                const mappedList = rawList.map((item: any) => ({
+                    agencyId: item.agencyId,
+                    // Handle case where agency relation might be missing (though it shouldn't be)
+                    agencyName: item.agency?.name || 'Unknown Agency',
+                    email: item.agency?.email || 'No Email',
+                    status: item.status,
+                    submittedAt: item.createdAt
+                }));
+
+                setVerifications(mappedList);
+            } else {
+                console.error('API Error:', res.status);
             }
         } catch (error) {
             console.error('Failed to fetch', error);
