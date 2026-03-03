@@ -109,10 +109,10 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
 
 async function handleVerifications(req: Request, segments: string[], user: AuthUser) {
     // /admin/agency-verifications
-    // GET / -> list pending
+    // GET / -> list all
     if (segments.length === 0 && req.method === 'GET') {
         const verifications = await prisma.agencyOwnerKyc.findMany({
-            where: { status: 'PENDING' }, include: { agency: true }, orderBy: { createdAt: 'asc' }
+            include: { agency: true }, orderBy: { createdAt: 'desc' }
         });
         return Response.json({ verifications });
     }
