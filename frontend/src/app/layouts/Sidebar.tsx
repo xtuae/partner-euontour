@@ -68,9 +68,15 @@ export function Sidebar() {
             roles: [ROLES.AGENCY],
         },
         {
-            label: 'Agency Verifications',
+            label: 'Verified Agencies',
+            href: '/admin/verified-agencies',
+            icon: ShieldCheck,
+            roles: [ROLES.ADMIN],
+        },
+        {
+            label: 'Agencies & KYC',
             href: '/super-admin/agency-verifications',
-            icon: CheckCircle, // Reusing CheckCircle or import ShieldCheck
+            icon: ShieldCheck,
             roles: [ROLES.SUPER_ADMIN],
         },
         {
