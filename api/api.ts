@@ -55,24 +55,39 @@ async function appHandler(req: Request): Promise<Response> {
     } else {
         const user = await authHandler(req);
 
-        if (path.startsWith("/agency")) {
-            response = await agencyRoutes(req, path, user!);
-        } else if (path.startsWith("/admin")) {
-            response = await adminRoutes(req, path, user!);
-        } else if (path.startsWith("/super")) {
-            response = await superRoutes(req, path, user!);
-        } else if (path.startsWith("/deposits")) {
-            response = await depositsRoutes(req, path, user!);
-        } else if (path.startsWith("/bookings")) {
-            response = await bookingsRoutes(req, path, user!);
-        } else if (path.startsWith("/wallet")) {
-            response = await walletRoutes(req, path, user!);
-        } else if (path.startsWith("/files") || path.startsWith("/uploads")) {
-            response = await filesRoutes(req, path, user!);
-        } else if (path.startsWith("/notifications")) {
-            response = await notificationsRoutes(req, path, user!);
+        if (!user) {
+            response = new Response(JSON.stringify({ error: 'Unauthorized' }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' }
+            });
         } else {
-            response = new Response("Not Found", { status: 404 });
+            try {
+                if (path.startsWith("/agency")) {
+                    response = await agencyRoutes(req, path, user);
+                } else if (path.startsWith("/admin")) {
+                    response = await adminRoutes(req, path, user);
+                } else if (path.startsWith("/super")) {
+                    response = await superRoutes(req, path, user);
+                } else if (path.startsWith("/deposits")) {
+                    response = await depositsRoutes(req, path, user);
+                } else if (path.startsWith("/bookings")) {
+                    response = await bookingsRoutes(req, path, user);
+                } else if (path.startsWith("/wallet")) {
+                    response = await walletRoutes(req, path, user);
+                } else if (path.startsWith("/files") || path.startsWith("/uploads")) {
+                    response = await filesRoutes(req, path, user);
+                } else if (path.startsWith("/notifications")) {
+                    response = await notificationsRoutes(req, path, user);
+                } else {
+                    response = new Response("Not Found", { status: 404 });
+                }
+            } catch (err: any) {
+                if (err.message === 'Forbidden') {
+                    response = new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+                } else {
+                    throw err;
+                }
+            }
         }
     }
 
