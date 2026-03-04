@@ -139,3 +139,47 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
 2. **Generate Client:** Run `npx prisma generate` to update the local TypeScript types.
 3. **Push to Neon DB:** - *For safe, trackable changes (Recommended):* Run `npx prisma migrate dev --name descriptive_update_name`. This creates a migration file and applies it to Neon.
    - *For rapid prototyping (Destructive, use with caution):* Run `npx prisma db push`. This forces the Neon database schema to match your local Prisma file without creating a migration history.
+
+   ## Milestone 7: WordPress Tour Sync (Backend Implementation)
+**Objective:** Implement a secure, automated synchronization pipeline to fetch tours from the `euontour.com` WordPress REST API and update the local Prisma database.
+
+**Target Files:**
+- **Backend Sync Logic:** `src/lib/sync.ts` (New File)
+- **Manual Trigger:** `src/routes/super.ts`
+- **Automated Cron:** `api/cron-sync.ts` (New File) and `vercel.json`
+
+**Implementation Prompts:**
+1. **The Sync Function (`src/lib/sync.ts`):**
+   - Create a new file for external synchronization logic.
+   - Implement an exported asynchronous function `syncToursFromWordPress()`.
+   - **Authentication:** Use the `jsonwebtoken` library to sign a payload (e.g., `{ source: 'partner-platform' }`) using `process.env.WP_JWT_SECRET` with a short expiration (e.g., `5m`).
+   - **Fetch:** Use `axios` or native `fetch` to make a GET request to `https://euontour.com/wp-json/partner/v1/tours`, passing the generated JWT in the `Authorization: Bearer <token>` header.
+   - **Database Update:** Iterate over the returned tours array. Use `prisma.tour.upsert()` to create or update each tour based on its `wp_tour_id`. Ensure `name`, `price`, `active`, and `image_url` are mapped correctly. Wrap the database operations in a try/catch block and log the results.
+2. **Super Admin Manual Trigger (`src/routes/super.ts`):**
+   - Add a new endpoint: `POST /super/tours/sync`.
+   - When called, execute `await syncToursFromWordPress()`.
+   - Create an `AuditLog` entry: `action: 'MANUAL_TOUR_SYNC'`.
+   - Return `{ success: true, message: "Sync completed" }`.
+3. **Vercel Cron Job Setup:**
+   - **API Endpoint (`api/cron-sync.ts`):** Create a serverless function dedicated to the cron job. This route MUST check the `Authorization` header against `process.env.CRON_SECRET` to prevent unauthorized execution. If authorized, call `syncToursFromWordPress()`.
+   - **Vercel Config (`vercel.json`):** Update the `vercel.json` file to include a `"crons"` array. Schedule the `/api/cron-sync` endpoint to run daily (e.g., `"0 0 * * *"`).
+
+   ## Milestone 8: Dynamic Agency Discount Configuration
+**Objective:** Allow Super Admins to dynamically set the global agency discount percentage (e.g., 5%, 10%, 15%) from the dashboard, and apply this setting during the WordPress tour synchronization.
+
+**Target Files:**
+- **Backend Sync:** `src/lib/sync.ts`
+- **Frontend UI:** `frontend/src/features/admin/AdminSettingsPage.tsx`
+
+**Implementation Prompts:**
+1. **Backend Sync Logic (`src/lib/sync.ts`):**
+   - Before the `for (const tour of tours)` loop, query the `SystemSettings` table for a key named `AGENCY_DISCOUNT_PERCENTAGE`.
+   - `const discountSetting = await prisma.systemSettings.findUnique({ where: { key: 'AGENCY_DISCOUNT_PERCENTAGE' } });`
+   - Parse the value into a float. If the setting doesn't exist, default to `10` (10%).
+   - Convert the percentage to a decimal multiplier (e.g., `10` becomes `0.10`).
+   - Inside the loop, calculate the `agencyNetPrice` using this dynamic multiplier instead of a hardcoded value.
+2. **Frontend UI (`AdminSettingsPage.tsx`):**
+   - Implement a `useEffect` to fetch current settings from `GET /api/super/system/settings`.
+   - Create a form with an input field for "Global Agency Discount (%)".
+   - When the user clicks "Save", send a `PUT /api/super/system/settings` request with the payload: `{ settings: [{ key: 'AGENCY_DISCOUNT_PERCENTAGE', value: String(discountValue) }] }`.
+   - Show a success toast or message upon saving.

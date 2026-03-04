@@ -24,21 +24,35 @@ export async function syncToursFromWordPress() {
             throw new Error(`WordPress returned 200 OK, but no tours array was found.`);
         }
 
+        // Fetch the global discount percentage setting
+        const discountSetting = await prisma.systemSettings.findUnique({ where: { key: 'AGENCY_DISCOUNT_PERCENTAGE' } });
+        let discountPercentage = 10; // Default limit
+        if (discountSetting && !isNaN(parseFloat(discountSetting.value))) {
+            discountPercentage = parseFloat(discountSetting.value);
+        }
+        // e.g. 10% -> 0.10
+        const discountMultiplier = discountPercentage / 100;
+
         // Upsert tours into your Prisma database
         let syncedCount = 0;
         for (const tour of tours) {
+            const retailPrice = parseFloat(tour.price);
+            const agencyNetPrice = retailPrice - (retailPrice * discountMultiplier);
+
             await prisma.tour.upsert({
                 where: { wp_tour_id: Number(tour.wp_tour_id) },
                 update: {
                     name: tour.name,
-                    price: parseFloat(tour.price),
+                    price: retailPrice,
+                    agency_net_price: agencyNetPrice,
                     active: tour.active !== undefined ? tour.active : true,
                     image_url: tour.image_url || null
                 },
                 create: {
                     wp_tour_id: Number(tour.wp_tour_id),
                     name: tour.name,
-                    price: parseFloat(tour.price),
+                    price: retailPrice,
+                    agency_net_price: agencyNetPrice,
                     active: tour.active !== undefined ? tour.active : true,
                     image_url: tour.image_url || null
                 }

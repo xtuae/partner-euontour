@@ -149,9 +149,10 @@ model Tour {
   id         String   @id @default(uuid())
   wp_tour_id Int      @unique
   name       String
-  duration   String?
-  price      Decimal  @db.Decimal(12, 2)
-  active     Boolean  @default(true)
+  duration         String?
+  price            Decimal  @db.Decimal(12, 2)
+  agency_net_price Decimal  @default(0.00) @db.Decimal(12, 2)
+  active           Boolean  @default(true)
   image_url  String?
   deletedAt  DateTime?
 
