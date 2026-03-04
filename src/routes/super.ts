@@ -102,10 +102,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             return Response.json({ tours });
         }
 
-        const tourId = parts[2];
-        const action = parts[3];
-
-        if (action === 'sync' && req.method === 'POST') {
+        if (parts[2] === 'sync' && req.method === 'POST') {
             const { syncToursFromWordPress } = await import('../lib/sync.js');
             await syncToursFromWordPress();
 
@@ -114,6 +111,9 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             });
             return Response.json({ success: true, message: "Sync completed" });
         }
+
+        const tourId = parts[2];
+        const action = parts[3];
 
         if (action === 'status' && req.method === 'PUT') {
             const { active } = TourStatusSchema.parse(await req.json());
