@@ -38,6 +38,20 @@ async function appHandler(req: Request): Promise<Response> {
         response = await authRoutes(req, path);
     } else if (path.startsWith("/webhooks")) {
         response = await webhookRoutes(req, path);
+    } else if (path.startsWith("/cron/sync")) {
+        const authHeader = req.headers.get('authorization');
+        if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+            response = new Response('Unauthorized', { status: 401 });
+        } else {
+            const { syncToursFromWordPress } = await import('../src/lib/sync.js');
+            try {
+                await syncToursFromWordPress();
+                response = Response.json({ success: true, message: "Sync completed via cron" });
+            } catch (error: any) {
+                console.error("Cron sync failed", error);
+                response = Response.json({ success: false, error: 'Sync failed', details: error.message }, { status: 500 });
+            }
+        }
     } else {
         const user = await authHandler(req);
 
