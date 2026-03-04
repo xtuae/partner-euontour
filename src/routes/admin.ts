@@ -97,10 +97,20 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
 
 async function handleVerifications(req: Request, segments: string[], user: AuthUser) {
     // /admin/agency-verifications
-    // GET / -> list all
     if (segments.length === 0 && req.method === 'GET') {
-        const verifications = await prisma.agencyOwnerKyc.findMany({
-            include: { agency: true }, orderBy: { createdAt: 'desc' }
+        const agencies = await prisma.agency.findMany({
+            include: { owner_kyc: { orderBy: { createdAt: 'desc' }, take: 1 } },
+            orderBy: { created_at: 'desc' }
+        });
+
+        const verifications = agencies.map(agency => {
+            const kyc = agency.owner_kyc[0];
+            return {
+                agencyId: agency.id,
+                agency: { name: agency.name, email: agency.email },
+                status: agency.verification_status,
+                createdAt: kyc?.createdAt || agency.created_at,
+            };
         });
         return Response.json({ verifications });
     }
@@ -109,11 +119,27 @@ async function handleVerifications(req: Request, segments: string[], user: AuthU
     const action = segments[1];
 
     if (id && !action && req.method === 'GET') {
-        const kyc = await prisma.agencyOwnerKyc.findUnique({
-            where: { id },
+        const agency = await prisma.agency.findUnique({ where: { id } });
+        if (!agency) return Response.json({ error: 'Not Found' }, { status: 404 });
+
+        let kyc = await prisma.agencyOwnerKyc.findFirst({
+            where: { agencyId: id },
+            orderBy: { createdAt: 'desc' },
             include: { agency: true }
         });
-        if (!kyc) return Response.json({ error: 'Not Found' }, { status: 404 });
+
+        if (!kyc) {
+            kyc = {
+                id: 'stub',
+                agencyId: id,
+                status: agency.verification_status,
+                idFrontUrl: '',
+                idBackUrl: '',
+                selfieUrl: '',
+                createdAt: agency.created_at,
+                agency: agency as any
+            } as any;
+        }
         return Response.json({ kyc });
     }
 

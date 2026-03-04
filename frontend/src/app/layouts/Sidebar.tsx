@@ -45,9 +45,9 @@ export function Sidebar() {
         },
         {
             label: 'Tours',
-            href: '/agency/tours',
+            href: user?.role === ROLES.SUPER_ADMIN ? '/super-admin/tours' : '/agency/tours',
             icon: BookOpen,
-            roles: [ROLES.AGENCY],
+            roles: [ROLES.AGENCY, ROLES.SUPER_ADMIN],
         },
         {
             label: 'Bookings',

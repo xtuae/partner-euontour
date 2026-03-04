@@ -94,6 +94,14 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
     }
 
     if (entity === 'tours') {
+        if (parts.length === 2 && req.method === 'GET') {
+            const tours = await prisma.tour.findMany({
+                where: { deletedAt: null },
+                orderBy: { name: 'asc' }
+            });
+            return Response.json({ tours });
+        }
+
         const tourId = parts[2];
         const action = parts[3];
 
