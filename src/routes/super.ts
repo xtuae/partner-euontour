@@ -97,6 +97,16 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
         const tourId = parts[2];
         const action = parts[3];
 
+        if (action === 'sync' && req.method === 'POST') {
+            const { syncToursFromWordPress } = await import('../lib/sync.js');
+            await syncToursFromWordPress();
+
+            await prisma.auditLog.create({
+                data: { actor_id: user.userId, action: 'MANUAL_TOUR_SYNC', entity: 'SYSTEM', entity_id: 'SYSTEM' }
+            });
+            return Response.json({ success: true, message: "Sync completed" });
+        }
+
         if (action === 'status' && req.method === 'PUT') {
             const { active } = TourStatusSchema.parse(await req.json());
             await prisma.$transaction(async (tx: any) => {

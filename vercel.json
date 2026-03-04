@@ -1,5 +1,15 @@
 {
+    "crons": [
+        {
+            "path": "/api/cron-sync",
+            "schedule": "0 0 * * *"
+        }
+    ],
     "routes": [
+        {
+            "src": "^/api/cron-sync(/.*)?$",
+            "dest": "/api/cron-sync"
+        },
         {
             "src": "^/api/(.*)$",
             "dest": "/api/api"
