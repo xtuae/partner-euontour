@@ -68,19 +68,7 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
         } catch (e) { return Response.json({ error: 'Server Error' }, { status: 500 }); }
     }
 
-    if (action === 'status' && req.method === 'PUT') {
-        const body = await req.json();
-        const { status } = StatusSchema.parse(body);
-        if (status === 'BLOCKED' && user.role !== 'SUPER_ADMIN') return Response.json({ error: 'Forbidden' }, { status: 403 });
-
-        await prisma.$transaction(async (tx: any) => {
-            await tx.agency.update({ where: { id: agencyId }, data: { status } });
-            await tx.auditLog.create({
-                data: { actor_id: user.userId, action: `AGENCY_STATUS_${status}`, entity: 'AGENCY', entity_id: agencyId }
-            });
-        });
-        return Response.json({ success: true });
-    }
+    // status updates moved to super.ts
 
     if (action === 'notify' && req.method === 'POST') {
         const body = await req.json();
@@ -120,34 +108,16 @@ async function handleVerifications(req: Request, segments: string[], user: AuthU
     const id = segments[0];
     const action = segments[1];
 
-    // PUT /[id]/approve
-    if (id && action === 'approve' && req.method === 'PUT') {
-        const kyc = await prisma.agencyOwnerKyc.findUnique({ where: { id }, include: { agency: true } });
+    if (id && !action && req.method === 'GET') {
+        const kyc = await prisma.agencyOwnerKyc.findUnique({
+            where: { id },
+            include: { agency: true }
+        });
         if (!kyc) return Response.json({ error: 'Not Found' }, { status: 404 });
-
-        await prisma.$transaction([
-            prisma.agencyOwnerKyc.update({ where: { id }, data: { status: 'VERIFIED' } }),
-            prisma.agency.update({ where: { id: kyc.agencyId }, data: { verification_status: 'VERIFIED' } }),
-            prisma.auditLog.create({ data: { actor_id: user.userId, action: 'APPROVE_KYC', entity: 'AGENCY_KYC', entity_id: id } })
-        ]);
-        await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_APPROVED_AGENCY(kyc.agency.name, `${process.env.NEXT_PUBLIC_APP_URL}/login`) });
-        return Response.json({ success: true });
+        return Response.json({ kyc });
     }
 
-    // PUT /[id]/reject
-    if (id && action === 'reject' && req.method === 'PUT') {
-        const { reason } = await req.json();
-        const kyc = await prisma.agencyOwnerKyc.findUnique({ where: { id }, include: { agency: true } });
-        if (!kyc) return Response.json({ error: 'Not Found' }, { status: 404 });
-
-        await prisma.$transaction([
-            prisma.agencyOwnerKyc.update({ where: { id }, data: { status: 'REJECTED', rejectionReason: reason } }),
-            prisma.agency.update({ where: { id: kyc.agencyId }, data: { verification_status: 'REJECTED' } }),
-            prisma.auditLog.create({ data: { actor_id: user.userId, action: 'REJECT_KYC', entity: 'AGENCY_KYC', entity_id: id } })
-        ]);
-        await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_REJECTED_AGENCY(kyc.agency.name, reason, `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`) });
-        return Response.json({ success: true });
-    }
+    // KYC approve/reject moved to super.ts
 
     return Response.json({ error: 'Not Found' }, { status: 404 });
 }

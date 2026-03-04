@@ -1,38 +1,36 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
-import { Users, CreditCard, AlertTriangle, Activity } from 'lucide-react';
+import { CreditCard, AlertTriangle, Activity } from 'lucide-react';
 import { apiFetch } from '../../lib/api-client';
 
 export function AdminDashboard() {
     const [stats, setStats] = useState({
-        totalAgencies: 0,
-        pendingVerifications: 0,
-        pendingDeposits: 0,
-        activeTours: 0
+        totalWalletBalance: 0,
+        pendingAdminDeposits: 0,
+        pendingSuperAdminDeposits: 0,
+        totalCredits30d: 0,
+        totalDebits30d: 0
     });
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await apiFetch('/api/admin/stats');
+                const res = await apiFetch('/api/admin/finance/metrics');
                 if (res.ok) {
                     const data = await res.json();
-                    setStats(data.stats);
+                    setStats({
+                        totalWalletBalance: Number(data.totalWalletBalance) || 0,
+                        pendingAdminDeposits: data.pendingAdminDeposits || 0,
+                        pendingSuperAdminDeposits: data.pendingSuperAdminDeposits || 0,
+                        totalCredits30d: Number(data.totalCredits30d) || 0,
+                        totalDebits30d: Number(data.totalDebits30d) || 0
+                    });
                 } else {
-                    // Fallback for when API endpoint doesn't exist yet (Production mismatch)
-                    console.warn("Stats API not found, using preview data");
-                    throw new Error("API not found");
+                    console.error("Failed to fetch admin stats");
                 }
             } catch (error) {
-                console.error("Using mock stats due to API error/missing endpoint", error);
-                // Mock Data for consistent UI experience until deployment
-                setStats({
-                    totalAgencies: 24,
-                    pendingVerifications: 3,
-                    pendingDeposits: 5,
-                    activeTours: 12
-                });
+                console.error("Error fetching admin stats", error);
             } finally {
                 setLoading(false);
             }
@@ -50,11 +48,11 @@ export function AdminDashboard() {
                 <Card>
                     <CardContent className="p-6 flex items-center space-x-4">
                         <div className="bg-blue-100 p-3 rounded-full">
-                            <Users className="w-6 h-6 text-blue-600" />
+                            <CreditCard className="w-6 h-6 text-blue-600" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-500">Total Agencies</p>
-                            <h3 className="text-2xl font-bold">{stats.totalAgencies}</h3>
+                            <p className="text-sm text-gray-500">Total Wallet Balance</p>
+                            <h3 className="text-2xl font-bold">€{stats.totalWalletBalance.toFixed(2)}</h3>
                         </div>
                     </CardContent>
                 </Card>
@@ -64,30 +62,30 @@ export function AdminDashboard() {
                             <AlertTriangle className="w-6 h-6 text-yellow-600" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-500">Pending Verification</p>
-                            <h3 className="text-2xl font-bold">{stats.pendingVerifications}</h3>
+                            <p className="text-sm text-gray-500">Pending Super Deposits</p>
+                            <h3 className="text-2xl font-bold">{stats.pendingSuperAdminDeposits}</h3>
                         </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-6 flex items-center space-x-4">
                         <div className="bg-green-100 p-3 rounded-full">
-                            <CreditCard className="w-6 h-6 text-green-600" />
+                            <Activity className="w-6 h-6 text-green-600" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-500">Pending Deposits</p>
-                            <h3 className="text-2xl font-bold">{stats.pendingDeposits}</h3>
+                            <p className="text-sm text-gray-500">30d Credits</p>
+                            <h3 className="text-2xl font-bold">€{stats.totalCredits30d.toFixed(2)}</h3>
                         </div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardContent className="p-6 flex items-center space-x-4">
-                        <div className="bg-purple-100 p-3 rounded-full">
-                            <Activity className="w-6 h-6 text-purple-600" />
+                        <div className="bg-red-100 p-3 rounded-full">
+                            <Activity className="w-6 h-6 text-red-600" />
                         </div>
                         <div>
-                            <p className="text-sm text-gray-500">Active Tours</p>
-                            <h3 className="text-2xl font-bold">{stats.activeTours}</h3>
+                            <p className="text-sm text-gray-500">30d Debits</p>
+                            <h3 className="text-2xl font-bold">€{stats.totalDebits30d.toFixed(2)}</h3>
                         </div>
                     </CardContent>
                 </Card>

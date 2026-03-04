@@ -2,11 +2,18 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
-import { Check, X, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Check, X, ArrowLeft } from 'lucide-react';
 
 interface Detail {
-    agency: { name: string; email: string; type: string };
-    verification: { status: string; documents: any[]; submittedAt: string };
+    agency: { id: string; name: string; email: string; type: string };
+    verification: {
+        id: string;
+        status: string;
+        idFrontUrl: string;
+        idBackUrl?: string;
+        selfieUrl?: string;
+        submittedAt: string
+    };
 }
 
 export function SuperAdminVerificationDetail() {
@@ -24,9 +31,15 @@ export function SuperAdminVerificationDetail() {
 
     const fetchDetail = async () => {
         try {
-            const res = await apiFetch(`/api/super/agency-verifications/${agencyId}`);
+            const res = await apiFetch(`/api/admin/agency-verifications/${agencyId}`);
             if (res.ok) {
-                setData(await res.json());
+                const json = await res.json();
+                if (json.kyc) {
+                    setData({
+                        agency: json.kyc.agency,
+                        verification: json.kyc
+                    });
+                }
             }
         } catch (error) {
             console.error(error);
@@ -39,8 +52,9 @@ export function SuperAdminVerificationDetail() {
         if (!confirm('Are you sure you want to approve this agency? Booking will be unlocked immediately.')) return;
         setActionLoading(true);
         try {
-            const res = await apiFetch(`/api/super/agency-verifications/${agencyId}/approve`, {
-                method: 'PUT'
+            const res = await apiFetch(`/api/super/agencies/${data?.agency.id}/kyc`, {
+                method: 'PUT',
+                body: JSON.stringify({ action: 'APPROVE' })
             });
             if (res.ok) {
                 alert('Agency Verified Successfully');
@@ -55,9 +69,9 @@ export function SuperAdminVerificationDetail() {
         if (!rejectReason) return alert('Reason is required');
         setActionLoading(true);
         try {
-            const res = await apiFetch(`/api/super/agency-verifications/${agencyId}/reject`, {
+            const res = await apiFetch(`/api/super/agencies/${data?.agency.id}/kyc`, {
                 method: 'PUT',
-                body: JSON.stringify({ reason: rejectReason })
+                body: JSON.stringify({ action: 'REJECT', reason: rejectReason })
             });
             if (res.ok) {
                 alert('Agency Rejected');
@@ -93,15 +107,25 @@ export function SuperAdminVerificationDetail() {
                 <Card>
                     <CardHeader><CardTitle>Documents</CardTitle></CardHeader>
                     <CardContent>
-                        <div className="space-y-3">
-                            {data.verification.documents.map((doc, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-3 border rounded bg-gray-50">
-                                    <span className="capitalize font-medium text-sm">{doc.type.replace('_', ' ')}</span>
-                                    <a href={doc.url} target="_blank" rel="noreferrer" className="text-brand-blue flex items-center gap-1 text-sm hover:underline">
-                                        View <ExternalLink size={14} />
-                                    </a>
+                        <div className="space-y-6">
+                            {data.verification.idFrontUrl && (
+                                <div>
+                                    <h3 className="text-sm font-semibold mb-2">ID Front</h3>
+                                    <img src={data.verification.idFrontUrl} alt="ID Front" className="w-full rounded border" />
                                 </div>
-                            ))}
+                            )}
+                            {data.verification.idBackUrl && (
+                                <div>
+                                    <h3 className="text-sm font-semibold mb-2">ID Back</h3>
+                                    <img src={data.verification.idBackUrl} alt="ID Back" className="w-full rounded border" />
+                                </div>
+                            )}
+                            {data.verification.selfieUrl && (
+                                <div>
+                                    <h3 className="text-sm font-semibold mb-2">Selfie</h3>
+                                    <img src={data.verification.selfieUrl} alt="Selfie" className="w-full rounded object-cover max-h-64 border" />
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

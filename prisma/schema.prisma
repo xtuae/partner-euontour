@@ -78,6 +78,7 @@ model Agency {
   owner_kyc           AgencyOwnerKyc[]
   // tours removed as per authoritative schema (Tours are global)
   agency_tours AgencyTour[]
+  notifications       Notification[]
 }
 
 model User {
@@ -95,6 +96,7 @@ model User {
   refreshTokens RefreshToken[]
   auditLogs     AuditLog[]
   reviewed_deposits Deposit[]
+  notifications      Notification[]
   
   // Auth extra
 
@@ -151,6 +153,7 @@ model Tour {
   price      Decimal  @db.Decimal(12, 2)
   active     Boolean  @default(true)
   image_url  String?
+  deletedAt  DateTime?
 
   bookings  Booking[]
   agency_tours AgencyTour[]
@@ -260,3 +263,18 @@ model SystemSettings {
     updated_by  String?
 }
 
+// 1.9 NOTIFICATIONS
+model Notification {
+  id        String   @id @default(uuid())
+  agencyId  String?  // Relation to Agency
+  agency    Agency?  @relation(fields: [agencyId], references: [id])
+  userId    String?  // Relation to User (optional specific target)
+  user      User?    @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([agencyId])
+  @@index([userId])
+}

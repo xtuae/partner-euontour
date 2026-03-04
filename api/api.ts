@@ -13,6 +13,7 @@ import { bookingsRoutes } from "../src/routes/bookings.js";
 import { walletRoutes } from "../src/routes/wallet.js";
 import { filesRoutes } from "../src/routes/files.js";
 import { webhookRoutes } from "../src/routes/webhooks.js";
+import { notificationsRoutes } from "../src/routes/notifications.js";
 
 export const config = {
     api: {
@@ -54,6 +55,8 @@ async function appHandler(req: Request): Promise<Response> {
             response = await walletRoutes(req, path, user!);
         } else if (path.startsWith("/files") || path.startsWith("/uploads")) {
             response = await filesRoutes(req, path, user!);
+        } else if (path.startsWith("/notifications")) {
+            response = await notificationsRoutes(req, path, user!);
         } else {
             response = new Response("Not Found", { status: 404 });
         }

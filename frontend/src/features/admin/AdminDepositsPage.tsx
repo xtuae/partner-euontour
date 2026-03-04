@@ -39,25 +39,11 @@ export function AdminDepositsPage() {
         fetchDeposits();
     }, []);
 
-    const handleAction = async (id: string, action: 'VERIFY' | 'REJECT') => {
+    const handleAction = async (id: string, action: 'VERIFY' | 'APPROVE') => {
         if (!confirm(`Are you sure you want to ${action.toLowerCase()} this deposit?`)) return;
 
         try {
-            // const endpoint = action === 'VERIFY' ? '/api/admin/deposits/verify' : '/api/admin/deposits/reject';
-            // Note: Verify endpoint path: /api/admin/deposits/[id]/verify -> we'll use query param or path? 
-            // My backend: /api/admin/deposits/[id]/verify.ts -> /api/admin/deposits/VERIFY/verify ? No.
-            // My route structure: api/admin/deposits/[id]/verify.ts
-            // So calling /api/admin/deposits/${id}/verify
-
-            let url = '';
-            if (action === 'VERIFY') url = `/api/admin/deposits/${id}/verify`;
-            // REJECT might still be the old way or needs new endpoint? 
-            // I haven't implemented REJECT in phase 3 explicitly. 
-            // I'll assume standard update to REJECTED allowed for Admin?
-            // Prompt says: "Admin: Can verify only... Cannot credit wallet". 
-            // Can they reject? Probably.
-            // For now implementing VERIFY.
-
+            const url = `/api/deposits/${id}/${action.toLowerCase()}`;
             const res = await apiFetch(url, {
                 method: 'PUT',
             });
@@ -117,13 +103,16 @@ export function AdminDepositsPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 space-x-2">
-                                            <td className="px-6 py-4 space-x-2">
-                                                {dep.status === 'PENDING_ADMIN' && (
-                                                    <Button size="sm" variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50" onClick={() => handleAction(dep.id, 'VERIFY')}>
-                                                        <CheckCircle className="w-4 h-4 mr-1" /> Verify
-                                                    </Button>
-                                                )}
-                                            </td>
+                                            {dep.status === 'PENDING_ADMIN' && (
+                                                <Button size="sm" variant="outline" className="text-blue-600 border-blue-600 hover:bg-blue-50" onClick={() => handleAction(dep.id, 'VERIFY')}>
+                                                    <CheckCircle className="w-4 h-4 mr-1" /> Verify
+                                                </Button>
+                                            )}
+                                            {dep.status === 'PENDING_SUPER_ADMIN' && (
+                                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleAction(dep.id, 'APPROVE')}>
+                                                    <CheckCircle className="w-4 h-4 mr-1" /> Approve
+                                                </Button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))
