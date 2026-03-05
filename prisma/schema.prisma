@@ -151,7 +151,7 @@ model Tour {
   id         String   @id @default(uuid())
   wp_tour_id Int      @unique
   name       String
-  duration         String?
+  duration   String?
   price            Decimal  @db.Decimal(12, 2)
   agency_net_price Decimal  @default(0.00) @db.Decimal(12, 2)
   active           Boolean  @default(true)
@@ -185,6 +185,8 @@ model Booking {
   travel_date  DateTime      @db.Date
   amount       Decimal       @db.Decimal(12, 2)
   status       BookingStatus @default(CONFIRMED)
+  wp_order_id  String?
+  wp_sync_pending Boolean @default(true)
   created_at   DateTime      @default(now())
 
   @@index([agency_id, created_at])

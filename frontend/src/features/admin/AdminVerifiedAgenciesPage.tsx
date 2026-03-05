@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
-import { CheckCircle, ExternalLink, RefreshCw } from 'lucide-react';
+import { CheckCircle, ExternalLink, RefreshCw, Trash2 } from 'lucide-react';
 import { apiFetch } from '../../lib/api-client';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 
 interface Agency {
     id: string;
@@ -17,6 +18,9 @@ export function AdminVerifiedAgenciesPage() {
     const [agencies, setAgencies] = useState<Agency[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+
+    const { user } = useAuth();
+    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
     const fetchAgencies = async () => {
         setLoading(true);
@@ -33,6 +37,20 @@ export function AdminVerifiedAgenciesPage() {
             setError('Error loading agencies');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async (id: string, name: string) => {
+        if (!confirm(`Are you sure you want to delete agency: ${name}?`)) return;
+        try {
+            const res = await apiFetch(`/api/super/agencies/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setAgencies(agencies.filter(a => a.id !== id));
+            } else {
+                alert('Failed to delete agency');
+            }
+        } catch (err) {
+            alert('Error deleting agency');
         }
     };
 
@@ -72,6 +90,11 @@ export function AdminVerifiedAgenciesPage() {
                                             <ExternalLink className="w-4 h-4 mr-2" /> View Details
                                         </Button>
                                     </Link>
+                                    {isSuperAdmin && (
+                                        <Button variant="destructive" onClick={() => handleDelete(agency.id, agency.name)}>
+                                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                        </Button>
+                                    )}
                                 </div>
                             </CardContent>
                         </Card>

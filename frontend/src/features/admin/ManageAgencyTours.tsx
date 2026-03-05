@@ -6,6 +6,7 @@ interface Tour {
     id: string;
     name: string;
     description?: string;
+    duration?: string;
     price: number;
     active: boolean;
 }

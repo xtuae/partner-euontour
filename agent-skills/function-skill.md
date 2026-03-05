@@ -207,3 +207,43 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
    - Create tables to list Admins and Agencies.
    - Implement modals/dialogs with forms for "Create New" and "Edit".
    - Add confirmation prompts for the "Delete" action using standard UI components.
+
+   ## Milestone 10: Granular Agency Management & Proxy Booking
+**Objective:** Differentiate Agency CRUD permissions between Super Admin (Create, Edit, Disable, Delete) and Admin (Create, Edit, Disable). Enable Super Admins to create bookings on behalf of any agency.
+
+**Target Files:**
+- **Backend API (Super Admin):** `src/routes/super.ts`
+- **Backend API (Admin):** `src/routes/admin.ts`
+- **Backend API (Bookings):** `src/routes/bookings.ts`
+- **Frontend UI:** Agency List pages, Booking/Checkout flow for Super Admin.
+
+**Implementation Prompts:**
+1. **Backend Agency CRUD Separation:**
+   - **Shared Logic:** Extract the Agency creation logic (Prisma `$transaction` to create `Agency` + `User` with bcrypt) into a shared service function, as both `POST /super/agencies` and `POST /admin/agencies` will use it.
+   - **Super Admin (`src/routes/super.ts`):** Must have `DELETE /super/agencies/:id`. Protect this strictly with `requireRole(user, ['SUPER_ADMIN'])`. This should perform a soft delete (`deletedAt = now()`) and revoke the agency's tokens.
+   - **Admin (`src/routes/admin.ts`):** Must have `POST`, `PUT` (edit), and `PUT /status` (disable), but **NO** `DELETE` route.
+2. **Super Admin Proxy Booking:**
+   - **Backend Update (`src/routes/bookings.ts`):** In the `POST /bookings` endpoint, allow an optional `targetAgencyId` in the body. If the user making the request is a `SUPER_ADMIN`, use this `targetAgencyId` instead of their own ID. Deduct the funds from the *target agency's* wallet and link the booking to them.
+3. **Frontend UI Adjustments:**
+   - **Agency Tables:** Render the "Delete" button conditionally on the frontend. Only show it if the logged-in user's role is `SUPER_ADMIN`.
+   - **Booking Flow:** When a Super Admin browses the Tour catalog and clicks "Book", present a dropdown to select *which* Agency this booking belongs to before proceeding to checkout.
+   ## Milestone 11: Two-Way Booking Sync (WooCommerce & Tourfic)
+**Objective:** Push successful bookings from the Partner Platform to WordPress by programmatically creating WooCommerce orders to block out Tourfic calendar dates and inventory.
+
+**Target Files:**
+- **Database:** `prisma/schema.prisma`
+- **Backend Bookings:** `src/routes/bookings.ts`
+- **Backend Sync Logic:** `src/lib/wp-booking-sync.ts` (New)
+
+**Implementation Prompts:**
+1. **Database Update (`prisma/schema.prisma`):**
+   - Add a field `wp_order_id String?` to the `Booking` model to store the WooCommerce order ID returned by WordPress.
+   - Add a boolean flag `wp_sync_pending Boolean @default(true)` to the `Booking` model to handle retries if the initial sync fails.
+2. **Node.js Sync Service (`src/lib/wp-booking-sync.ts`):**
+   - Create a function `pushBookingToWordPress(bookingId: string)`.
+   - Fetch the full booking details from Prisma (including the related Tour's `wp_tour_id`, travel dates, and passenger counts).
+   - Generate a JWT using `process.env.WP_JWT_SECRET`.
+   - Make a `POST` request to `https://euontour.com/wp-json/partner/v1/bookings` containing the payload.
+   - If successful, update the Prisma `Booking` record with `wp_order_id` and set `wp_sync_pending = false`.
+3. **Booking Route Integration (`src/routes/bookings.ts`):**
+   - In the `POST /bookings` endpoint (after the `prisma.$transaction` successfully deducts the wallet and creates the local booking), trigger `pushBookingToWordPress(newBooking.id)` asynchronously. Do NOT `await` it in a way that blocks the user's HTTP response. Let it run in the background so the checkout feels instant.

@@ -48,6 +48,40 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
         } catch (e) { return Response.json({ error: 'Server Error' }, { status: 500 }); }
     }
 
+    if (segments.length === 0 && req.method === 'POST') {
+        const body = await req.json();
+        const { companyName, ownerName, email, password, phone, type } = z.object({
+            companyName: z.string().min(1),
+            ownerName: z.string().min(1),
+            email: z.string().email(),
+            password: z.string().min(6),
+            phone: z.string().optional(),
+            type: z.string().default('Retail')
+        }).parse(body);
+
+        if (await prisma.agency.findUnique({ where: { email } })) return Response.json({ error: 'Agency email already in use' }, { status: 409 });
+        if (await prisma.user.findUnique({ where: { email } })) return Response.json({ error: 'User email already in use' }, { status: 409 });
+
+        const ph = await import('bcryptjs').then(m => m.hash(password, 10));
+
+        const newAgency = await prisma.$transaction(async (tx: any) => {
+            const a = await tx.agency.create({
+                data: { name: companyName, email, type, status: 'ACTIVE', verification_status: 'UNVERIFIED' }
+            });
+
+            await tx.user.create({
+                data: { agency_id: a.id, name: ownerName, email, password_hash: ph, role: 'AGENCY', active: true, email_verified: true }
+            });
+
+            await tx.auditLog.create({
+                data: { actor_id: user.userId, action: 'AGENCY_CREATED_BY_ADMIN', entity: 'AGENCY', entity_id: a.id }
+            });
+
+            return a;
+        });
+        return Response.json({ success: true, agency: newAgency });
+    }
+
     const agencyId = segments[0];
     const action = segments[1];
 
@@ -68,7 +102,43 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
         } catch (e) { return Response.json({ error: 'Server Error' }, { status: 500 }); }
     }
 
-    // status updates moved to super.ts
+    if (segments.length === 1 && req.method === 'PUT') {
+        const body = await req.json();
+        const { name, type, email } = z.object({
+            name: z.string().min(1).optional(),
+            type: z.string().optional(),
+            email: z.string().email().optional()
+        }).parse(body);
+
+        await prisma.$transaction(async (tx: any) => {
+            await tx.agency.update({ where: { id: agencyId }, data: { name, type, email } });
+            await tx.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_UPDATED_BY_ADMIN', entity: 'AGENCY', entity_id: agencyId } });
+        });
+        return Response.json({ success: true });
+    }
+
+    if (action === 'status' && req.method === 'PUT') {
+        const { status } = StatusSchema.parse(await req.json());
+
+        await prisma.$transaction(async (tx: any) => {
+            await tx.agency.update({ where: { id: agencyId }, data: { status } });
+            await tx.auditLog.create({
+                data: { actor_id: user.userId, action: `AGENCY_STATUS_${status}_BY_ADMIN`, entity: 'AGENCY', entity_id: agencyId }
+            });
+
+            if (status === 'SUSPENDED' || status === 'BLOCKED') {
+                const agencyUsers = await tx.user.findMany({ where: { agency_id: agencyId }, select: { id: true } });
+                const userIds = agencyUsers.map((u: any) => u.id);
+                if (userIds.length > 0) {
+                    await tx.refreshToken.updateMany({
+                        where: { user_id: { in: userIds } },
+                        data: { revoked: true }
+                    });
+                }
+            }
+        });
+        return Response.json({ success: true });
+    }
 
     if (action === 'notify' && req.method === 'POST') {
         const body = await req.json();

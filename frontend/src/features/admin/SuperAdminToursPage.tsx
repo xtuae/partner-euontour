@@ -8,6 +8,7 @@ interface Tour {
     wp_tour_id: number;
     name: string;
     price: number | string;
+    duration?: string;
     active: boolean;
     image_url: string;
 }
@@ -98,6 +99,7 @@ export function SuperAdminToursPage() {
                                     <th className="p-3 font-semibold text-gray-600">ID (WP)</th>
                                     <th className="p-3 font-semibold text-gray-600">Tour Name</th>
                                     <th className="p-3 font-semibold text-gray-600">Price</th>
+                                    <th className="p-3 font-semibold text-gray-600">Duration</th>
                                     <th className="p-3 font-semibold text-gray-600">Status</th>
                                     <th className="p-3 font-semibold text-gray-600">Actions</th>
                                 </tr>
@@ -115,6 +117,7 @@ export function SuperAdminToursPage() {
                                             </div>
                                         </td>
                                         <td className="p-3 font-medium text-gray-700">€{Number(tour.price).toFixed(2)}</td>
+                                        <td className="p-3 text-sm text-gray-600">{tour.duration || 'N/A'}</td>
                                         <td className="p-3">
                                             {tour.active ? (
                                                 <span className="flex items-center gap-1 text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full w-max">

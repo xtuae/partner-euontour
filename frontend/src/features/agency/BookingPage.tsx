@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
@@ -6,6 +6,7 @@ import { Button } from '../../app/components/ui/Button';
 import { Input } from '../../app/components/ui/Input';
 import { Label } from '../../app/components/ui/Label';
 import { CheckCircle } from 'lucide-react';
+import { useAuth } from '../auth/AuthContext';
 
 const MOCK_TOURS = [
     { id: 'tour_1', name: 'Paris City Highlights', price: 50 },
@@ -15,6 +16,9 @@ const MOCK_TOURS = [
 
 export function BookingPage() {
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+
     const [selectedTour, setSelectedTour] = useState(MOCK_TOURS[0].id);
     const [date, setDate] = useState('');
     const [pax, setPax] = useState('2');
@@ -22,19 +26,43 @@ export function BookingPage() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
 
+    const [agencies, setAgencies] = useState<{ id: string, name: string }[]>([]);
+    const [selectedAgency, setSelectedAgency] = useState('');
+
+    useEffect(() => {
+        if (isSuperAdmin) {
+            apiFetch('/api/admin/agencies')
+                .then(res => res.json())
+                .then(data => {
+                    const verified = data.agencies?.filter((a: any) => a.verification_status === 'VERIFIED') || [];
+                    setAgencies(verified);
+                    if (verified.length > 0) {
+                        setSelectedAgency(verified[0].id);
+                    }
+                })
+                .catch(console.error);
+        }
+    }, [isSuperAdmin]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
+            const payload: any = {
+                tourId: selectedTour,
+                date: date || new Date().toISOString().split('T')[0],
+                pax: parseInt(pax, 10),
+            };
+
+            if (isSuperAdmin && selectedAgency) {
+                payload.targetAgencyId = selectedAgency;
+            }
+
             const res = await apiFetch('/api/bookings/create', {
                 method: 'POST',
-                body: JSON.stringify({
-                    tourId: selectedTour,
-                    date: date || new Date().toISOString().split('T')[0],
-                    pax: parseInt(pax, 10),
-                }),
+                body: JSON.stringify(payload),
             });
 
             if (!res.ok) {
@@ -72,6 +100,25 @@ export function BookingPage() {
                         {error && (
                             <div className="bg-red-50 text-red-600 p-3 rounded text-sm">
                                 {error}
+                            </div>
+                        )}
+
+                        {isSuperAdmin && (
+                            <div className="space-y-2">
+                                <Label htmlFor="agency">Target Agency (Proxy Booking)</Label>
+                                <select
+                                    id="agency"
+                                    className="flex h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-brand-red outline-none"
+                                    value={selectedAgency}
+                                    onChange={(e) => setSelectedAgency(e.target.value)}
+                                    required
+                                >
+                                    {agencies.map(agency => (
+                                        <option key={agency.id} value={agency.id}>
+                                            {agency.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         )}
 
