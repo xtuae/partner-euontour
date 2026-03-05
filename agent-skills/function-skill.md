@@ -183,3 +183,27 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
    - Create a form with an input field for "Global Agency Discount (%)".
    - When the user clicks "Save", send a `PUT /api/super/system/settings` request with the payload: `{ settings: [{ key: 'AGENCY_DISCOUNT_PERCENTAGE', value: String(discountValue) }] }`.
    - Show a success toast or message upon saving.
+
+   ## Milestone 9: Admin & Agency Staff Management (Full CRUD)
+**Objective:** Allow Super Admins to perform full Create, Read, Update, and Delete operations for internal Admin staff and partner Agencies directly from the dashboard.
+
+**Target Files:**
+- **Backend API:** `src/routes/super.ts`
+- **Frontend UI (Admins):** `frontend/src/features/super/AdminManagementPage.tsx` (New)
+- **Frontend UI (Agencies):** `frontend/src/features/super/AgencyManagementPage.tsx` (Update existing list to include Create/Edit/Delete actions)
+
+**Implementation Prompts:**
+1. **Backend Admin CRUD (`src/routes/super.ts`):**
+   - `GET /super/admins`: Fetch all users where `role = 'ADMIN'`.
+   - `POST /super/admins`: Create a new `User` with `role = 'ADMIN'`. Hash the provided password using `bcryptjs`.
+   - `PUT /super/admins/:id`: Update name, email, or active status.
+   - `DELETE /super/admins/:id`: Soft delete or completely remove the Admin user.
+2. **Backend Agency CRUD (`src/routes/super.ts`):**
+   - `GET /super/agencies`: (Already exists, ensure it returns all necessary fields).
+   - `POST /super/agencies`: Requires a Prisma `$transaction`. Create the `Agency` record first, then create the `User` record (with `role = 'AGENCY'`, linking it to the new `agency_id`), and hash the password.
+   - `PUT /super/agencies/:id`: Update agency details (company name, contact info, etc.).
+   - `DELETE /super/agencies/:id`: Soft delete the agency (set `status = 'BLOCKED'` or `deletedAt = now()`) and revoke all associated user tokens.
+3. **Frontend UI:**
+   - Create tables to list Admins and Agencies.
+   - Implement modals/dialogs with forms for "Create New" and "Edit".
+   - Add confirmation prompts for the "Delete" action using standard UI components.

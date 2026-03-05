@@ -25,8 +25,80 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
     const entity = parts[1];
 
     if (entity === 'agencies') {
+        if (!parts[2] && req.method === 'GET') {
+            const agencies = await prisma.agency.findMany({
+                include: { users: { select: { name: true, email: true, last_login: true, active: true } } },
+                orderBy: { created_at: 'desc' }
+            });
+            return Response.json({ agencies });
+        }
+
+        if (!parts[2] && req.method === 'POST') {
+            const body = await req.json();
+            const { companyName, ownerName, email, password, phone, type } = z.object({
+                companyName: z.string().min(1),
+                ownerName: z.string().min(1),
+                email: z.string().email(),
+                password: z.string().min(6),
+                phone: z.string().optional(),
+                type: z.string().default('Retail')
+            }).parse(body);
+
+            if (await prisma.agency.findUnique({ where: { email } })) return Response.json({ error: 'Agency email already in use' }, { status: 409 });
+            if (await prisma.user.findUnique({ where: { email } })) return Response.json({ error: 'User email already in use' }, { status: 409 });
+
+            const ph = await import('bcryptjs').then(m => m.hash(password, 10));
+
+            const newAgency = await prisma.$transaction(async (tx: any) => {
+                const a = await tx.agency.create({
+                    data: { name: companyName, email, type, status: 'ACTIVE', verification_status: 'UNVERIFIED' }
+                });
+
+                await tx.user.create({
+                    data: { agency_id: a.id, name: ownerName, email, password_hash: ph, role: 'AGENCY', active: true, email_verified: true }
+                });
+
+                await tx.auditLog.create({
+                    data: { actor_id: user.userId, action: 'AGENCY_CREATED', entity: 'AGENCY', entity_id: a.id }
+                });
+
+                return a;
+            });
+            return Response.json({ success: true, agency: newAgency });
+        }
+
         const agencyId = parts[2];
         const action = parts[3];
+
+        if (agencyId && !action && req.method === 'PUT') {
+            const body = await req.json();
+            const { name, type, email } = z.object({
+                name: z.string().min(1).optional(),
+                type: z.string().optional(),
+                email: z.string().email().optional()
+            }).parse(body);
+
+            await prisma.$transaction(async (tx: any) => {
+                await tx.agency.update({ where: { id: agencyId }, data: { name, type, email } });
+                await tx.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_UPDATED', entity: 'AGENCY', entity_id: agencyId } });
+            });
+            return Response.json({ success: true });
+        }
+
+        if (agencyId && !action && req.method === 'DELETE') {
+            await prisma.$transaction(async (tx: any) => {
+                await tx.agency.update({ where: { id: agencyId }, data: { status: 'BLOCKED' } }); // Soft block
+                const agencyUsers = await tx.user.findMany({ where: { agency_id: agencyId }, select: { id: true } });
+                const userIds = agencyUsers.map((u: any) => u.id);
+                if (userIds.length > 0) {
+                    await tx.refreshToken.updateMany({ where: { user_id: { in: userIds } }, data: { revoked: true } });
+                    // Also soft-delete the users associated directly
+                    await tx.user.updateMany({ where: { agency_id: agencyId }, data: { active: false } });
+                }
+                await tx.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_SOFT_DELETED', entity: 'AGENCY', entity_id: agencyId } });
+            });
+            return Response.json({ success: true });
+        }
 
         if (action === 'status' && req.method === 'PUT') {
             const { status } = StatusSchema.parse(await req.json());
@@ -150,9 +222,62 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             await prisma.auditLog.create({ data: { actor_id: user.userId, action: 'ADMIN_INVITED', entity: 'USER', entity_id: u.id } });
             return Response.json({ success: true });
         }
-        if (parts[2] === 'list' && req.method === 'GET') {
-            const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } });
+
+        if (!parts[2] && req.method === 'GET') {
+            const admins = await prisma.user.findMany({
+                where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+                select: { id: true, name: true, email: true, role: true, active: true, created_at: true, last_login: true }
+            });
             return Response.json({ admins });
+        }
+
+        if (!parts[2] && req.method === 'POST') {
+            const body = await req.json();
+            const { name, email, password, role } = z.object({
+                name: z.string().min(1),
+                email: z.string().email(),
+                password: z.string().min(6),
+                role: z.enum(['ADMIN', 'SUPER_ADMIN']).default('ADMIN')
+            }).parse(body);
+
+            if (await prisma.user.findUnique({ where: { email } })) return Response.json({ error: 'Email already exists' }, { status: 409 });
+
+            const ph = await import('bcryptjs').then(m => m.hash(password, 10));
+            const newAdmin = await prisma.user.create({
+                data: { name, email, role, password_hash: ph, email_verified: true, active: true }
+            });
+            await prisma.auditLog.create({ data: { actor_id: user.userId, action: 'ADMIN_CREATED', entity: 'USER', entity_id: newAdmin.id } });
+            return Response.json({ success: true });
+        }
+
+        const adminId = parts[2];
+
+        if (adminId && req.method === 'PUT') {
+            const body = await req.json();
+            const { name, email, active } = z.object({
+                name: z.string().min(1).optional(),
+                email: z.string().email().optional(),
+                active: z.boolean().optional()
+            }).parse(body);
+
+            await prisma.$transaction(async (tx: any) => {
+                await tx.user.update({ where: { id: adminId }, data: { name, email, active } });
+                await tx.auditLog.create({ data: { actor_id: user.userId, action: 'ADMIN_UPDATED', entity: 'USER', entity_id: adminId } });
+
+                if (active === false) {
+                    await tx.refreshToken.updateMany({ where: { user_id: adminId }, data: { revoked: true } });
+                }
+            });
+            return Response.json({ success: true });
+        }
+
+        if (adminId && req.method === 'DELETE') {
+            await prisma.$transaction(async (tx: any) => {
+                await tx.user.update({ where: { id: adminId }, data: { active: false } }); // Soft Delete 
+                await tx.refreshToken.updateMany({ where: { user_id: adminId }, data: { revoked: true } });
+                await tx.auditLog.create({ data: { actor_id: user.userId, action: 'ADMIN_DELETED', entity: 'USER', entity_id: adminId } });
+            });
+            return Response.json({ success: true });
         }
     }
 

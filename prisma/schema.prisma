@@ -85,9 +85,11 @@ model User {
   id            String    @id @default(uuid())
   agency_id     String?
   agency        Agency?   @relation(fields: [agency_id], references: [id])
+  name          String?
   email         String    @unique
   password_hash String
   role          UserRole
+  active        Boolean   @default(true)
   last_login    DateTime?
   created_at    DateTime  @default(now())
   updated_at    DateTime  @default(now()) @updatedAt

@@ -10,7 +10,8 @@ import {
     CheckCircle,
     Bell,
     CreditCard,
-    ShieldCheck
+    ShieldCheck,
+    UserPlus
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import logo from '../../assets/logo.webp';
@@ -84,6 +85,12 @@ export function Sidebar() {
             href: user?.role === ROLES.SUPER_ADMIN ? '/super-admin/settings' : '/agency/settings',
             icon: Settings,
             roles: [ROLES.AGENCY, ROLES.SUPER_ADMIN],
+        },
+        {
+            label: 'Staff',
+            href: '/super-admin/staff',
+            icon: UserPlus,
+            roles: [ROLES.SUPER_ADMIN],
         },
     ];
 

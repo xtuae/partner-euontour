@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
+import { Button } from '../../app/components/ui/Button';
 import { Link } from 'react-router-dom';
 import { BadgeCheck, XCircle, Clock } from 'lucide-react';
 
@@ -15,6 +16,10 @@ interface Verification {
 export function SuperAdminVerificationList() {
     const [verifications, setVerifications] = useState<Verification[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({ companyName: '', ownerName: '', email: '', password: '', phone: '', type: 'Retail' });
 
     useEffect(() => {
         fetchVerifications();
@@ -50,6 +55,30 @@ export function SuperAdminVerificationList() {
         }
     };
 
+    const handleCreateAgency = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            const res = await apiFetch('/api/super/agencies', {
+                method: 'POST',
+                body: JSON.stringify(formData)
+            });
+            if (res.ok) {
+                setIsCreateModalOpen(false);
+                setFormData({ companyName: '', ownerName: '', email: '', password: '', phone: '', type: 'Retail' });
+                fetchVerifications();
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Failed to create agency');
+            }
+        } catch (error) {
+            console.error(error);
+            alert('An error occurred');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'VERIFIED': return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs flex items-center gap-1"><BadgeCheck size={12} /> Verified</span>;
@@ -62,7 +91,12 @@ export function SuperAdminVerificationList() {
 
     return (
         <div className="max-w-7xl mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-6">Agency Verifications</h1>
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold">Agency Verifications & Staff</h1>
+                <Button onClick={() => setIsCreateModalOpen(true)} className="flex items-center">
+                    Create Agency
+                </Button>
+            </div>
 
             <Card>
                 <CardHeader>
@@ -107,6 +141,48 @@ export function SuperAdminVerificationList() {
                     </div>
                 </CardContent>
             </Card>
+
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                        <h2 className="text-xl font-bold mb-4">Create New Agency</h2>
+                        <form onSubmit={handleCreateAgency} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Agency / Company Name</label>
+                                <input required type="text" className="mt-1 w-full border p-2 rounded" value={formData.companyName} onChange={e => setFormData({ ...formData, companyName: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Primary Owner Name</label>
+                                <input required type="text" className="mt-1 w-full border p-2 rounded" value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Login Email Address</label>
+                                <input required type="email" className="mt-1 w-full border p-2 rounded" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Secure Password</label>
+                                <input required type="password" minLength={6} className="mt-1 w-full border p-2 rounded" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Contact Phone (Optional)</label>
+                                <input type="tel" className="mt-1 w-full border p-2 rounded" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Agency Type</label>
+                                <select className="mt-1 w-full border p-2 rounded" value={formData.type} onChange={e => setFormData({ ...formData, type: e.target.value })}>
+                                    <option value="Retail">Retail</option>
+                                    <option value="B2B">B2B Wholesale</option>
+                                </select>
+                            </div>
+
+                            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                                <Button variant="outline" type="button" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
+                                <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Creating...' : 'Create Agency & User'}</Button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

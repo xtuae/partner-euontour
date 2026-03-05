@@ -27,6 +27,7 @@ import { AdminVerifiedAgenciesPage } from './features/admin/AdminVerifiedAgencie
 import { SuperAdminVerificationList } from './features/admin/SuperAdminVerificationList';
 import { SuperAdminVerificationDetail } from './features/admin/SuperAdminVerificationDetail';
 import { SuperAdminToursPage } from './features/admin/SuperAdminToursPage';
+import { AdminManagementPage } from './features/super/AdminManagementPage';
 import { ManageAgencyTours } from './features/admin/ManageAgencyTours';
 import { AdminAgencyDetailsPage } from './features/admin/AdminAgencyDetailsPage';
 
@@ -84,6 +85,7 @@ function App() {
                 <Route path="agency-verifications/:agencyId" element={<SuperAdminVerificationDetail />} />
                 <Route path="deposits" element={<AdminDepositsPage />} />
                 <Route path="tours" element={<SuperAdminToursPage />} />
+                <Route path="staff" element={<AdminManagementPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
                 <Route path="audit" element={<PlaceholderPage title="Global Audit" />} />
               </Route>
