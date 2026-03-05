@@ -75,6 +75,7 @@ function App() {
                 <Route path="finance" element={<PlaceholderPage title="Finance" />} />
                 <Route path="users" element={<PlaceholderPage title="Users" />} />
                 <Route path="audit" element={<PlaceholderPage title="Audit Logs" />} />
+                <Route path="notifications" element={<NotificationsPage />} />
               </Route>
 
               {/* Super Admin Routes */}
@@ -88,6 +89,7 @@ function App() {
                 <Route path="staff" element={<AdminManagementPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
                 <Route path="audit" element={<PlaceholderPage title="Global Audit" />} />
+                <Route path="notifications" element={<NotificationsPage />} />
               </Route>
             </Route>
           </Route>

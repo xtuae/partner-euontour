@@ -62,7 +62,7 @@ export function Header() {
                 )}
 
                 {/* Notifications */}
-                <Link to="/notifications" className="p-1 rounded-full text-gray-400 hover:text-brand-red focus:outline-none relative">
+                <Link to={user?.role === 'AGENCY' ? '/agency/notifications' : (user?.role === 'SUPER_ADMIN' ? '/super-admin/notifications' : '/admin/notifications')} className="p-1 rounded-full text-gray-400 hover:text-brand-red focus:outline-none relative">
                     <span className="sr-only">View notifications</span>
                     <Bell className="h-6 w-6" />
                     {unreadCount > 0 && (
@@ -86,7 +86,7 @@ export function Header() {
                     {isProfileOpen && (
                         <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
                             <Link
-                                to={user?.role === 'SUPER_ADMIN' ? '/super-admin/settings' : '/settings'}
+                                to={user?.role === 'SUPER_ADMIN' ? '/super-admin/settings' : (user?.role === 'ADMIN' ? '/admin/dashboard' : '/agency/settings')}
                                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                 onClick={() => setIsProfileOpen(false)}
                             >

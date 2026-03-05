@@ -13,7 +13,7 @@ export function NotificationsPage() {
                 const res = await apiFetch('/api/notifications');
                 if (res.ok) {
                     const data = await res.json();
-                    setNotifications(data.notifications);
+                    setNotifications(Array.isArray(data.notifications) ? data.notifications : []);
                 }
             } catch (error) {
                 console.error(error);
@@ -35,7 +35,7 @@ export function NotificationsPage() {
     };
 
     const getIcon = (title: string) => {
-        if (!title) return <Info className="w-5 h-5 text-blue-500" />;
+        if (!title || typeof title !== 'string') return <Info className="w-5 h-5 text-blue-500" />;
         const titleLower = title.toLowerCase();
         if (titleLower.includes('approve') || titleLower.includes('success')) {
             return <CheckCircle className="w-5 h-5 text-green-500" />;
@@ -47,7 +47,9 @@ export function NotificationsPage() {
     };
 
     const formatDate = (dateString: string) => {
+        if (!dateString) return 'Unknown Date';
         const date = new Date(dateString);
+        if (isNaN(date.getTime())) return 'Invalid Date';
         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
