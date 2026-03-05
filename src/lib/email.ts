@@ -228,5 +228,24 @@ ${note ? `<p><strong>Admin Note:</strong><br/>${note}</p>` : ''}
 <p>Please log in to your dashboard to view details.</p>
 <p>Regards,<br/><strong>EuOnTour Partner Team</strong></p>
 ${EMAIL_FOOTER}`
+  }),
+
+  // 10. KYC WARNING DEACTIVATION (SUPER ADMIN)
+  KYC_WARNING_DEACTIVATION: (agencyName: string, daysLimit: number, loginLink: string) => ({
+    subject: 'URGENT: Action Required to Prevent Account Deactivation',
+    body: `
+<p>Hello ${agencyName},</p>
+<p style="color:#D32F2F;font-weight:bold;">Action Required: Update your KYC documents immediately.</p>
+<p>Our records indicate your <strong>Passport</strong> or <strong>Trade License</strong> information is missing, invalid, or expired.</p>
+<p><strong>Failure to provide valid documentation within ${daysLimit} days will result in immediate account deactivation.</strong></p>
+<p>Please log in and update your KYC profile to comply with verification standards:</p>
+<p style="text-align:center;">
+  <a href="${loginLink}" style="background:#D32F2F;color:#ffffff;padding:12px 20px;text-decoration:none;border-radius:4px;">
+    Update KYC Now
+  </a>
+</p>
+<p>If you have already sent these forms to your account manager, please ignore this notice.</p>
+<p>Regards,<br/><strong>EuOnTour Compliance Team</strong></p>
+${EMAIL_FOOTER}`
   })
 };

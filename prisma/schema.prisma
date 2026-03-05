@@ -67,6 +67,7 @@ model Agency {
   booking_locked      Boolean            @default(false)
   verification_status VerificationStatus @default(UNVERIFIED)
   wallet_balance      Decimal            @default(0.00) @db.Decimal(12, 2)
+  kycWarningSentAt    DateTime?
   created_at          DateTime           @default(now())
   updated_at          DateTime           @default(now()) @updatedAt
 

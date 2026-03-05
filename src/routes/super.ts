@@ -223,7 +223,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
 
                 await tx.agency.update({
                     where: { id: agencyId },
-                    data: { verification_status: 'UNDER_REVIEW' }
+                    data: { verification_status: 'UNDER_REVIEW', kycWarningSentAt: null }
                 });
 
                 await tx.auditLog.create({
@@ -232,6 +232,25 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             });
 
             return Response.json({ success: true, message: "Proxy KYC Uploaded" });
+        }
+
+        if (action === 'kyc-warning' && req.method === 'POST') {
+            const agency = await prisma.agency.findUnique({ where: { id: agencyId } });
+            if (!agency) return Response.json({ error: 'Agency not found' }, { status: 404 });
+
+            await prisma.$transaction([
+                prisma.agency.update({ where: { id: agencyId }, data: { kycWarningSentAt: new Date() } }),
+                prisma.auditLog.create({
+                    data: { actor_id: user.userId, action: 'KYC_WARNING_SENT', entity: 'AGENCY', entity_id: agencyId }
+                })
+            ]);
+
+            await sendEmail({
+                to: agency.email,
+                ...EMAIL_TEMPLATES.KYC_WARNING_DEACTIVATION(agency.name, 7, `${process.env.NEXT_PUBLIC_APP_URL}/login`)
+            });
+
+            return Response.json({ success: true, message: "Warning Sent" });
         }
     }
 

@@ -3,7 +3,7 @@ import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, XCircle, Clock, Trash2, Edit2, Play, Square, Upload } from 'lucide-react';
+import { BadgeCheck, XCircle, Clock, Trash2, Edit2, Play, Square, Upload, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { ProxyKycUploadModal } from './ProxyKycUploadModal';
 
@@ -21,6 +21,7 @@ interface Agency {
     email: string;
     type: string;
     status: string;
+    kycWarningSentAt?: string | null;
     created_at: string;
 }
 
@@ -188,6 +189,21 @@ export function SuperAdminVerificationList() {
         }
     };
 
+    const handleSendKycWarning = async (id: string, name: string) => {
+        if (!confirm(`Are you sure you want to send a strict KYC deactivation warning to ${name}?`)) return;
+        try {
+            const res = await apiFetch(`/api/super/agencies/${id}/kyc-warning`, { method: 'POST' });
+            if (res.ok) {
+                alert(`Warning sent to ${name}`);
+                fetchAgencies();
+            } else {
+                alert('Failed to send warning');
+            }
+        } catch (err) {
+            alert('Error sending warning');
+        }
+    };
+
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'VERIFIED': return <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs flex items-center gap-1"><BadgeCheck size={12} /> Verified</span>;
@@ -280,9 +296,16 @@ export function SuperAdminVerificationList() {
                                             <span className="px-2.5 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium border border-gray-200">{agency.type}</span>
                                         </td>
                                         <td className="p-4">
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${agency.status === 'ACTIVE' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
-                                                {agency.status || 'ACTIVE'}
-                                            </span>
+                                            <div className="flex flex-col items-start gap-1">
+                                                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${agency.status === 'ACTIVE' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`}>
+                                                    {agency.status || 'ACTIVE'}
+                                                </span>
+                                                {agency.kycWarningSentAt && (
+                                                    <span className="text-[10px] font-semibold text-red-600 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded shadow-sm">
+                                                        Warning Sent: {new Date(agency.kycWarningSentAt).toLocaleDateString()}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td className="p-4 text-sm text-gray-500">
                                             {new Date(agency.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -294,6 +317,9 @@ export function SuperAdminVerificationList() {
                                                 </Button>
                                                 {isSuperAdmin && (
                                                     <>
+                                                        <Button variant="outline" size="sm" onClick={() => handleSendKycWarning(agency.id, agency.name)} className="bg-white hover:bg-red-50 border-red-200 w-8 h-8 p-0" title="Send KYC Warning">
+                                                            <AlertTriangle size={14} className="text-red-600" />
+                                                        </Button>
                                                         <Button variant="outline" size="sm" onClick={() => { setProxyAgency({ id: agency.id, name: agency.name }); setIsProxyModalOpen(true); }} className="bg-white hover:bg-blue-50 border-blue-200 w-8 h-8 p-0" title="Upload Proxy KYC">
                                                             <Upload size={14} className="text-brand-blue" />
                                                         </Button>
