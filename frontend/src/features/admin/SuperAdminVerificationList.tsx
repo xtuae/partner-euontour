@@ -3,8 +3,9 @@ import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, XCircle, Clock, Trash2, Edit2, Play, Square } from 'lucide-react';
+import { BadgeCheck, XCircle, Clock, Trash2, Edit2, Play, Square, Upload } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
+import { ProxyKycUploadModal } from './ProxyKycUploadModal';
 
 interface Verification {
     agencyId: string;
@@ -34,6 +35,9 @@ export function SuperAdminVerificationList() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
     const [selectedAgencyId, setSelectedAgencyId] = useState<string | null>(null);
+
+    const [isProxyModalOpen, setIsProxyModalOpen] = useState(false);
+    const [proxyAgency, setProxyAgency] = useState<{ id: string, name: string } | null>(null);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({ companyName: '', ownerName: '', email: '', password: '', phone: '', type: 'Retail' });
@@ -290,6 +294,9 @@ export function SuperAdminVerificationList() {
                                                 </Button>
                                                 {isSuperAdmin && (
                                                     <>
+                                                        <Button variant="outline" size="sm" onClick={() => { setProxyAgency({ id: agency.id, name: agency.name }); setIsProxyModalOpen(true); }} className="bg-white hover:bg-blue-50 border-blue-200 w-8 h-8 p-0" title="Upload Proxy KYC">
+                                                            <Upload size={14} className="text-brand-blue" />
+                                                        </Button>
                                                         <Button
                                                             variant="outline"
                                                             size="sm"
@@ -367,6 +374,18 @@ export function SuperAdminVerificationList() {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {isProxyModalOpen && proxyAgency && (
+                <ProxyKycUploadModal
+                    agencyId={proxyAgency.id}
+                    agencyName={proxyAgency.name}
+                    onClose={() => setIsProxyModalOpen(false)}
+                    onSuccess={() => {
+                        setIsProxyModalOpen(false);
+                        fetchVerifications();
+                    }}
+                />
             )}
         </div>
     );

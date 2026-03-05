@@ -139,14 +139,26 @@ async function submitVerification(req: Request, userToken: AuthUser) {
         const idType = formData.get('idType') as string;
         const idNumber = formData.get('idNumber') as string;
         const idExpiryStr = formData.get('idExpiry') as string;
+        const licenseExpiryStr = formData.get('licenseExpiry') as string;
 
         const businessDoc = formData.get('businessDoc') as File;
         const idFront = formData.get('idFront') as File;
         const idBack = formData.get('idBack') as File | null;
         const selfie = formData.get('selfie') as File | null;
+        const passportDoc = formData.get('passportDoc') as File | null;
 
-        if (!fullName || !businessDoc || !idFront) {
-            return Response.json({ error: "Missing fields" }, { status: 400 });
+        if (!fullName || !businessDoc || !idFront || !licenseExpiryStr) {
+            return Response.json({ error: "Missing required fields" }, { status: 400 });
+        }
+
+        // 6-Month Validation
+        const licenseExpiryDate = new Date(licenseExpiryStr);
+        const today = new Date();
+        const diffTime = licenseExpiryDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 180) {
+            return Response.json({ error: "License must be valid for at least 6 months" }, { status: 400 });
         }
 
         const user = await prisma.user.findUnique({ where: { id: userToken.userId }, include: { agency: true } });
@@ -170,6 +182,9 @@ async function submitVerification(req: Request, userToken: AuthUser) {
         let selfieData = null;
         if (selfie) selfieData = await uploadBlob(selfie, 'selfie');
 
+        let passportData = null;
+        if (passportDoc) passportData = await uploadBlob(passportDoc, 'passport');
+
         // Transaction
         const kycId = await prisma.$transaction(async (tx: any) => {
             await tx.verificationDocument.create({
@@ -192,6 +207,8 @@ async function submitVerification(req: Request, userToken: AuthUser) {
                     idBackThumbnail: idBackData?.thumbnailUrl,
                     selfieUrl: selfieData?.url,
                     selfieThumbnail: selfieData?.thumbnailUrl,
+                    passportUrl: passportData?.url,
+                    licenseExpiryDate: licenseExpiryDate,
                     status: 'PENDING',
                     ocrStatus: 'PENDING'
                 }

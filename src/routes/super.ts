@@ -145,6 +145,94 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             }
             return Response.json({ success: true });
         }
+
+        if (action === 'kyc' && req.method === 'POST') {
+            const { put } = await import('@vercel/blob');
+            const formData = await req.formData();
+
+            const fullName = formData.get('fullName') as string;
+            const nationality = formData.get('nationality') as string;
+            const idType = formData.get('idType') as string;
+            const idNumber = formData.get('idNumber') as string;
+
+            const licenseExpiryStr = formData.get('licenseExpiry') as string;
+            const idExpiryStr = formData.get('idExpiry') as string;
+
+            const businessDoc = formData.get('businessDoc') as File | null;
+            const idFront = formData.get('idFront') as File | null;
+            const idBack = formData.get('idBack') as File | null;
+            const selfie = formData.get('selfie') as File | null;
+            const passportDoc = formData.get('passportDoc') as File | null;
+
+            if (!fullName || !idFront || !licenseExpiryStr) {
+                return Response.json({ error: "Missing required fields" }, { status: 400 });
+            }
+
+            const licenseExpiryDate = new Date(licenseExpiryStr);
+            const today = new Date();
+            const diffTime = licenseExpiryDate.getTime() - today.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 180) {
+                return Response.json({ error: "License must be valid for at least 6 months" }, { status: 400 });
+            }
+
+            const uploadBlob = async (file: File | null, prefix: string) => {
+                if (!file || file.size === 0) return null;
+                const buf = Buffer.from(await file.arrayBuffer());
+                const filename = `verification/${prefix}_${Date.now()}_${file.name}`;
+                const blob = await put(filename, buf, { access: 'public', token: process.env.BLOB_READ_WRITE_TOKEN });
+                return { url: blob.url, thumbnailUrl: blob.url };
+            };
+
+            const businessUpload = await uploadBlob(businessDoc, 'business');
+            const idFrontUpload = await uploadBlob(idFront, 'id_front');
+            const idBackData = await uploadBlob(idBack, 'id_back');
+            const selfieData = await uploadBlob(selfie, 'selfie');
+            const passportData = await uploadBlob(passportDoc, 'passport');
+
+            await prisma.$transaction(async (tx: any) => {
+                if (businessUpload) {
+                    await tx.verificationDocument.create({
+                        data: {
+                            agency_id: agencyId,
+                            doc_type: 'TRADE_LICENSE',
+                            file_url: businessUpload.url,
+                            thumbnail_url: businessUpload.thumbnailUrl
+                        }
+                    });
+                }
+
+                const kyc = await tx.agencyOwnerKyc.create({
+                    data: {
+                        agencyId: agencyId,
+                        fullName, nationality: nationality || 'Unknown', idType: idType || 'ID', idNumber: idNumber || 'Proxy-Upload',
+                        idExpiry: idExpiryStr ? new Date(idExpiryStr) : new Date(licenseExpiryDate),
+                        idFrontUrl: idFrontUpload?.url || '',
+                        idFrontThumbnail: idFrontUpload?.thumbnailUrl,
+                        idBackUrl: idBackData?.url,
+                        idBackThumbnail: idBackData?.thumbnailUrl,
+                        selfieUrl: selfieData?.url,
+                        selfieThumbnail: selfieData?.thumbnailUrl,
+                        passportUrl: passportData?.url,
+                        licenseExpiryDate: licenseExpiryDate,
+                        status: 'PENDING',
+                        ocrStatus: 'PENDING'
+                    }
+                });
+
+                await tx.agency.update({
+                    where: { id: agencyId },
+                    data: { verification_status: 'UNDER_REVIEW' }
+                });
+
+                await tx.auditLog.create({
+                    data: { actor_id: user.userId, action: 'PROXY_KYC_UPLOAD', entity: 'AGENCY', entity_id: agencyId }
+                });
+            });
+
+            return Response.json({ success: true, message: "Proxy KYC Uploaded" });
+        }
     }
 
     if (entity === 'notify' && req.method === 'POST') {

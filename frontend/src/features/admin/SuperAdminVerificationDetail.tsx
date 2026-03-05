@@ -12,7 +12,9 @@ interface Detail {
         idFrontUrl: string;
         idBackUrl?: string;
         selfieUrl?: string;
-        submittedAt: string
+        passportUrl?: string;
+        licenseExpiryDate?: string;
+        submittedAt: string;
     };
 }
 
@@ -103,6 +105,16 @@ export function SuperAdminVerificationDetail() {
                 </div>
             </div>
 
+            {data.verification.licenseExpiryDate && (
+                <div className="mb-6 p-4 bg-gray-50 border rounded-lg flex items-center gap-2 text-sm text-gray-700">
+                    <span className="font-semibold text-gray-900">License Expiry Date:</span>
+                    {new Date(data.verification.licenseExpiryDate).toLocaleDateString()}
+                    {new Date(data.verification.licenseExpiryDate) < new Date(Date.now() + 180 * 24 * 60 * 60 * 1000) && (
+                        <span className="text-red-500 font-bold ml-2">(Expires in &lt; 6 months)</span>
+                    )}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <Card>
                     <CardHeader><CardTitle>Documents</CardTitle></CardHeader>
@@ -124,6 +136,12 @@ export function SuperAdminVerificationDetail() {
                                 <div>
                                     <h3 className="text-sm font-semibold mb-2">Selfie</h3>
                                     <img src={data.verification.selfieUrl} alt="Selfie" className="w-full rounded object-cover max-h-64 border" />
+                                </div>
+                            )}
+                            {data.verification.passportUrl && (
+                                <div>
+                                    <h3 className="text-sm font-semibold mb-2">Passport</h3>
+                                    <img src={data.verification.passportUrl} alt="Passport" className="w-full rounded border" />
                                 </div>
                             )}
                         </div>

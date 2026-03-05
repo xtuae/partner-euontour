@@ -160,6 +160,21 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
         return Response.json({ success: true });
     }
 
+    if (action === 'kyc-reminder' && req.method === 'POST') {
+        const agency = await prisma.agency.findUnique({ where: { id: agencyId } });
+        if (!agency) return Response.json({ error: 'Agency not found' }, { status: 404 });
+
+        const uploadLink = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/verification`;
+        await sendEmail({
+            to: agency.email,
+            subject: 'Action Required: Update Your KYC Documents',
+            body: `<p>Dear ${agency.name},</p><p>We have noticed that your KYC documents are either missing, expired, or require updates.</p><p>Please log in and securely upload your documents to maintain your account actively: <a href="${uploadLink}">Upload KYC Documents</a></p><p>Thank you.</p>`
+        });
+
+        await prisma.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_KYC_REMINDER_SENT', entity: 'AGENCY', entity_id: agencyId } });
+        return Response.json({ success: true, message: 'KYC Reminder Sent' });
+    }
+
     // bookings-lock, force-logout... (omitted for brevity, assume implemented if needed or use existing patterns)
 
     return Response.json({ error: 'Not Found' }, { status: 404 });

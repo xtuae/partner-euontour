@@ -247,3 +247,26 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
    - If successful, update the Prisma `Booking` record with `wp_order_id` and set `wp_sync_pending = false`.
 3. **Booking Route Integration (`src/routes/bookings.ts`):**
    - In the `POST /bookings` endpoint (after the `prisma.$transaction` successfully deducts the wallet and creates the local booking), trigger `pushBookingToWordPress(newBooking.id)` asynchronously. Do NOT `await` it in a way that blocks the user's HTTP response. Let it run in the background so the checkout feels instant.
+   ## Milestone 12: Advanced KYC & Compliance Workflow
+**Objective:** Expand the KYC system to capture Passport copies and License Expiry Dates, enforce a strict 6-month validity rule, allow Admins to trigger email reminders, and allow Super Admins to upload documents on behalf of Agencies.
+
+**Target Files:**
+- **Database:** `prisma/schema.prisma`
+- **Backend API:** `src/routes/admin.ts`, `src/routes/super.ts`, `src/routes/kyc.ts` (or equivalent)
+- **Email System:** `src/lib/email.ts`
+- **Frontend UI:** Agency Management List, KYC Verification Detail, Super Admin Proxy KYC Upload.
+
+**Implementation Prompts:**
+1. **Database Schema Update (`prisma/schema.prisma`):**
+   - Update `AgencyOwnerKyc` (or your specific KYC model).
+   - Add `passportUrl String?`.
+   - Add `licenseExpiryDate DateTime?`.
+   - Add `rejectionReason String?` (to store why it was rejected so the agency knows what to fix).
+2. **Backend Validation & Email Reminders:**
+   - **Reminders (`src/routes/admin.ts`):** Create `POST /admin/agencies/:id/kyc-reminder`. This queries the agency's email and triggers `sendEmail` with a "Please upload/update your KYC documents" template.
+   - **Upload Endpoint (`src/routes/kyc.ts` & `src/routes/super.ts`):** Ensure the KYC upload endpoint (both for the Agency and the new Super Admin proxy route `POST /super/agencies/:id/kyc`) accepts the new `passport_image` and `license_expiry_date`.
+   - **The 6-Month Rule:** Before saving the KYC data, parse the `license_expiry_date`. If it is less than 6 months (approx 180 days) from `new Date()`, return a `400 Bad Request: License must be valid for at least 6 months`.
+3. **Approval / Rejection Workflow:**
+   - **Reject:** Update the `PUT /super/agencies/:id/kyc/reject` endpoint to accept a `reason` in the body. Save this to the database, set status to `REJECTED`, and trigger the rejection email including the reason.
+   - **Approve:** Ensure status changes to `VERIFIED`.
+   - **Proxy Upload:** When a Super Admin uploads via `POST /super/agencies/:id/kyc`, set the status to `PENDING` or `UNDER_REVIEW` so it still forces a formal visual verification check and audit log.

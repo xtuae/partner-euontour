@@ -219,6 +219,8 @@ model AgencyOwnerKyc {
   idBackThumbnail String?
   selfieUrl       String?
   selfieThumbnail String?
+  passportUrl     String?
+  licenseExpiryDate DateTime?
   status          String   @default("PENDING") // PENDING | VERIFIED | REJECTED
   rejectionReason String?
   

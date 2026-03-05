@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
-import { CheckCircle, ExternalLink, RefreshCw, Trash2 } from 'lucide-react';
+import { CheckCircle, ExternalLink, RefreshCw, Trash2, Bell } from 'lucide-react';
 import { apiFetch } from '../../lib/api-client';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
@@ -151,6 +151,20 @@ export function AdminVerifiedAgenciesPage() {
         }
     };
 
+    const handleSendReminder = async (id: string) => {
+        if (!confirm('Send a KYC reminder email to this agency?')) return;
+        try {
+            const res = await apiFetch(`/api/admin/agencies/${id}/kyc-reminder`, { method: 'POST' });
+            if (res.ok) {
+                alert('KYC Reminder sent successfully!');
+            } else {
+                alert('Failed to send reminder.');
+            }
+        } catch (err) {
+            alert('Error sending reminder.');
+        }
+    };
+
     useEffect(() => {
         fetchAgencies();
     }, []);
@@ -201,6 +215,9 @@ export function AdminVerifiedAgenciesPage() {
                                             <ExternalLink className="w-4 h-4 mr-2" /> View Details
                                         </Button>
                                     </Link>
+                                    <Button variant="outline" size="sm" onClick={() => handleSendReminder(agency.id)} className="text-blue-600 border-blue-200 hover:bg-blue-50">
+                                        <Bell className="w-4 h-4 mr-2" /> Reminder
+                                    </Button>
                                     {isSuperAdmin && (
                                         <>
                                             <Button variant="outline" size="sm" onClick={() => handleOpenModal('edit', agency)}>
