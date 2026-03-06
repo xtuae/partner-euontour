@@ -40,8 +40,12 @@ export async function agencyRoutes(req: Request, path: string, user: AuthUser) {
     if (path === '/agency/wallet' && req.method === 'GET') {
         const u = await prisma.user.findUnique({ where: { id: user.userId }, select: { agency_id: true } });
         if (!u?.agency_id) return Response.json({ error: 'Agency not found' }, { status: 400 });
-        const agency = await prisma.agency.findUnique({ where: { id: u.agency_id }, select: { wallet_balance: true } });
-        return Response.json({ balance: agency?.wallet_balance || 0 });
+        const [agency, ledger, deposits] = await Promise.all([
+            prisma.agency.findUnique({ where: { id: u.agency_id }, select: { wallet_balance: true } }),
+            prisma.walletLedger.findMany({ where: { agency_id: u.agency_id }, orderBy: { created_at: 'desc' } }),
+            prisma.deposit.findMany({ where: { agency_id: u.agency_id }, orderBy: { created_at: 'desc' } })
+        ]);
+        return Response.json({ balance: agency?.wallet_balance || 0, ledger, deposits });
     }
 
     // Verification Status

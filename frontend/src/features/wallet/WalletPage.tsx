@@ -29,7 +29,7 @@ export function WalletPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        apiFetch('/api/wallet/balance')
+        apiFetch('/api/agency/wallet')
             .then(res => res.json())
             .then(data => {
                 setBalance(Number(data.balance));
