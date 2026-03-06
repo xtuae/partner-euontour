@@ -149,17 +149,17 @@ export function AgencyDashboard() {
                                     <tr key={booking.id} className="hover:bg-gray-50/50">
                                         <td className="px-6 py-4 text-gray-900 font-medium">#{booking.id.slice(-6).toUpperCase()}</td>
                                         <td className="px-6 py-4 text-gray-600">
-                                            {booking.tour?.destination || 'Unknown Destination'}
+                                            {booking.tour?.name || 'Unknown Tour'}
                                         </td>
                                         <td className="px-6 py-4 text-gray-600">
-                                            {new Date(booking.travelDate || booking.createdAt).toLocaleDateString()}
+                                            {new Date(booking.travel_date || booking.created_at).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4">
                                             <Badge variant={booking.status === 'CONFIRMED' ? 'success' : booking.status === 'PENDING' ? 'warning' : 'outline'}>
                                                 {booking.status}
                                             </Badge>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-900 font-medium">€{Number(booking.totalAmount).toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-gray-900 font-medium">€{Number(booking.amount).toFixed(2)}</td>
                                     </tr>
                                 ))}
                             </tbody>

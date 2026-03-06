@@ -266,5 +266,24 @@ ${note ? `<p style="background:#fef2f2;padding:12px;border-left:4px solid #ef444
 <p>If you have already sent these forms to your account manager, please ignore this notice.</p>
 <p>Regards,<br/><strong>EuOnTour Compliance Team</strong></p>
 ` + getFooter()
+  }),
+
+  // 12. BOOKING CANCELLED & REFUNDED
+  BOOKING_CANCELLED_REFUND: (agencyName: string, tourName: string, amount: string, bookingId: string) => ({
+    subject: `Booking Cancelled — €${amount} Refunded`,
+    body: getHeader() + `
+<p>Hello ${agencyName},</p>
+<p>We are writing to inform you that a booking has been <strong style="color:#D32F2F;">cancelled</strong> by the administration.</p>
+<ul style="padding-left: 20px;">
+  <li><strong>Booking ID:</strong> ${bookingId.slice(0, 8)}…</li>
+  <li><strong>Tour:</strong> ${tourName}</li>
+  <li><strong>Refund Amount:</strong> €${amount}</li>
+</ul>
+<p style="background:#ecfdf5;padding:12px;border-left:4px solid #10b981;border-radius:4px;color:#065f46;margin-top:10px;">
+  <strong>€${amount} has been credited back to your wallet.</strong> You can view your updated balance in your dashboard.
+</p>
+<p>If you have any questions about this cancellation, please contact your account manager.</p>
+<p>Regards,<br/><strong>EuOnTour Partner Team</strong></p>
+` + getFooter()
   })
 };

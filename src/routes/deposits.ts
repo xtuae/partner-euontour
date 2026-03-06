@@ -36,6 +36,7 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
             const formData = await req.formData();
             const amountRaw = formData.get('amount') as string;
             const proof = formData.get('proof_image') as File;
+            const referenceNumber = formData.get('referenceNumber') as string || 'UPLOADED_PROOF';
 
             // 2. Safer number parsing
             const amount = parseFloat(amountRaw);
@@ -69,7 +70,7 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
                     id: depositId,
                     agency_id: u.agency_id,
                     amount: amount, // Prisma handles Decimal conversion if type matches
-                    bank_reference: 'UPLOADED_PROOF',
+                    bank_reference: referenceNumber,
                     proof_url: blob.url,
                     status: 'PENDING_ADMIN'
                 } as any
@@ -95,7 +96,7 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
                     ...EMAIL_TEMPLATES.DEPOSIT_SUBMITTED_ADMIN(
                         u.agency?.name || 'Agency',
                         amount.toString(),
-                        'UPLOADED_PROOF',
+                        referenceNumber,
                         adminLink
                     )
                 })

@@ -7,19 +7,31 @@ import { apiFetch } from '../../lib/api-client';
 export function Header() {
     const { user, logout } = useAuth();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [isNotifOpen, setIsNotifOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [notifications, setNotifications] = useState<any[]>([]);
     const [balance, setBalance] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const notifRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         // Fetch unread count
         const fetchNotifications = async () => {
             try {
-                const res = await apiFetch('/api/notifications');
-                if (res.ok) {
-                    const data = await res.json();
-                    const unread = data.notifications.filter((n: any) => !n.read).length;
-                    setUnreadCount(unread);
+                if (user?.role === 'AGENCY') {
+                    const res = await apiFetch('/api/agency/notifications');
+                    if (res.ok) {
+                        const data = await res.json();
+                        setNotifications(data.notifications || []);
+                        setUnreadCount(data.unreadCount || 0);
+                    }
+                } else {
+                    const res = await apiFetch('/api/notifications');
+                    if (res.ok) {
+                        const data = await res.json();
+                        const unread = data.notifications?.filter((n: any) => !n.read).length || 0;
+                        setUnreadCount(unread);
+                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch notifications");
@@ -48,6 +60,9 @@ export function Header() {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setIsProfileOpen(false);
+            }
+            if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+                setIsNotifOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -80,15 +95,55 @@ export function Header() {
                 )}
 
                 {/* Notifications */}
-                <Link to={user?.role === 'AGENCY' ? '/agency/notifications' : (user?.role === 'SUPER_ADMIN' ? '/super-admin/notifications' : '/admin/notifications')} className="p-1 rounded-full text-gray-400 hover:text-brand-red focus:outline-none relative">
-                    <span className="sr-only">View notifications</span>
-                    <Bell className="h-6 w-6" />
-                    {unreadCount > 0 && (
-                        <span className="absolute top-0 right-0 block h-4 w-4 rounded-full bg-brand-red text-white text-[10px] font-bold flex items-center justify-center">
-                            {unreadCount}
-                        </span>
+                <div className="relative" ref={notifRef}>
+                    <button onClick={() => {
+                        if (user?.role === 'AGENCY') {
+                            setIsNotifOpen(!isNotifOpen);
+                        } else {
+                            window.location.href = user?.role === 'SUPER_ADMIN' ? '/#/super-admin/notifications' : '/#/admin/notifications';
+                        }
+                    }} className="p-1 rounded-full text-gray-400 hover:text-brand-red focus:outline-none relative">
+                        <span className="sr-only">View notifications</span>
+                        <Bell className="h-6 w-6" />
+                        {unreadCount > 0 && (
+                            <span className="absolute top-0 right-0 block h-4 w-4 rounded-full bg-brand-red text-white text-[10px] font-bold flex items-center justify-center">
+                                {unreadCount}
+                            </span>
+                        )}
+                    </button>
+
+                    {isNotifOpen && user?.role === 'AGENCY' && (
+                        <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 max-h-[80vh] overflow-y-auto">
+                            <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
+                            </div>
+                            {notifications.length === 0 ? (
+                                <div className="px-4 py-8 text-sm text-center text-gray-500">No recent notifications.</div>
+                            ) : (
+                                <div className="divide-y divide-gray-100">
+                                    {notifications.map(notif => (
+                                        <div key={notif.id} className={`px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition-colors ${notif.isRead ? 'opacity-70 bg-white' : 'bg-blue-50/30'}`} onClick={async () => {
+                                            if (!notif.isRead) {
+                                                await apiFetch(`/api/agency/notifications/${notif.id}/read`, { method: 'PUT' });
+                                                setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, isRead: true } : n));
+                                                setUnreadCount(prev => Math.max(0, prev - 1));
+                                            }
+                                        }}>
+                                            <div className="flex items-start">
+                                                <div className="flex-1">
+                                                    <p className={`text-gray-900 ${notif.isRead ? 'font-medium' : 'font-bold'}`}>{notif.title}</p>
+                                                    <p className="text-gray-600 mt-1 leading-snug">{notif.message}</p>
+                                                    <p className="text-xs text-gray-400 mt-1.5">{new Date(notif.createdAt).toLocaleDateString()} {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                </div>
+                                                {!notif.isRead && <div className="w-2 h-2 rounded-full bg-brand-red mt-1.5 ml-3 flex-shrink-0 shadow-sm"></div>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     )}
-                </Link>
+                </div>
 
                 {/* Profile Dropdown */}
                 <div className="relative ml-3" ref={dropdownRef}>

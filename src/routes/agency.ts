@@ -54,17 +54,12 @@ export async function agencyRoutes(req: Request, path: string, user: AuthUser) {
             where: { id: user.userId },
             include: {
                 agency: {
-                    select: {
-                        verification_status: true,
+                    include: {
                         owner_kyc: {
-                            select: {
-                                status: true,
-                                createdAt: true,
-                                rejectionReason: true
-                            },
                             orderBy: { createdAt: 'desc' },
                             take: 1
-                        }
+                        },
+                        documents: true
                     }
                 }
             }
@@ -79,7 +74,9 @@ export async function agencyRoutes(req: Request, path: string, user: AuthUser) {
             submissionStatus: kyc?.status || 'NOT_SUBMITTED',
             submittedAt: kyc?.createdAt || null,
             reviewedAt: null, // doesn't explicitly exist in schema
-            rejectionReason: kyc?.rejectionReason || null
+            rejectionReason: kyc?.rejectionReason || null,
+            kyc: kyc || null,
+            documents: u.agency.documents || []
         });
     }
 
@@ -97,19 +94,44 @@ export async function agencyRoutes(req: Request, path: string, user: AuthUser) {
             where.status = status;
         }
 
-        const [count, bookings] = await prisma.$transaction([
-            prisma.booking.count({ where }),
-            prisma.booking.findMany({
-                where: where as any,
-                take: limitStr ? parseInt(limitStr) : undefined,
-                orderBy: { created_at: 'desc' },
-                include: {
-                    tour: { select: { name: true, duration: true } }
-                }
-            })
-        ]);
+        const totalCount = await prisma.booking.count({ where });
+        const bookings = await prisma.booking.findMany({
+            where: where as any,
+            take: limitStr ? parseInt(limitStr) : undefined,
+            orderBy: { created_at: 'desc' },
+            include: {
+                tour: { select: { name: true, duration: true } }
+            }
+        });
 
-        return Response.json({ count, bookings });
+        return Response.json({ count: totalCount, bookings });
+    }
+
+    // Notifications
+    if (path === '/agency/notifications' && req.method === 'GET') {
+        const u = await prisma.user.findUnique({ where: { id: user.userId }, select: { agency_id: true } });
+        if (!u?.agency_id) return Response.json({ error: 'Agency not found' }, { status: 400 });
+
+        const notifications = await prisma.appNotification.findMany({
+            where: { agencyId: u.agency_id },
+            orderBy: { createdAt: 'desc' },
+            take: 50
+        });
+        const unreadCount = await prisma.appNotification.count({
+            where: { agencyId: u.agency_id, isRead: false }
+        });
+
+        return Response.json({ notifications, unreadCount });
+    }
+
+    if (path.startsWith('/agency/notifications/') && path.endsWith('/read') && req.method === 'PUT') {
+        const id = path.split('/')[3];
+        await prisma.appNotification.update({
+            where: { id },
+            data: { isRead: true },
+            // Catch error if id doesn't exist
+        }).catch(() => null);
+        return Response.json({ success: true });
     }
 
     return new Response('Not Found', { status: 404 });
@@ -221,6 +243,16 @@ async function submitVerification(req: Request, userToken: AuthUser) {
             await tx.agency.update({
                 where: { id: agencyId },
                 data: { verification_status: 'UNDER_REVIEW' }
+            });
+
+            await tx.auditLog.create({
+                data: {
+                    actor_id: userToken.userId,
+                    action: 'KYC Documents Re-submitted (Status Reset)',
+                    entity: 'AGENCY',
+                    entity_id: agencyId,
+                    agency_id: agencyId
+                }
             });
 
             return kyc.id;

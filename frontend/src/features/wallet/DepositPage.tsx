@@ -16,6 +16,7 @@ export function DepositPage() {
 
     // Manual State
     const [proofFile, setProofFile] = useState<File | null>(null);
+    const [referenceNumber, setReferenceNumber] = useState('');
 
     const handleManualSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,6 +25,7 @@ export function DepositPage() {
         try {
             const formData = new FormData();
             formData.append('amount', amount);
+            formData.append('referenceNumber', referenceNumber);
             if (proofFile) {
                 formData.append('proof_image', proofFile);
             }
@@ -97,8 +99,8 @@ export function DepositPage() {
                 <button
                     onClick={() => setActiveTab('manual')}
                     className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 ${activeTab === 'manual'
-                            ? 'border-brand-red text-brand-red'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        ? 'border-brand-red text-brand-red'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                 >
                     <UploadCloud className="w-4 h-4" />
@@ -107,8 +109,8 @@ export function DepositPage() {
                 <button
                     onClick={() => setActiveTab('online')}
                     className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors border-b-2 ${activeTab === 'online'
-                            ? 'border-brand-red text-brand-red'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        ? 'border-brand-red text-brand-red'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
                         }`}
                 >
                     <Zap className="w-4 h-4" />
@@ -152,6 +154,21 @@ export function DepositPage() {
                                             required
                                         />
                                     </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label htmlFor="manual-reference" className="block text-sm font-medium text-gray-700">
+                                        Bank Reference / Transaction ID
+                                    </label>
+                                    <input
+                                        id="manual-reference"
+                                        type="text"
+                                        placeholder="e.g. TXN-9876543210"
+                                        value={referenceNumber}
+                                        onChange={(e) => setReferenceNumber(e.target.value)}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-brand-red focus:border-brand-red transition-shadow outline-none"
+                                        required
+                                    />
                                 </div>
 
                                 <div className="space-y-2">

@@ -20,6 +20,7 @@ interface DepositEntry {
     status: string;
     created_at: string;
     rejectionReason?: string;
+    bank_reference?: string;
 }
 
 export function WalletPage() {
@@ -117,6 +118,7 @@ export function WalletPage() {
                     <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Reference</th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Amount</th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                         </tr>
@@ -126,6 +128,9 @@ export function WalletPage() {
                             <tr key={dep.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 text-sm text-gray-600">
                                     {new Date(dep.created_at).toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 text-sm font-mono text-gray-500">
+                                    {dep.bank_reference || 'N/A'}
                                 </td>
                                 <td className="px-6 py-4 text-sm font-bold text-gray-900">
                                     €{Number(dep.amount).toFixed(2)}
@@ -145,7 +150,7 @@ export function WalletPage() {
                         ))}
                         {deposits.length === 0 && (
                             <tr>
-                                <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                                <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
                                     No deposit requests found.
                                 </td>
                             </tr>

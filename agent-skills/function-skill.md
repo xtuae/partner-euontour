@@ -405,3 +405,31 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
 3. **Wire Up the Rejection Route (`src/routes/admin.ts`):**
    - In `POST /admin/deposits/:id/reject`, after updating the database status, fetch the agency's email.
    - Call `sendDepositRejectedEmail()`, passing in the `rejectionReason` provided by the Admin.
+
+
+## Milestone 19: Global Booking Management & Wallet Refunds
+**Objective:** Provide Super Admins with a global booking dashboard to monitor all agency sales. Enable a secure cancellation workflow that automatically refunds the agency's wallet and logs the transaction.
+
+**Target Files:**
+- **Backend API:** `src/routes/super.ts` (or `src/routes/bookings.ts`)
+- **Frontend UI:** `frontend/src/features/super/GlobalBookingsPage.tsx`
+- **Notifications:** `src/lib/email.ts` and `AppNotification` creation.
+
+**Implementation Prompts:**
+1. **Global Bookings API (`src/routes/super.ts`):**
+   - Create `GET /super/bookings`. Fetch all bookings globally, ordered by newest first. `include` the related `Agency` (name) and `Tour` (title).
+2. **Cancellation & Refund API:**
+   - Create `POST /super/bookings/:id/cancel`.
+   - **CRITICAL:** Use `prisma.$transaction`.
+     1. Find the booking and ensure it is currently `CONFIRMED`.
+     2. Update the booking status to `CANCELLED`.
+     3. Read the `total_amount_paid` from the booking.
+     4. Increment the associated Agency's `Wallet.balance` by that exact amount.
+     5. Create a `WalletLedger` record (type: 'REFUND', amount: `total_amount_paid`, description: 'Refund for cancelled booking ID X').
+3. **Automated Notifications:**
+   - Inside the cancellation route, trigger a `sendBookingCancelledEmail` to the agency.
+   - Create an `AppNotification` alerting the agency that their wallet has been refunded.
+4. **Super Admin UI (`GlobalBookingsPage.tsx`):**
+   - Build a comprehensive data table showing: Booking ID, Agency Name, Tour Name, Travel Date, Amount, and Status.
+   - Add a 'Cancel Booking' action button. 
+   - When clicked, open a strict confirmation modal: "Are you sure you want to cancel this booking? €[Amount] will be automatically refunded to [Agency Name]'s wallet."

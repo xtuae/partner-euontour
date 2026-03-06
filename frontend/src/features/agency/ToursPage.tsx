@@ -3,47 +3,28 @@ import { Button } from '../../app/components/ui/Button';
 import { MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const MOCK_TOURS = [
-    {
-        id: 'tour_1',
-        name: 'Paris City Highlights',
-        price: 50,
-        duration: '3 hours',
-        location: 'Paris, France',
-        image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&q=80&w=1000',
-        description: 'Experience the magic of Paris with our guided tour of the city\'s most iconic landmarks.'
-    },
-    {
-        id: 'tour_2',
-        name: 'Berlin Wall & Bike',
-        price: 45,
-        duration: '4 hours',
-        location: 'Berlin, Germany',
-        image: 'https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&q=80&w=1000',
-        description: 'Explore the history of the Berlin Wall on this comprehensive bike tour.'
-    },
-    {
-        id: 'tour_3',
-        name: 'Rome Colosseum Express',
-        price: 60,
-        duration: '2 hours',
-        location: 'Rome, Italy',
-        image: 'https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&q=80&w=1000',
-        description: 'Skip the line and dive straight into the history of the world\'s most famous amphitheater.'
-    },
-    {
-        id: 'tour_4',
-        name: 'Barcelona Gaudí Architecture',
-        price: 55,
-        duration: '3.5 hours',
-        location: 'Barcelona, Spain',
-        image: 'https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&q=80&w=1000',
-        description: 'Discover the whimsical world of Antoni Gaudí and his masterpieces.'
-    },
-];
+import { useState, useEffect } from 'react';
+import { apiFetch } from '../../lib/api-client';
 
 export function ToursPage() {
     const navigate = useNavigate();
+    const [tours, setTours] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        apiFetch('/api/agency/tours')
+            .then(res => res.json())
+            .then(data => {
+                setTours(data.tours || []);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error(err);
+                setLoading(false);
+            });
+    }, []);
+
+    if (loading) return <div className="p-8 text-center text-gray-500">Loading tours...</div>;
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -55,7 +36,11 @@ export function ToursPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {MOCK_TOURS.map((tour) => (
+                {tours.length === 0 ? (
+                    <div className="col-span-full py-12 text-center text-gray-500 bg-white rounded-xl border border-gray-100">
+                        No active tours available down this sales channel.
+                    </div>
+                ) : tours.map((tour) => (
                     <Card key={tour.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                         <div className="h-48 overflow-hidden bg-gray-200">
                             <img

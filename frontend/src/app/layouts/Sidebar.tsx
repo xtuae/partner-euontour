@@ -57,6 +57,12 @@ export function Sidebar() {
             roles: [ROLES.AGENCY],
         },
         {
+            label: 'Bookings',
+            href: '/super-admin/bookings',
+            icon: CheckCircle,
+            roles: [ROLES.SUPER_ADMIN],
+        },
+        {
             label: 'Notifications',
             href: '/agency/notifications',
             icon: Bell, // Need to import Bell

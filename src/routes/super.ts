@@ -410,6 +410,98 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
         return Response.json({ logs });
     }
 
+    // ── GLOBAL BOOKINGS ──────────────────────────────────────────
+    if (entity === 'bookings') {
+        // GET /super/bookings — list all bookings globally
+        if (!parts[2] && req.method === 'GET') {
+            const bookings = await prisma.booking.findMany({
+                include: {
+                    agency: { select: { id: true, name: true, email: true } },
+                    tour: { select: { id: true, name: true } }
+                },
+                orderBy: { created_at: 'desc' }
+            });
+            return Response.json({ bookings });
+        }
+
+        // POST /super/bookings/:id/cancel — cancel & refund
+        if (parts[2] && parts[3] === 'cancel' && req.method === 'POST') {
+            const bookingId = parts[2];
+            const booking = await prisma.booking.findUnique({
+                where: { id: bookingId },
+                include: { agency: true, tour: { select: { name: true } } }
+            });
+
+            if (!booking) return Response.json({ error: 'Booking not found' }, { status: 404 });
+            if (booking.status === 'CANCELLED' || booking.status === 'CANCELLED_BY_ADMIN') {
+                return Response.json({ error: 'Booking is already cancelled' }, { status: 400 });
+            }
+
+            const refundAmount = booking.amount;
+
+            await prisma.$transaction(async (tx: any) => {
+                // 1. Cancel the booking
+                await tx.booking.update({
+                    where: { id: bookingId },
+                    data: { status: 'CANCELLED_BY_ADMIN' }
+                });
+
+                // 2. Refund Agency wallet
+                await tx.agency.update({
+                    where: { id: booking.agency_id },
+                    data: { wallet_balance: { increment: refundAmount } }
+                });
+
+                // 3. Create Wallet Ledger entry
+                await tx.walletLedger.create({
+                    data: {
+                        agency_id: booking.agency_id,
+                        type: 'CREDIT',
+                        amount: refundAmount,
+                        reference_type: 'BOOKING_REFUND',
+                        reference_id: bookingId,
+                        description: `Refund for cancelled booking ${bookingId.slice(0, 8)}… (${booking.tour.name})`
+                    }
+                });
+
+                // 4. Audit log
+                await tx.auditLog.create({
+                    data: {
+                        actor_id: user.userId,
+                        action: 'SUPER_CANCEL_BOOKING_REFUND',
+                        entity: 'BOOKING',
+                        entity_id: bookingId,
+                        agency_id: booking.agency_id,
+                        metadata: { refundAmount: refundAmount.toString(), tourName: booking.tour.name }
+                    }
+                });
+
+                // 5. In-app notification
+                await tx.appNotification.create({
+                    data: {
+                        agencyId: booking.agency_id,
+                        title: 'Booking Cancelled & Refunded',
+                        message: `Your booking for "${booking.tour.name}" has been cancelled. €${Number(refundAmount).toFixed(2)} has been refunded to your wallet.`,
+                        type: 'WARNING'
+                    }
+                });
+            });
+
+            // 6. Email notification (fire-and-forget)
+            sendEmail({
+                to: booking.agency.email,
+                ...EMAIL_TEMPLATES.BOOKING_CANCELLED_REFUND(
+                    booking.agency.name,
+                    booking.tour.name,
+                    Number(refundAmount).toFixed(2),
+                    bookingId
+                )
+            }).catch(e => console.error('Failed to send cancellation email:', e));
+
+            return Response.json({ success: true, message: `Booking cancelled. €${Number(refundAmount).toFixed(2)} refunded to ${booking.agency.name}` });
+        }
+    }
+
     return Response.json({ error: 'Not Found' }, { status: 404 });
 }
 

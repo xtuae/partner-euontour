@@ -8,18 +8,15 @@ import { Label } from '../../app/components/ui/Label';
 import { CheckCircle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
-const MOCK_TOURS = [
-    { id: 'tour_1', name: 'Paris City Highlights', price: 50 },
-    { id: 'tour_2', name: 'Berlin Wall & Bike', price: 45 },
-    { id: 'tour_3', name: 'Rome Colosseum Express', price: 60 },
-];
+// dynamic tours fetched below
 
 export function BookingPage() {
     const navigate = useNavigate();
     const { user } = useAuth();
     const isSuperAdmin = user?.role === 'SUPER_ADMIN';
 
-    const [selectedTour, setSelectedTour] = useState(MOCK_TOURS[0].id);
+    const [tours, setTours] = useState<any[]>([]);
+    const [selectedTour, setSelectedTour] = useState('');
     const [date, setDate] = useState('');
     const [pax, setPax] = useState('2');
     const [loading, setLoading] = useState(false);
@@ -30,6 +27,17 @@ export function BookingPage() {
     const [selectedAgency, setSelectedAgency] = useState('');
 
     useEffect(() => {
+        apiFetch('/api/agency/tours')
+            .then(res => res.json())
+            .then(data => {
+                const tourList = data.tours || [];
+                setTours(tourList);
+                if (tourList.length > 0) setSelectedTour(tourList[0].id);
+            })
+            .catch(err => {
+                console.error(err);
+            });
+
         if (isSuperAdmin) {
             apiFetch('/api/admin/agencies')
                 .then(res => res.json())
@@ -130,7 +138,7 @@ export function BookingPage() {
                                 value={selectedTour}
                                 onChange={(e) => setSelectedTour(e.target.value)}
                             >
-                                {MOCK_TOURS.map(tour => (
+                                {tours.map(tour => (
                                     <option key={tour.id} value={tour.id}>
                                         {tour.name} - €{tour.price}
                                     </option>

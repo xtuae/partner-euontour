@@ -78,8 +78,8 @@ model Agency {
   documents           VerificationDocument[]
   owner_kyc           AgencyOwnerKyc[]
   // tours removed as per authoritative schema (Tours are global)
-  agency_tours AgencyTour[]
-  notifications       Notification[]
+  agency_tours        AgencyTour[]
+  app_notifications  AppNotification[]
 }
 
 model User {
@@ -99,7 +99,7 @@ model User {
   refreshTokens RefreshToken[]
   auditLogs     AuditLog[]
   reviewed_deposits Deposit[]
-  notifications      Notification[]
+  // app_notifications AppNotification[] // Not assigning to users directly anymore, only agencies
   
   // Auth extra
 
@@ -272,18 +272,16 @@ model SystemSettings {
     updated_by  String?
 }
 
-// 1.9 NOTIFICATIONS
-model Notification {
+// 1.9 APP NOTIFICATIONS
+model AppNotification {
   id        String   @id @default(uuid())
-  agencyId  String?  // Relation to Agency
-  agency    Agency?  @relation(fields: [agencyId], references: [id])
-  userId    String?  // Relation to User (optional specific target)
-  user      User?    @relation(fields: [userId], references: [id])
+  agencyId  String
+  agency    Agency   @relation(fields: [agencyId], references: [id])
   title     String
   message   String
-  read      Boolean  @default(false)
+  type      String   @default("INFO") // SUCCESS, WARNING, INFO
+  isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
   @@index([agencyId])
-  @@index([userId])
 }
