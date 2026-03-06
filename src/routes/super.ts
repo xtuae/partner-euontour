@@ -24,6 +24,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
     const parts = path.split('/').filter(Boolean); // ["super", "admins", "invite"]
     const entity = parts[1];
 
+    if (entity === 'analytics' && req.method === 'GET') return handleAnalytics(req, user);
     if (entity === 'agencies') {
         if (!parts[2] && req.method === 'GET') {
             const agencies = await prisma.agency.findMany({
@@ -410,4 +411,73 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
     }
 
     return Response.json({ error: 'Not Found' }, { status: 404 });
+}
+
+async function handleAnalytics(req: Request, user: AuthUser) {
+    try {
+        const [
+            walletAgg,
+            revenueAgg,
+            pendingDepositsCount,
+            totalAgencies,
+            recentBookings,
+            topAgencies
+        ] = await Promise.all([
+            // Local Liabilities (Wallet Balances)
+            prisma.agency.aggregate({ _sum: { wallet_balance: true } }),
+
+            // Total Platform Revenue
+            prisma.booking.aggregate({ _sum: { amount: true }, where: { status: 'CONFIRMED' } }),
+
+            // Pending Requests
+            prisma.deposit.count({ where: { status: { in: ['PENDING_ADMIN', 'PENDING_SUPER_ADMIN'] } } }),
+
+            // Active Agencies Count
+            prisma.agency.count({ where: { status: 'ACTIVE' } }),
+
+            // 5 Most Recent Bookings Across Platform
+            prisma.booking.findMany({
+                orderBy: { created_at: 'desc' },
+                take: 5,
+                include: { agency: { select: { name: true } }, tour: { select: { name: true } } }
+            }),
+
+            // Top 5 Agencies By Volume (grouping by booking amount)
+            prisma.booking.groupBy({
+                by: ['agency_id'],
+                _sum: { amount: true },
+                where: { status: 'CONFIRMED' },
+                orderBy: { _sum: { amount: 'desc' } },
+                take: 5
+            })
+        ]);
+
+        // Enrich the Top Agencies with their Names
+        const enrichedTopAgencies = await Promise.all(topAgencies.map(async (top) => {
+            const agency = await prisma.agency.findUnique({ where: { id: top.agency_id }, select: { name: true } });
+            return {
+                agencyName: agency?.name || 'Unknown',
+                revenue: Number(top._sum.amount) || 0
+            };
+        }));
+
+        return Response.json({
+            liabilities: Number(walletAgg._sum.wallet_balance) || 0,
+            revenue: Number(revenueAgg._sum.amount) || 0,
+            pendingDeposits: pendingDepositsCount,
+            activeAgencies: totalAgencies,
+            recentBookings: recentBookings.map(b => ({
+                id: b.id,
+                agency: b.agency?.name || 'Unknown',
+                tour: b.tour?.name || 'Unknown',
+                amount: b.amount,
+                date: b.created_at,
+                status: b.status
+            })),
+            topAgencies: enrichedTopAgencies
+        });
+    } catch (e) {
+        console.error('Analytics Error:', e);
+        return Response.json({ error: 'Failed to aggregate analytics' }, { status: 500 });
+    }
 }

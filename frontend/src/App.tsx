@@ -21,6 +21,7 @@ import { ToursPage } from './features/agency/ToursPage';
 import { SettingsPage } from './features/agency/SettingsPage';
 import { NotificationsPage } from './features/notifications/NotificationsPage';
 import { AdminDashboard } from './features/admin/AdminDashboard';
+import { DashboardOverview } from './features/super/DashboardOverview';
 import { AdminDepositsPage } from './features/admin/AdminDepositsPage';
 import { AdminVerificationPage } from './features/admin/AdminVerificationPage';
 import { AdminSettingsPage } from './features/admin/AdminSettingsPage';
@@ -83,7 +84,7 @@ function App() {
               {/* Super Admin Routes */}
               <Route path="/super-admin" element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]} />}>
                 {/* Reuse Admin components for now or create specific ones */}
-                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="dashboard" element={<DashboardOverview />} />
                 <Route path="agency-verifications" element={<SuperAdminVerificationList />} />
                 <Route path="agency-verifications/:agencyId" element={<SuperAdminVerificationDetail />} />
                 <Route path="deposits" element={<AdminDepositsPage />} />
