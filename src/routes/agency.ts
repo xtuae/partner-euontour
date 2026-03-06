@@ -88,7 +88,7 @@ export async function agencyRoutes(req: Request, path: string, user: AuthUser) {
         const limitStr = url.searchParams.get('limit');
         const status = url.searchParams.get('status'); // Optional filter
 
-        const where: any = { agencyId: u.agency_id };
+        const where: any = { agency_id: u.agency_id };
         if (status) {
             where.status = status;
         }

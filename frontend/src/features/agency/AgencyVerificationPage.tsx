@@ -109,10 +109,17 @@ export function AgencyVerificationPage() {
                     <h3 className="text-lg font-semibold border-b pb-2">2. Document Uploads</h3>
 
                     <div className="grid grid-cols-1 gap-6">
-                        <div>
-                            <Label className="mb-2 block">Business Trade License / Registration</Label>
-                            <Input name="businessDoc" type="file" required accept=".pdf,.jpg,.png,.jpeg" className="bg-gray-50" />
-                            <p className="text-xs text-gray-500 mt-1">Upload valid company registration document.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label className="mb-2 block">Business Trade License / Registration</Label>
+                                <Input name="businessDoc" type="file" required accept=".pdf,.jpg,.png,.jpeg" className="bg-gray-50" />
+                                <p className="text-xs text-gray-500 mt-1">Upload valid company registration document.</p>
+                            </div>
+                            <div>
+                                <Label className="mb-2 block">Trade License Expiry Date</Label>
+                                <Input name="licenseExpiry" type="date" required className="bg-gray-50" />
+                                <p className="text-xs text-gray-500 mt-1">Required to map expiration boundaries.</p>
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
