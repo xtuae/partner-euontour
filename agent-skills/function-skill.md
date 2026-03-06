@@ -388,4 +388,20 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
    - **Data Visualization:** Install a charting library like `recharts` or `chart.js`. Create a bar chart showing "Revenue over the last 30 days" or "Bookings by Top 5 Agencies".
    - **Quick Actions:** Add a small table showing the 5 most recent activities (e.g., latest bookings or latest approved deposits) with quick links to view them.
 
-   
+## Milestone 18: Transactional Emails for Wallet Deposits
+**Objective:** Automatically send professional, branded HTML emails to agencies when their offline deposit requests are either approved (funds credited) or rejected (action required).
+
+**Target Files:**
+- **Email Service:** `src/lib/email.ts` (or your existing mailer utility)
+- **Backend API:** `src/routes/admin.ts` (or `src/routes/deposits.ts`)
+
+**Implementation Prompts:**
+1. **Create Email Templates (`src/lib/email.ts`):**
+   - **Template 1 (Deposit Approved):** Create a function `sendDepositApprovedEmail(email, agencyName, amount, newBalance)`. The HTML template should say: "Great news! Your wallet deposit of €[Amount] has been approved and credited. Your new balance is €[NewBalance]. You are ready to book tours."
+   - **Template 2 (Deposit Rejected):** Create a function `sendDepositRejectedEmail(email, agencyName, amount, reason)`. The HTML template should say: "There was an issue with your recent deposit request of €[Amount]. Reason: [Reason]. Please log in to your dashboard to upload a new receipt or contact support."
+2. **Wire Up the Approval Route (`src/routes/admin.ts`):**
+   - In `POST /admin/deposits/:id/approve`, right after the `prisma.$transaction` successfully commits and the wallet is updated, query the associated `User` record to get the agency's email address.
+   - Call `sendDepositApprovedEmail()` asynchronously (using `.catch(console.error)` so it doesn't block the API response if the email server is slow).
+3. **Wire Up the Rejection Route (`src/routes/admin.ts`):**
+   - In `POST /admin/deposits/:id/reject`, after updating the database status, fetch the agency's email.
+   - Call `sendDepositRejectedEmail()`, passing in the `rejectionReason` provided by the Admin.

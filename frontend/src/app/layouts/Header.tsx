@@ -8,6 +8,7 @@ export function Header() {
     const { user, logout } = useAuth();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [balance, setBalance] = useState<number | null>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -25,7 +26,22 @@ export function Header() {
             }
         };
         fetchNotifications();
-    }, []);
+
+        if (user?.role === 'AGENCY') {
+            const fetchBalance = async () => {
+                try {
+                    const res = await apiFetch('/api/agency/wallet');
+                    if (res.ok) {
+                        const data = await res.json();
+                        setBalance(data.balance);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch balance");
+                }
+            };
+            fetchBalance();
+        }
+    }, [user]);
 
     // Close dropdown on click outside
     useEffect(() => {
@@ -57,7 +73,9 @@ export function Header() {
                 {user?.role === 'AGENCY' && (
                     <div className="hidden sm:flex items-center px-3 py-1 bg-green-50 text-green-700 rounded-full border border-green-200">
                         <span className="text-xs font-medium uppercase mr-2">Balance</span>
-                        <span className="font-semibold text-sm">€ 2,450.00</span>
+                        <span className="font-semibold text-sm">
+                            {balance === null ? '€...' : `€ ${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
+                        </span>
                     </div>
                 )}
 
