@@ -62,9 +62,9 @@ export function WalletPage() {
                     <CardTitle>Current Balance</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-4xl font-bold text-brand-black">
-                        €{(balance || 0).toFixed(2)}
-                    </div>
+                    <p className="text-3xl font-bold text-gray-900 mt-1">
+                        {balance === null ? '€...' : `€${Number(balance || 0).toFixed(2)}`}
+                    </p>
                     <p className="text-gray-500 mt-1">Available for new bookings</p>
                 </CardContent>
             </Card>

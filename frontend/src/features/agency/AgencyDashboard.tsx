@@ -91,7 +91,9 @@ export function AgencyDashboard() {
                             <Wallet className="w-4 h-4" />
                         </span>
                     </div>
-                    <p className="text-2xl font-bold text-gray-900">€{stats.balance.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                        {stats.balance === undefined ? '€...' : `€${Number(stats.balance || 0).toFixed(2)}`}
+                    </p>
                     <p className="text-xs text-gray-400 mt-1">Available for bookings</p>
                 </Card>
 

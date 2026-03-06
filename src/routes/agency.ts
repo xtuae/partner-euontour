@@ -108,7 +108,7 @@ export async function agencyRoutes(req: Request, path: string, user: AuthUser) {
     }
 
     // Notifications
-    if (path === '/agency/notifications' && req.method === 'GET') {
+    if ((path === '/agency/notifications' || path === '/api/agency/notifications') && req.method === 'GET') {
         const u = await prisma.user.findUnique({ where: { id: user.userId }, select: { agency_id: true } });
         if (!u?.agency_id) return Response.json({ error: 'Agency not found' }, { status: 400 });
 
@@ -124,12 +124,15 @@ export async function agencyRoutes(req: Request, path: string, user: AuthUser) {
         return Response.json({ notifications, unreadCount });
     }
 
-    if (path.startsWith('/agency/notifications/') && path.endsWith('/read') && req.method === 'PUT') {
-        const id = path.split('/')[3];
+    if ((path.startsWith('/agency/notifications/') || path.startsWith('/api/agency/notifications/')) && path.endsWith('/read') && req.method === 'PUT') {
+        const parts = path.split('/');
+        // if path is /api/agency/notifications/123/read -> parts[4]
+        // if path is /agency/notifications/123/read -> parts[3]
+        const id = path.includes('/api/') ? parts[4] : parts[3];
+
         await prisma.appNotification.update({
             where: { id },
-            data: { isRead: true },
-            // Catch error if id doesn't exist
+            data: { isRead: true }
         }).catch(() => null);
         return Response.json({ success: true });
     }
