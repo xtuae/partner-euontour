@@ -28,6 +28,7 @@ export async function adminRoutes(req: Request, path: string, user: AuthUser) {
     if (entity === 'agencies') return handleAgencies(req, parts.slice(2), user);
     if (entity === 'agency-verifications') return handleVerifications(req, parts.slice(2), user);
     if (entity === 'finance') return handleFinance(req, parts.slice(2), user);
+    if (entity === 'deposits') return handleDeposits(req, parts.slice(2), user);
     if (entity === 'bookings') return handleAdminBookings(req, parts.slice(2), user); // Legacy? Bookings route handles it.
     // If Admin wants to cancel bookings, they go to /bookings/[id]/cancel usually. 
     // But my previous consolidation for bookings had /api/bookings/[id]/cancel.
@@ -314,4 +315,105 @@ async function handleAdminBookings(req: Request, segments: string[], user: AuthU
     // Implement if Admin-Bookings logic is distinct. 
     // Currently bookingsRoutes handles cancel logic.
     return Response.json({ error: 'Use /bookings endpoint' }, { status: 404 });
+}
+
+async function handleDeposits(req: Request, segments: string[], user: AuthUser) {
+    // GET /admin/deposits (list PENDING_ADMIN)
+    if (segments.length === 0 && req.method === 'GET') {
+        const deposits = await prisma.deposit.findMany({
+            where: { status: 'PENDING_ADMIN' },
+            orderBy: { created_at: 'desc' },
+            include: { agency: { select: { name: true, email: true } } }
+        });
+        return Response.json({ deposits });
+    }
+
+    const id = segments[0];
+    const action = segments[1];
+
+    if (!id || !action) return Response.json({ error: 'Not Found' }, { status: 404 });
+
+    // POST /admin/deposits/:id/approve
+    if (action === 'approve' && req.method === 'POST') {
+        const d = await prisma.deposit.findUnique({ where: { id }, include: { agency: true } });
+        if (!d) return Response.json({ error: 'Deposit not found' }, { status: 404 });
+        if (d.status !== 'PENDING_ADMIN') return Response.json({ error: 'Deposit is not in PENDING_ADMIN state' }, { status: 400 });
+
+        await prisma.$transaction(async (tx) => {
+            // Update Deposit
+            await tx.deposit.update({
+                where: { id },
+                data: { status: 'APPROVED', reviewed_by: user.userId, reviewed_at: new Date() }
+            });
+
+            // Credit Agency Wallet
+            await tx.agency.update({
+                where: { id: d.agency_id },
+                data: { wallet_balance: { increment: d.amount } }
+            });
+
+            // Create Wallet Ledger Entry
+            await tx.walletLedger.create({
+                data: {
+                    agency_id: d.agency_id,
+                    type: 'CREDIT',
+                    amount: d.amount,
+                    reference_type: 'DEPOSIT_APPROVAL',
+                    reference_id: d.id,
+                    description: 'Offline Bank Deposit Approved by Admin'
+                }
+            });
+
+            // Log Audit
+            await tx.auditLog.create({
+                data: { actor_id: user.userId, action: 'ADMIN_APPROVE_DEPOSIT', entity: 'DEPOSIT', entity_id: d.id }
+            });
+        });
+
+        // Email Notification
+        const updatedAgency = await prisma.agency.findUnique({ where: { id: d.agency_id } });
+        if (updatedAgency) {
+            await sendEmail({
+                to: d.agency.email,
+                ...EMAIL_TEMPLATES.DEPOSIT_APPROVED(
+                    d.agency.name,
+                    d.amount.toString(),
+                    updatedAgency.wallet_balance.toString(),
+                    new Date().toISOString()
+                )
+            });
+        }
+
+        return Response.json({ success: true, message: 'Deposit Approved & Wallet Credited' });
+    }
+
+    // POST /admin/deposits/:id/reject
+    if (action === 'reject' && req.method === 'POST') {
+        const body = await req.json();
+        const reason = body.rejectionReason || 'No reason provided';
+
+        const d = await prisma.deposit.findUnique({ where: { id }, include: { agency: true } });
+        if (!d) return Response.json({ error: 'Deposit not found' }, { status: 404 });
+        if (d.status !== 'PENDING_ADMIN') return Response.json({ error: 'Deposit is not in PENDING_ADMIN state' }, { status: 400 });
+
+        await prisma.$transaction([
+            prisma.deposit.update({
+                where: { id },
+                data: { status: 'REJECTED', rejectionReason: reason, reviewed_by: user.userId, reviewed_at: new Date() }
+            }),
+            prisma.auditLog.create({
+                data: { actor_id: user.userId, action: 'ADMIN_REJECT_DEPOSIT', entity: 'DEPOSIT', entity_id: d.id }
+            })
+        ]);
+
+        await sendEmail({
+            to: d.agency.email,
+            subject: 'Wallet Deposit Rejected',
+            body: `<p>Dear ${d.agency.name},</p><p>Your recent wallet deposit of AED ${d.amount.toString()} has been rejected.</p><p><b>Reason:</b> ${reason}</p><p>Please contact support if you have questions.</p>`
+        });
+
+        return Response.json({ success: true, message: 'Deposit Rejected' });
+    }
+
+    return Response.json({ error: 'Not Found' }, { status: 404 });
 }

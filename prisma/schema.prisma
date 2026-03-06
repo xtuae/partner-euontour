@@ -139,6 +139,7 @@ model Deposit {
   proof_url       String?
   thumbnail_url   String?
   status          DepositStatus @default(PENDING_ADMIN)
+  rejectionReason String?
   reviewed_by     String?
   reviewer        User?         @relation(fields: [reviewed_by], references: [id])
   reviewed_at     DateTime?
