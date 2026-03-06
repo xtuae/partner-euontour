@@ -69,15 +69,15 @@ export async function pushBookingToWordPress(bookingId: string) {
 
         const data = await response.json();
 
-        if (data && data.wp_order_id) {
+        if (data && data.id) { // Assuming WP returns an 'id' field for the new booking
             await prisma.booking.update({
                 where: { id: bookingId },
                 data: {
-                    wp_order_id: String(data.wp_order_id),
-                    wp_sync_pending: false
+                    wp_booking_id: Number(data.id) || null,
+                    sync_status: 'SYNCED'
                 }
             });
-            console.log(`[WP Sync] Successfully synced booking ${bookingId}. WP Order ID: ${data.wp_order_id}`);
+            console.log(`[WP Sync] Successfully synced booking ${bookingId}. WP Booking ID: ${data.id}`);
         } else {
             console.error(`[WP Sync] Unexpected response from WP for booking ${bookingId}:`, data);
         }

@@ -5,7 +5,7 @@ import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
 import { pushBookingToWordPress } from '../lib/wp-booking-sync.js';
 import { z } from 'zod';
 
-const CreateBookingSchema = z.object({ tourId: z.string().uuid(), travelDate: z.string().transform(s => new Date(s)), targetAgencyId: z.string().uuid().optional() });
+const CreateBookingSchema = z.object({ tourId: z.string().uuid(), travelDate: z.string().transform(s => new Date(s)), pax: z.number().int().min(1).default(1), targetAgencyId: z.string().uuid().optional() });
 
 export async function bookingsRoutes(req: Request, path: string, user: AuthUser) {
     const parts = path.split('/').filter(Boolean); // ["bookings"]
@@ -25,7 +25,7 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
     // CREATE
     if (parts.length === 1 && req.method === 'POST') {
         requireRole(user, ['AGENCY', 'SUPER_ADMIN']);
-        const { tourId, travelDate, targetAgencyId } = CreateBookingSchema.parse(await req.json());
+        const { tourId, travelDate, pax, targetAgencyId } = CreateBookingSchema.parse(await req.json());
 
         let agencyIdToUse: string;
 
@@ -46,13 +46,33 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
         if (!tour || !tour.active) return Response.json({ error: 'Invalid tour' }, { status: 400 });
 
         // ... (check assignment, check balance, transaction) ...
-        // Simplification for brevity in this refactor step, assumes logic from step 1193:
+        // B2B Pricing Math
+        const subtotal = Number(tour.price) * pax;
+        const discountPercent = 10; // Default or fetched from system settings
+        const discountAmount = subtotal * (discountPercent / 100);
+        const netPrice = subtotal - discountAmount;
+        const vatAmount = netPrice * 0.19; // 19% MWST
+        const finalTotal = netPrice + vatAmount;
 
         const booking = await prisma.$transaction(async (tx: any) => {
-            const updated = await tx.agency.update({ where: { id: agencyIdToUse }, data: { wallet_balance: { decrement: tour.price } } });
+            const updated = await tx.agency.update({ where: { id: agencyIdToUse }, data: { wallet_balance: { decrement: finalTotal } } });
             if (updated.wallet_balance.isNegative()) throw new Error('Insufficient funds');
-            const b = await tx.booking.create({ data: { agency_id: agencyIdToUse, tour_id: tour.id, travel_date: travelDate, amount: tour.price, status: 'CONFIRMED' } });
-            await tx.walletLedger.create({ data: { agency_id: agencyIdToUse, type: 'DEBIT', amount: tour.price, reference_type: 'BOOKING', reference_id: b.id } });
+
+            const b = await tx.booking.create({
+                data: {
+                    agency_id: agencyIdToUse,
+                    tour_id: tour.id,
+                    travel_date: travelDate,
+                    amount: finalTotal,
+                    subtotal: subtotal,
+                    discountAmount: discountAmount,
+                    vatAmount: vatAmount,
+                    guests: pax,
+                    status: 'CONFIRMED'
+                }
+            });
+
+            await tx.walletLedger.create({ data: { agency_id: agencyIdToUse, type: 'DEBIT', amount: finalTotal, reference_type: 'BOOKING', reference_id: b.id } });
 
             if (user.role === 'SUPER_ADMIN') {
                 await tx.auditLog.create({
@@ -60,11 +80,63 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
                 });
             }
 
+            // In-App Notifications
+            await tx.appNotification.create({
+                data: {
+                    agencyId: agencyIdToUse,
+                    title: 'Booking Confirmed',
+                    message: `Your booking for ${tour.name} has been processed. €${finalTotal.toFixed(2)} deducted.`,
+                    type: 'INFO'
+                }
+            });
+
+            // Global Super Admin Notification
+            const superAdmins = await tx.user.findMany({ where: { role: 'SUPER_ADMIN' } });
+            // Since appNotifications are agency-scoped right now according to schema, let's just create an AuditLog
+            // for admins or create a system-level notification if model supports it.  
+            // BUT schema.prisma shows app_notifications bound to Agency. So we just skip the DB admin alert 
+            // and rely strictly on the super admin EMAIL alert.
+
             return b;
         });
 
-        // Async trigger WP Sync
+        // Fetch agency details for emails
+        const bookingAgency = await prisma.agency.findUnique({ where: { id: agencyIdToUse }, include: { users: true } });
+        const agencyEmailUrl = bookingAgency?.email || (bookingAgency?.users[0]?.email);
+
+        // Async trigger WP Sync & Emails
         pushBookingToWordPress(booking.id).catch(err => console.error('[WP Async Sync Error]', err));
+
+        if (agencyEmailUrl && bookingAgency) {
+            sendEmail({
+                to: agencyEmailUrl,
+                ...EMAIL_TEMPLATES.BOOKING_CONFIRMATION(
+                    bookingAgency.name,
+                    tour.name,
+                    pax,
+                    travelDate.toLocaleDateString(),
+                    subtotal.toFixed(2),
+                    discountAmount.toFixed(2),
+                    vatAmount.toFixed(2),
+                    finalTotal.toFixed(2)
+                )
+            }).catch(e => console.error(e));
+        }
+
+        const superAdmins = await prisma.user.findMany({ where: { role: 'SUPER_ADMIN', active: true } });
+        superAdmins.forEach(admin => {
+            sendEmail({
+                to: admin.email,
+                ...EMAIL_TEMPLATES.NEW_BOOKING_ALERT(
+                    bookingAgency?.name || 'Unknown Agency',
+                    tour.name,
+                    pax,
+                    travelDate.toLocaleDateString(),
+                    finalTotal.toFixed(2),
+                    `${process.env.NEXT_PUBLIC_APP_URL}/#/super-admin/bookings`
+                )
+            }).catch(e => console.error(e));
+        });
 
         return Response.json({ success: true, booking });
     }

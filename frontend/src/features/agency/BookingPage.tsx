@@ -26,6 +26,29 @@ export function BookingPage() {
     const [agencies, setAgencies] = useState<{ id: string, name: string }[]>([]);
     const [selectedAgency, setSelectedAgency] = useState('');
 
+    // --- Pricing Engine ---
+    const discountPercent = 10;
+
+    // Find the currently selected tour object to extract its price
+    const currentTourObj = useMemo(() => tours.find(t => t.id === selectedTour), [tours, selectedTour]);
+
+    const orderSummary = useMemo(() => {
+        if (!currentTourObj) return null;
+        const paxCount = parseInt(pax, 10) || 1;
+        const subtotal = Number(currentTourObj.price) * paxCount;
+        const discountAmount = subtotal * (discountPercent / 100);
+        const netPrice = subtotal - discountAmount;
+        const vatAmount = netPrice * 0.19;
+        const finalTotal = netPrice + vatAmount;
+
+        return {
+            subtotal: subtotal.toFixed(2),
+            discountAmount: discountAmount.toFixed(2),
+            vatAmount: vatAmount.toFixed(2),
+            finalTotal: finalTotal.toFixed(2)
+        };
+    }, [currentTourObj, pax]);
+
     useEffect(() => {
         apiFetch('/api/tours')
             .then(res => res.json())
@@ -169,7 +192,29 @@ export function BookingPage() {
                             />
                         </div>
 
-                        <Button type="submit" className="w-full" disabled={loading}>
+                        {orderSummary && (
+                            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3 mt-4">
+                                <h3 className="font-semibold text-gray-800 text-sm tracking-wide uppercase border-b pb-2 mb-2">Order Summary</h3>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                    <span>Subtotal ({pax} {parseInt(pax) === 1 ? 'Guest' : 'Guests'})</span>
+                                    <span>€{orderSummary.subtotal}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-brand-red">
+                                    <span>Agency Discount ({discountPercent}%)</span>
+                                    <span>-€{orderSummary.discountAmount}</span>
+                                </div>
+                                <div className="flex justify-between text-sm text-gray-600">
+                                    <span>MWST (19%)</span>
+                                    <span>€{orderSummary.vatAmount}</span>
+                                </div>
+                                <div className="flex justify-between font-bold text-gray-900 text-lg border-t pt-2 mt-2">
+                                    <span>Total to Deduct</span>
+                                    <span>€{orderSummary.finalTotal}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        <Button type="submit" className="w-full mt-6" disabled={loading}>
                             {loading ? 'Processing...' : 'Confirm Booking'}
                         </Button>
                     </form>

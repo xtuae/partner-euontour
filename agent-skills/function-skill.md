@@ -455,3 +455,31 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
 3. **Fullscreen KYC Documents:**
    - In the KYC Verification views (both for the Admin reviewing and the Agency viewing their own approved docs), wrap all document images (ID Front, ID Back, Selfie, License) in a clickable wrapper.
    - When clicked, trigger the `ImageModal` to view the document in high resolution. Include an `onMouseOver` effect (like a magnifying glass cursor or slight scale transform) so the user knows the image is clickable.
+
+   ## Milestone 21: B2B Pricing Engine & Omnichannel Notifications
+**Objective:** Upgrade the booking logic to calculate per-person pricing, apply dynamic agency discounts, and add 19% MWST. Implement a live price breakdown on the frontend and trigger dual email/in-app notifications for both the Agency and Superadmin.
+
+**Target Files:**
+- **Database:** `prisma/schema.prisma`
+- **Backend Booking Logic:** `src/routes/bookings.ts` (or `agency.ts`)
+- **Frontend Checkout:** `frontend/src/features/agency/NewBooking.tsx`
+- **Email Service:** `src/lib/email.ts`
+
+**Implementation Prompts:**
+1. **Database Update (`schema.prisma`):**
+   - Update the `Booking` model to store the financial breakdown: add `subtotal Float`, `discountAmount Float`, `vatAmount Float`, and ensure `guests Int` exists.
+2. **Backend Pricing Engine (`POST /api/bookings`):**
+   - Fetch the `Tour` base price.
+   - Calculate `subtotal = tour.price * guests`.
+   - Fetch the global `AGENCY_DISCOUNT_PERCENTAGE` (e.g., 10%).
+   - Calculate `discountAmount = subtotal * (discount / 100)`.
+   - Calculate `netPrice = subtotal - discountAmount`.
+   - Calculate 19% MWST: `vatAmount = netPrice * 0.19`.
+   - Calculate `finalTotal = netPrice + vatAmount`.
+   - Deduct `finalTotal` from the Wallet and save all breakdown fields to the `Booking` record.
+3. **Omnichannel Notifications:**
+   - **Emails:** Trigger `sendBookingConfirmation(agencyEmail)` and `sendNewBookingAlert(superAdminEmail)` with the full price breakdown.
+   - **In-App:** Create `AppNotification` records for the `agencyId` AND create a global notification record flagged for the `SUPER_ADMIN` dashboard.
+4. **Frontend Price Summary (`NewBooking.tsx`):**
+   - Add a dynamic "Order Summary" box above the Confirm button.
+   - Use `useEffect` to watch the `selectedTour` and `numberOfGuests` state. Calculate and display the Subtotal, Discount, 19% MWST, and Final Total in real-time so the agency knows exactly what will be deducted from their wallet.

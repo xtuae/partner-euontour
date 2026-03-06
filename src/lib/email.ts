@@ -128,6 +128,63 @@ export const EMAIL_TEMPLATES = {
 ` + getFooter()
   }),
 
+  NEW_DEPOSIT_ALERT: (agencyName: string, amount: string, reference: string, link: string) => ({
+    subject: `New Deposit Request - ${agencyName}`,
+    body: `${getHeader()}
+      <h2 style="color: #334155; margin-top: 0; margin-bottom: 24px;">New Manual Deposit</h2>
+      <p style="margin-bottom: 20px;"><strong>${agencyName}</strong> has submitted a manual deposit request that requires your review.</p>
+      
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin-bottom: 24px;">
+        <p style="margin: 0 0 12px 0;"><strong>Amount:</strong> <span style="color: #047857; font-weight: bold; font-size: 16px;">€${amount}</span></p>
+        <p style="margin: 0;"><strong>Reference:</strong> ${reference}</p>
+      </div>
+
+      <div style="text-align: center; margin-top: 32px;">
+        <a href="${link}" style="background-color: #D32F2F; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 15px; display: inline-block;">Review Deposit Request</a>
+      </div>
+    ${getFooter()}`
+  }),
+
+  BOOKING_CONFIRMATION: (agencyName: string, tourName: string, guests: number, travelDate: string, subtotal: string, discount: string, vat: string, total: string) => ({
+    subject: `Booking Confirmed - ${tourName}`,
+    body: `${getHeader()}
+      <h2 style="color: #047857; margin-top: 0; margin-bottom: 24px;">Booking Confirmed!</h2>
+      <p style="margin-bottom: 20px;">Hello <strong>${agencyName}</strong>,</p>
+      <p>Your booking for <strong>${tourName}</strong> has been successfully confirmed and the amount has been deducted from your wallet.</p>
+      
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin-bottom: 24px;">
+        <p style="margin: 0 0 8px 0;"><strong>Travel Date:</strong> ${travelDate}</p>
+        <p style="margin: 0 0 16px 0;"><strong>Guests:</strong> ${guests}</p>
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 16px;" />
+        <table style="width: 100%; font-size: 14px;">
+          <tr><td style="padding-bottom: 8px;">Subtotal</td><td style="text-align: right; padding-bottom: 8px;">€${subtotal}</td></tr>
+          <tr><td style="padding-bottom: 8px; color: #D32F2F;">Agency Discount</td><td style="text-align: right; padding-bottom: 8px; color: #D32F2F;">-€${discount}</td></tr>
+          <tr><td style="padding-bottom: 8px;">MWST (19%)</td><td style="text-align: right; padding-bottom: 8px;">€${vat}</td></tr>
+          <tr><td style="padding-top: 8px; font-weight: bold; font-size: 16px;">Final Total</td><td style="text-align: right; padding-top: 8px; font-weight: bold; font-size: 16px; color: #047857;">€${total}</td></tr>
+        </table>
+      </div>
+    ${getFooter()}`
+  }),
+
+  NEW_BOOKING_ALERT: (agencyName: string, tourName: string, guests: number, travelDate: string, total: string, link: string) => ({
+    subject: `[ALERT] New Booking - ${agencyName}`,
+    body: `${getHeader()}
+      <h2 style="color: #334155; margin-top: 0; margin-bottom: 24px;">New Agency Booking</h2>
+      <p style="margin-bottom: 20px;"><strong>${agencyName}</strong> has just confirmed a new booking.</p>
+      
+      <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin-bottom: 24px;">
+        <p style="margin: 0 0 8px 0;"><strong>Tour:</strong> ${tourName}</p>
+        <p style="margin: 0 0 8px 0;"><strong>Travel Date:</strong> ${travelDate}</p>
+        <p style="margin: 0 0 8px 0;"><strong>Guests:</strong> ${guests}</p>
+        <p style="margin: 0;"><strong>Net Revenue:</strong> <span style="color: #047857; font-weight: bold;">€${total}</span></p>
+      </div>
+
+      <div style="text-align: center; margin-top: 32px;">
+        <a href="${link}" style="background-color: #D32F2F; color: white; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 15px; display: inline-block;">View Booking in Dashboard</a>
+      </div>
+    ${getFooter()}`
+  }),
+
   // 5. ADMIN REMINDER (CRON)
   ADMIN_REMINDER_PENDING: (count: number, hours: number, adminLink: string) => ({
     subject: 'Reminder: Pending Agency Verifications Awaiting Action',

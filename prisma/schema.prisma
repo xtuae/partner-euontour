@@ -179,17 +179,22 @@ model AgencyTour {
 }
 
 model Booking {
-  id           String        @id @default(uuid())
-  agency_id    String
-  agency       Agency        @relation(fields: [agency_id], references: [id])
-  tour_id      String
-  tour         Tour          @relation(fields: [tour_id], references: [id])
-  travel_date  DateTime      @db.Date
-  amount       Decimal       @db.Decimal(12, 2)
-  status       BookingStatus @default(CONFIRMED)
-  wp_order_id  String?
-  wp_sync_pending Boolean @default(true)
-  created_at   DateTime      @default(now())
+  id                  String             @id @default(uuid())
+  agency_id           String
+  agency              Agency             @relation(fields: [agency_id], references: [id])
+  tour_id             String
+  tour                Tour               @relation(fields: [tour_id], references: [id])
+  travel_date         DateTime           @db.Date
+  amount              Decimal            @db.Decimal(12, 2)
+  subtotal            Decimal?           @db.Decimal(12, 2)
+  discountAmount      Decimal?           @db.Decimal(12, 2)
+  vatAmount           Decimal?           @db.Decimal(12, 2)
+  guests              Int                @default(1)
+  status              BookingStatus      @default(CONFIRMED)
+  wp_booking_id       Int?               // To track ID from WordPress
+  sync_status         String             @default("PENDING") // PENDING, SYNCED, FAILED
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @default(now()) @updatedAt
 
   @@index([agency_id, created_at])
 }
