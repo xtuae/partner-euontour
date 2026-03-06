@@ -203,6 +203,23 @@ export const EMAIL_TEMPLATES = {
 ` + getFooter()
   }),
 
+  // 12. DEPOSIT REJECTED (AGENCY)
+  DEPOSIT_REJECTED: (agencyName: string, amount: string, reason: string) => ({
+    subject: `Wallet Top-Up Rejected - Action Required`,
+    body: getHeader() + `
+<h2 style="color:#D32F2F; margin-top:0;">Deposit Verification Failed</h2>
+<p>Hello ${agencyName},</p>
+<p>Your recent offline bank deposit request of <strong>AED ${amount}</strong> has unfortunately been rejected by our billing team.</p>
+<p><strong>Reason for Rejection:</strong></p>
+<p style="background:#fef2f2;padding:12px;border-left:4px solid #ef4444;border-radius:4px;color:#991b1b;">
+  <strong>${reason}</strong>
+</p>
+<p>Your wallet balance has not been credited. Please review the reason above, make the necessary corrections, and submit a new deposit request attaching the correct proof of transfer.</p>
+<p>If you believe this was an error, please contact our support team immediately.</p>
+<p>Regards,<br/><strong>EuOnTour Partner Billing</strong></p>
+` + getFooter()
+  }),
+
   // 9. BOOKING CONFIRMATION
   BOOKING_CONFIRMED: (agencyName: string, ref: string, tourName: string, amount: string, balance: string) => ({
     subject: 'Booking confirmed successfully',

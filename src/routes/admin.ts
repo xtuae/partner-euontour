@@ -370,10 +370,10 @@ async function handleDeposits(req: Request, segments: string[], user: AuthUser) 
             });
         });
 
-        // Email Notification
+        // Email Notification Background Push
         const updatedAgency = await prisma.agency.findUnique({ where: { id: d.agency_id } });
         if (updatedAgency) {
-            await sendEmail({
+            sendEmail({
                 to: d.agency.email,
                 ...EMAIL_TEMPLATES.DEPOSIT_APPROVED(
                     d.agency.name,
@@ -381,7 +381,7 @@ async function handleDeposits(req: Request, segments: string[], user: AuthUser) 
                     updatedAgency.wallet_balance.toString(),
                     new Date().toISOString()
                 )
-            });
+            }).catch(e => console.error("Failed to send approval email:", e));
         }
 
         return Response.json({ success: true, message: 'Deposit Approved & Wallet Credited' });
@@ -405,12 +405,15 @@ async function handleDeposits(req: Request, segments: string[], user: AuthUser) 
                 data: { actor_id: user.userId, action: 'ADMIN_REJECT_DEPOSIT', entity: 'DEPOSIT', entity_id: d.id }
             })
         ]);
-
-        await sendEmail({
+        // Background Email
+        sendEmail({
             to: d.agency.email,
-            subject: 'Wallet Deposit Rejected',
-            body: `<p>Dear ${d.agency.name},</p><p>Your recent wallet deposit of AED ${d.amount.toString()} has been rejected.</p><p><b>Reason:</b> ${reason}</p><p>Please contact support if you have questions.</p>`
-        });
+            ...EMAIL_TEMPLATES.DEPOSIT_REJECTED(
+                d.agency.name,
+                d.amount.toString(),
+                reason
+            )
+        }).catch(e => console.error("Failed to send rejection email:", e));
 
         return Response.json({ success: true, message: 'Deposit Rejected' });
     }
