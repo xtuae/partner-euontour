@@ -27,11 +27,13 @@ export async function pushBookingToWordPress(bookingId: string) {
         const payload = {
             wp_tour_id: booking.tour.wp_tour_id,
             travel_date: booking.travel_date.toISOString().split('T')[0],
-            adults: 1, // Defaulting to 1 as per current schema limitations
+            adults: booking.guests || 1, // Map from booking.guests instead of hardcoding 1
             children: 0,
             agency_name: booking.agency.name,
             total_amount_paid: Number(booking.amount), // EXACT deducted amount
         };
+
+        console.log("[WP Sync] Sending WP Payload:", payload);
 
         // Standard simplistic JWT structure for inter-service auth if WP expects raw HMAC
         // You might need a proper JWT library here if WP strictly validates header.payload.signature
@@ -83,6 +85,6 @@ export async function pushBookingToWordPress(bookingId: string) {
         }
 
     } catch (error) {
-        console.error(`[WP Sync] Exception while syncing booking ${bookingId}:`, error);
+        console.error(`[WP Sync] Exception while syncing booking ${bookingId} - WP Sync Failed:`, error);
     }
 }
