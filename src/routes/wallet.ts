@@ -10,7 +10,25 @@ export async function walletRoutes(req: Request, path: string, user: AuthUser) {
         const u = await prisma.user.findUnique({ where: { id: user.userId }, select: { agency_id: true } });
         if (!u?.agency_id) return Response.json({ error: 'No agency' }, { status: 403 });
         const a = await prisma.agency.findUnique({ where: { id: u.agency_id } });
-        return Response.json({ balance: a?.wallet_balance || 0 });
+
+        const [ledger, deposits] = await Promise.all([
+            prisma.walletLedger.findMany({
+                where: { agency_id: u.agency_id },
+                orderBy: { created_at: 'desc' },
+                take: 50
+            }),
+            prisma.deposit.findMany({
+                where: { agency_id: u.agency_id },
+                orderBy: { created_at: 'desc' },
+                take: 50
+            })
+        ]);
+
+        return Response.json({
+            balance: a?.wallet_balance || 0,
+            ledger,
+            deposits
+        });
     }
 
     // POST /wallet/topup/online -> Create Checkout Session

@@ -14,9 +14,18 @@ interface LedgerEntry {
     created_at: string;
 }
 
+interface DepositEntry {
+    id: string;
+    amount: string;
+    status: string;
+    created_at: string;
+    rejectionReason?: string;
+}
+
 export function WalletPage() {
     const [balance, setBalance] = useState<number | null>(null);
     const [ledger, setLedger] = useState<LedgerEntry[]>([]);
+    const [deposits, setDeposits] = useState<DepositEntry[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -24,7 +33,8 @@ export function WalletPage() {
             .then(res => res.json())
             .then(data => {
                 setBalance(Number(data.balance));
-                setLedger(data.ledger);
+                setLedger(data.ledger || []);
+                setDeposits(data.deposits || []);
                 setLoading(false);
             })
             .catch(err => {
@@ -93,6 +103,50 @@ export function WalletPage() {
                             <tr>
                                 <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
                                     No transactions yet.
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Deposits Section */}
+            <h2 className="text-xl font-semibold mt-12 mb-4">Pending & Past Top-Ups</h2>
+            <div className="bg-white rounded-lg shadow border border-gray-100 overflow-hidden">
+                <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Amount</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {deposits.map((dep) => (
+                            <tr key={dep.id} className="hover:bg-gray-50">
+                                <td className="px-6 py-4 text-sm text-gray-600">
+                                    {new Date(dep.created_at).toLocaleDateString()}
+                                </td>
+                                <td className="px-6 py-4 text-sm font-bold text-gray-900">
+                                    €{Number(dep.amount).toFixed(2)}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <Badge variant={
+                                        dep.status === 'APPROVED' ? 'success' :
+                                            dep.status === 'REJECTED' ? 'destructive' : 'default'
+                                    }>
+                                        {dep.status}
+                                    </Badge>
+                                    {dep.status === 'REJECTED' && dep.rejectionReason && (
+                                        <div className="text-xs text-red-600 mt-1 max-w-xs">{dep.rejectionReason}</div>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                        {deposits.length === 0 && (
+                            <tr>
+                                <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
+                                    No deposit requests found.
                                 </td>
                             </tr>
                         )}
