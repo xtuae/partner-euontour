@@ -60,7 +60,7 @@ export function BookingPage() {
         try {
             const payload: any = {
                 tourId: selectedTour,
-                date: date || new Date().toISOString().split('T')[0],
+                travelDate: date || new Date().toISOString().split('T')[0],
                 pax: parseInt(pax, 10),
             };
 
@@ -68,7 +68,7 @@ export function BookingPage() {
                 payload.targetAgencyId = selectedAgency;
             }
 
-            const res = await apiFetch('/api/bookings/create', {
+            const res = await apiFetch('/api/bookings', {
                 method: 'POST',
                 body: JSON.stringify(payload),
             });
