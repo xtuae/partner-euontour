@@ -220,7 +220,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
         if (!agency) return Response.json({ error: 'Agency not found' }, { status: 404 });
 
         await prisma.$transaction([
-            prisma.notification.create({
+            prisma.appNotification.create({
                 data: { agencyId: targetAgencyId, title, message }
             }),
             prisma.auditLog.create({
@@ -228,7 +228,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             })
         ]);
 
-        await sendEmail({ to: agency.email, subject: title, body: message });
+        await sendEmail({ to: agency.email, subject: title, body: message }).catch(() => null);
         return Response.json({ success: true });
     }
 

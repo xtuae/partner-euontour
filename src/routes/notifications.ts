@@ -8,13 +8,13 @@ export async function notificationsRoutes(req: Request, path: string, user: Auth
         const dbUser = await prisma.user.findUnique({ where: { id: user.userId } });
         const agencyId = dbUser?.agency_id;
 
-        const OR_CONDITIONS: any[] = [{ userId: user.userId }];
-        if (agencyId) {
-            OR_CONDITIONS.push({ agencyId: agencyId });
+        if (!agencyId) {
+            // Admins/Super Admins currently do not have notifications stored in DB
+            return Response.json({ notifications: [] });
         }
 
-        const notifications = await prisma.notification.findMany({
-            where: { OR: OR_CONDITIONS },
+        const notifications = await prisma.appNotification.findMany({
+            where: { agencyId: agencyId },
             orderBy: { createdAt: 'desc' },
             take: 50
         });
@@ -23,10 +23,10 @@ export async function notificationsRoutes(req: Request, path: string, user: Auth
 
     if (req.method === 'PUT' && parts.length === 3 && parts[2] === 'read') {
         const id = parts[1];
-        await prisma.notification.update({
+        await prisma.appNotification.update({
             where: { id },
-            data: { read: true }
-        });
+            data: { isRead: true }
+        }).catch(() => null);
         return Response.json({ success: true });
     }
 
