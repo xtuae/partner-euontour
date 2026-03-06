@@ -12,7 +12,7 @@ export function ToursPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        apiFetch('/api/agency/tours')
+        apiFetch('/api/tours')
             .then(res => res.json())
             .then(data => {
                 setTours(data.tours || []);

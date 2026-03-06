@@ -433,3 +433,25 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
    - Build a comprehensive data table showing: Booking ID, Agency Name, Tour Name, Travel Date, Amount, and Status.
    - Add a 'Cancel Booking' action button. 
    - When clicked, open a strict confirmation modal: "Are you sure you want to cancel this booking? €[Amount] will be automatically refunded to [Agency Name]'s wallet."
+
+   ## Milestone 20: Universal Image Viewer & Receipt Archiving
+**Objective:** Create a reusable fullscreen image modal (lightbox) and implement it across all KYC documents and Deposit history tables so users and admins can easily view high-resolution files.
+
+**Target Files:**
+- **New Component:** `frontend/src/components/ui/ImageModal.tsx`
+- **Wallet UI:** `frontend/src/features/agency/WalletPage.tsx`
+- **Admin Deposit UI:** `frontend/src/features/admin/DepositManagementPage.tsx`
+- **KYC UI:** `frontend/src/features/admin/VerificationDetailPage.tsx` and Agency `VerificationPage.tsx`
+
+**Implementation Prompts:**
+1. **Create the Universal Modal (`ImageModal.tsx`):**
+   - Build a React component that takes `isOpen`, `imageUrl`, `altText`, and `onClose` props.
+   - Use a fixed, full-screen overlay (`fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4`).
+   - The image should be `max-w-full max-h-full object-contain`.
+   - Add a prominent "Close" (X) button in the top right corner.
+2. **Archived Deposit Receipts (Agency & Admin):**
+   - In both `WalletPage` (Agency) and `DepositManagementPage` (Admin), add a 'Receipt' column to the Deposit history tables.
+   - If `deposit.receiptUrl` exists, render a 'View Receipt' button (or a small thumbnail) that, when clicked, opens the `ImageModal` with that URL.
+3. **Fullscreen KYC Documents:**
+   - In the KYC Verification views (both for the Admin reviewing and the Agency viewing their own approved docs), wrap all document images (ID Front, ID Back, Selfie, License) in a clickable wrapper.
+   - When clicked, trigger the `ImageModal` to view the document in high resolution. Include an `onMouseOver` effect (like a magnifying glass cursor or slight scale transform) so the user knows the image is clickable.

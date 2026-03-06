@@ -5,6 +5,7 @@ import { Button } from '../../app/components/ui/Button';
 import { Input } from '../../app/components/ui/Input';
 import { Label } from '../../app/components/ui/Label';
 import { Badge } from '../../app/components/ui/Badge';
+import { ImageModal } from '../../app/components/ui/ImageModal';
 
 
 export function AgencyVerificationPage() {
@@ -12,6 +13,7 @@ export function AgencyVerificationPage() {
     const [verificationData, setVerificationData] = useState<any>(null);
     const [isReverifying, setIsReverifying] = useState(false);
     const [errorMsg, setErrorMsg] = useState('');
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const formRef = useRef<HTMLFormElement>(null);
 
     useEffect(() => {
@@ -123,7 +125,7 @@ export function AgencyVerificationPage() {
                             <div className="space-y-2">
                                 <span className="text-gray-500 block text-xs uppercase tracking-wider font-semibold">ID Front</span>
                                 <div className="rounded-lg border border-gray-200 overflow-hidden bg-gray-50 aspect-video relative group">
-                                    <img src={verificationData.kyc.idFrontUrl} alt="ID Front" className="w-full h-full object-cover transition-opacity group-hover:opacity-90" />
+                                    <img onClick={() => setSelectedImage(verificationData.kyc.idFrontUrl)} src={verificationData.kyc.idFrontUrl} alt="ID Front" className="w-full h-full object-cover transition-opacity group-hover:opacity-90 cursor-zoom-in" />
                                 </div>
                             </div>
                         )}
@@ -131,7 +133,7 @@ export function AgencyVerificationPage() {
                             <div className="space-y-2">
                                 <span className="text-gray-500 block text-xs uppercase tracking-wider font-semibold">ID Back</span>
                                 <div className="rounded-lg border border-gray-200 overflow-hidden bg-gray-50 aspect-video relative group">
-                                    <img src={verificationData.kyc.idBackUrl} alt="ID Back" className="w-full h-full object-cover transition-opacity group-hover:opacity-90" />
+                                    <img onClick={() => setSelectedImage(verificationData.kyc.idBackUrl)} src={verificationData.kyc.idBackUrl} alt="ID Back" className="w-full h-full object-cover transition-opacity group-hover:opacity-90 cursor-zoom-in" />
                                 </div>
                             </div>
                         )}
@@ -142,7 +144,7 @@ export function AgencyVerificationPage() {
                                     <div className="absolute inset-0 z-0">
                                         <img src={doc.file_url} alt={doc.doc_type} className="w-full h-full object-cover opacity-20 blur-sm" />
                                     </div>
-                                    <Button variant="secondary" size="sm" className="relative z-10 shadow-sm" onClick={() => window.open(doc.file_url, '_blank')}>
+                                    <Button variant="secondary" size="sm" className="relative z-10 shadow-sm" onClick={() => setSelectedImage(doc.file_url)}>
                                         View Document
                                     </Button>
                                 </div>
@@ -156,6 +158,13 @@ export function AgencyVerificationPage() {
                         Update Documents (Re-verify)
                     </Button>
                 </div>
+
+                <ImageModal
+                    isOpen={!!selectedImage}
+                    imageUrl={selectedImage}
+                    altText="Document View"
+                    onClose={() => setSelectedImage(null)}
+                />
             </div>
         );
     }

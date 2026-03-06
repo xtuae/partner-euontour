@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
 import { Check, X, ArrowLeft } from 'lucide-react';
+import { ImageModal } from '../../app/components/ui/ImageModal';
 
 interface Detail {
     agency: { id: string; name: string; email: string; type: string };
@@ -26,6 +27,7 @@ export function SuperAdminVerificationDetail() {
     const [actionLoading, setActionLoading] = useState(false);
     const [rejectReason, setRejectReason] = useState('');
     const [showRejectForm, setShowRejectForm] = useState(false);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
     useEffect(() => {
         fetchDetail();
@@ -135,25 +137,25 @@ export function SuperAdminVerificationDetail() {
                             {data.verification.idFrontUrl && (
                                 <div>
                                     <h3 className="text-sm font-semibold mb-2">ID Front</h3>
-                                    <img src={data.verification.idFrontUrl} alt="ID Front" className="w-full rounded border" />
+                                    <img src={data.verification.idFrontUrl} alt="ID Front" className="w-full rounded border cursor-zoom-in" onClick={() => setSelectedImage(data.verification.idFrontUrl!)} />
                                 </div>
                             )}
                             {data.verification.idBackUrl && (
                                 <div>
                                     <h3 className="text-sm font-semibold mb-2">ID Back</h3>
-                                    <img src={data.verification.idBackUrl} alt="ID Back" className="w-full rounded border" />
+                                    <img src={data.verification.idBackUrl} alt="ID Back" className="w-full rounded border cursor-zoom-in" onClick={() => setSelectedImage(data.verification.idBackUrl!)} />
                                 </div>
                             )}
                             {data.verification.selfieUrl && (
                                 <div>
                                     <h3 className="text-sm font-semibold mb-2">Selfie</h3>
-                                    <img src={data.verification.selfieUrl} alt="Selfie" className="w-full rounded object-cover max-h-64 border" />
+                                    <img src={data.verification.selfieUrl} alt="Selfie" className="w-full rounded object-cover max-h-64 border cursor-zoom-in" onClick={() => setSelectedImage(data.verification.selfieUrl!)} />
                                 </div>
                             )}
                             {data.verification.passportUrl && (
                                 <div>
                                     <h3 className="text-sm font-semibold mb-2">Passport</h3>
-                                    <img src={data.verification.passportUrl} alt="Passport" className="w-full rounded border" />
+                                    <img src={data.verification.passportUrl} alt="Passport" className="w-full rounded border cursor-zoom-in" onClick={() => setSelectedImage(data.verification.passportUrl!)} />
                                 </div>
                             )}
                         </div>
@@ -205,6 +207,12 @@ export function SuperAdminVerificationDetail() {
                     </CardContent>
                 </Card>
             </div>
+            <ImageModal
+                isOpen={!!selectedImage}
+                imageUrl={selectedImage}
+                altText="Document View"
+                onClose={() => setSelectedImage(null)}
+            />
         </div>
     );
 }

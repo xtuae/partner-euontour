@@ -27,7 +27,7 @@ export function BookingPage() {
     const [selectedAgency, setSelectedAgency] = useState('');
 
     useEffect(() => {
-        apiFetch('/api/agency/tours')
+        apiFetch('/api/tours')
             .then(res => res.json())
             .then(data => {
                 const tourList = data.tours || [];

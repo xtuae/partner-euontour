@@ -3,6 +3,7 @@ import { Card, CardContent } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
 import { RefreshCw, CheckCircle, XCircle, Eye, AlertCircle } from 'lucide-react';
 import { apiFetch } from '../../lib/api-client';
+import { ImageModal } from '../../app/components/ui/ImageModal';
 
 interface Deposit {
     id: string;
@@ -23,6 +24,7 @@ export function AdminDepositsPage() {
     const [selectedDepositId, setSelectedDepositId] = useState<string | null>(null);
     const [rejectionReason, setRejectionReason] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
 
     const fetchDeposits = async () => {
         setLoading(true);
@@ -136,11 +138,11 @@ export function AdminDepositsPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 {dep.proof_url ? (
-                                                    <a href={dep.proof_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-brand-blue bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors">
+                                                    <button onClick={() => setSelectedReceipt(dep.proof_url!)} className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-brand-blue bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors">
                                                         <Eye className="w-3.5 h-3.5 mr-1.5" /> View Receipt
-                                                    </a>
+                                                    </button>
                                                 ) : (
-                                                    <span className="text-gray-400 text-xs italic">No Receipt</span>
+                                                    <span className="text-xs text-gray-400">No receipt</span>
                                                 )}
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -187,6 +189,13 @@ export function AdminDepositsPage() {
                     </div>
                 </div>
             )}
+
+            <ImageModal
+                isOpen={!!selectedReceipt}
+                imageUrl={selectedReceipt}
+                altText="Deposit Receipt"
+                onClose={() => setSelectedReceipt(null)}
+            />
         </div>
     );
 }

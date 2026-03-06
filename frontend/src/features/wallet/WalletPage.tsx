@@ -3,8 +3,9 @@ import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
 import { Badge } from '../../app/components/ui/Badge';
 import { Button } from '../../app/components/ui/Button';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ImageModal } from '../../app/components/ui/ImageModal';
 
 interface LedgerEntry {
     id: string;
@@ -21,6 +22,7 @@ interface DepositEntry {
     created_at: string;
     rejectionReason?: string;
     bank_reference?: string;
+    proof_url?: string;
 }
 
 export function WalletPage() {
@@ -28,6 +30,7 @@ export function WalletPage() {
     const [ledger, setLedger] = useState<LedgerEntry[]>([]);
     const [deposits, setDeposits] = useState<DepositEntry[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
 
     useEffect(() => {
         apiFetch('/api/agency/wallet')
@@ -121,6 +124,7 @@ export function WalletPage() {
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Reference</th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Amount</th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Receipt</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -146,11 +150,20 @@ export function WalletPage() {
                                         <div className="text-xs text-red-600 mt-1 max-w-xs">{dep.rejectionReason}</div>
                                     )}
                                 </td>
+                                <td className="px-6 py-4">
+                                    {dep.proof_url ? (
+                                        <button onClick={() => setSelectedReceipt(dep.proof_url!)} className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-brand-blue bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-colors">
+                                            <Eye className="w-3.5 h-3.5 mr-1" /> View
+                                        </button>
+                                    ) : (
+                                        <span className="text-xs text-gray-400">N/A</span>
+                                    )}
+                                </td>
                             </tr>
                         ))}
                         {deposits.length === 0 && (
                             <tr>
-                                <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
                                     No deposit requests found.
                                 </td>
                             </tr>
@@ -158,6 +171,13 @@ export function WalletPage() {
                     </tbody>
                 </table>
             </div>
+
+            <ImageModal
+                isOpen={!!selectedReceipt}
+                imageUrl={selectedReceipt}
+                altText="Deposit Receipt"
+                onClose={() => setSelectedReceipt(null)}
+            />
         </div>
     );
 }

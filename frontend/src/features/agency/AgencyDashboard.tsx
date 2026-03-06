@@ -48,8 +48,10 @@ export function AgencyDashboard() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
+            case 'VERIFIED':
             case 'APPROVED': return 'text-green-600 bg-green-50';
             case 'REJECTED': return 'text-red-600 bg-red-50';
+            case 'PENDING_REVIEW':
             case 'UNDER_REVIEW':
             case 'PENDING': return 'text-yellow-600 bg-yellow-50';
             default: return 'text-gray-600 bg-gray-50';
@@ -58,8 +60,10 @@ export function AgencyDashboard() {
 
     const getStatusText = (status: string) => {
         switch (status) {
+            case 'VERIFIED':
             case 'APPROVED': return 'Verified';
             case 'REJECTED': return 'Rejected';
+            case 'PENDING_REVIEW':
             case 'UNDER_REVIEW': return 'Pending Review';
             default: return 'Not Submitted';
         }
