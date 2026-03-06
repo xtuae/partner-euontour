@@ -53,10 +53,11 @@ export function AdminVerificationPage() {
                 alert(`Agency ${action}D successfully`);
                 fetchAgencies(); // Refresh list
             } else {
-                alert('Action failed');
+                const errData = await res.json().catch(() => ({}));
+                alert(`Error: ${errData.error || 'Action failed'}`);
             }
-        } catch (err) {
-            alert('Error performing action');
+        } catch (err: any) {
+            alert(`Error: ${err.message || 'Error performing action'}`);
         }
     };
 

@@ -54,14 +54,20 @@ export function SuperAdminVerificationDetail() {
         if (!confirm('Are you sure you want to approve this agency? Booking will be unlocked immediately.')) return;
         setActionLoading(true);
         try {
-            const res = await apiFetch(`/api/admin/agencies/${data?.agency.id}/kyc`, {
+            const res = await apiFetch(`/api/admin/agency-verifications/${data?.agency.id}/kyc`, {
                 method: 'PUT',
                 body: JSON.stringify({ action: 'APPROVE' })
             });
             if (res.ok) {
-                alert('Agency Verified Successfully');
+                alert('Agency verified successfully!');
                 navigate('/super-admin/agency-verifications');
+            } else {
+                const errData = await res.json().catch(() => ({}));
+                alert(`Error: ${errData.error || 'Failed to approve agency KYC'}`);
             }
+        } catch (error: any) {
+            console.error(error);
+            alert(`Error: ${error.message || 'An unexpected error occurred'}`);
         } finally {
             setActionLoading(false);
         }
@@ -71,14 +77,20 @@ export function SuperAdminVerificationDetail() {
         if (!rejectReason) return alert('Reason is required');
         setActionLoading(true);
         try {
-            const res = await apiFetch(`/api/admin/agencies/${data?.agency.id}/kyc`, {
+            const res = await apiFetch(`/api/admin/agency-verifications/${data?.agency.id}/kyc`, {
                 method: 'PUT',
                 body: JSON.stringify({ action: 'REJECT', reason: rejectReason })
             });
             if (res.ok) {
-                alert('Agency Rejected');
+                alert('Agency rejected successfully!');
                 navigate('/super-admin/agency-verifications');
+            } else {
+                const errData = await res.json().catch(() => ({}));
+                alert(`Error: ${errData.error || 'Failed to reject agency KYC'}`);
             }
+        } catch (error: any) {
+            console.error(error);
+            alert(`Error: ${error.message || 'An unexpected error occurred'}`);
         } finally {
             setActionLoading(false);
         }
