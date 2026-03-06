@@ -36,6 +36,7 @@ export function WalletPage() {
         apiFetch('/api/agency/wallet')
             .then(res => res.json())
             .then(data => {
+                console.log("Wallet API Response:", data);
                 setBalance(Number(data.balance));
                 setLedger(data.ledger || []);
                 setDeposits(data.deposits || []);

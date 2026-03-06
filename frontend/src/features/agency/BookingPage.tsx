@@ -8,6 +8,12 @@ import { Label } from '../../app/components/ui/Label';
 import { CheckCircle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
+const decodeHTML = (html: string) => {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+};
+
 // dynamic tours fetched below
 
 export function BookingPage() {
@@ -166,7 +172,7 @@ export function BookingPage() {
                             >
                                 {tours.map(tour => (
                                     <option key={tour.id} value={tour.id}>
-                                        {tour.name} - €{tour.price}
+                                        {decodeHTML(tour.name)} - €{tour.price}
                                     </option>
                                 ))}
                             </select>

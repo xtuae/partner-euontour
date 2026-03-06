@@ -6,6 +6,12 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../../lib/api-client';
 
+const decodeHTML = (html: string) => {
+    const txt = document.createElement("textarea");
+    txt.innerHTML = html;
+    return txt.value;
+};
+
 export function ToursPage() {
     const navigate = useNavigate();
     const [tours, setTours] = useState<any[]>([]);
@@ -44,14 +50,14 @@ export function ToursPage() {
                     <Card key={tour.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                         <div className="h-48 overflow-hidden bg-gray-200">
                             <img
-                                src={tour.image}
-                                alt={tour.name}
+                                src={tour.image_url || 'https://via.placeholder.com/400x250?text=Tour+Image'}
+                                alt={decodeHTML(tour.name)}
                                 className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
                             />
                         </div>
                         <CardHeader>
                             <div className="flex justify-between items-start">
-                                <CardTitle className="text-xl">{tour.name}</CardTitle>
+                                <CardTitle className="text-xl">{decodeHTML(tour.name)}</CardTitle>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-brand-light text-brand-red">
                                     €{tour.price}
                                 </span>
