@@ -192,7 +192,7 @@ export function SuperAdminVerificationList() {
     const handleSendKycWarning = async (id: string, name: string) => {
         if (!confirm(`Are you sure you want to send a strict KYC deactivation warning to ${name}?`)) return;
         try {
-            const res = await apiFetch(`/api/super/agencies/${id}/kyc-warning`, { method: 'POST' });
+            const res = await apiFetch(`/api/admin/agencies/${id}/kyc-warning`, { method: 'POST' });
             if (res.ok) {
                 alert(`Warning sent to ${name}`);
                 fetchAgencies();
@@ -315,12 +315,13 @@ export function SuperAdminVerificationList() {
                                                 <Button variant="outline" size="sm" onClick={() => openModal('edit', agency)} className="bg-white hover:bg-gray-50 w-8 h-8 p-0" title="Edit Agency">
                                                     <Edit2 size={14} className="text-gray-600" />
                                                 </Button>
+                                                <Button variant="outline" size="sm" onClick={() => handleSendKycWarning(agency.id, agency.name)} className="bg-white hover:bg-red-50 border-red-200 w-8 h-8 p-0" title="Send KYC Warning">
+                                                    <AlertTriangle size={14} className="text-red-600" />
+                                                </Button>
                                                 {isSuperAdmin && (
                                                     <>
-                                                        <Button variant="outline" size="sm" onClick={() => handleSendKycWarning(agency.id, agency.name)} className="bg-white hover:bg-red-50 border-red-200 w-8 h-8 p-0" title="Send KYC Warning">
-                                                            <AlertTriangle size={14} className="text-red-600" />
-                                                        </Button>
                                                         <Button variant="outline" size="sm" onClick={() => { setProxyAgency({ id: agency.id, name: agency.name }); setIsProxyModalOpen(true); }} className="bg-white hover:bg-blue-50 border-blue-200 w-8 h-8 p-0" title="Upload Proxy KYC">
+
                                                             <Upload size={14} className="text-brand-blue" />
                                                         </Button>
                                                         <Button

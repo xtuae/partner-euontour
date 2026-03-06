@@ -54,7 +54,7 @@ export function SuperAdminVerificationDetail() {
         if (!confirm('Are you sure you want to approve this agency? Booking will be unlocked immediately.')) return;
         setActionLoading(true);
         try {
-            const res = await apiFetch(`/api/super/agencies/${data?.agency.id}/kyc`, {
+            const res = await apiFetch(`/api/admin/agencies/${data?.agency.id}/kyc`, {
                 method: 'PUT',
                 body: JSON.stringify({ action: 'APPROVE' })
             });
@@ -71,7 +71,7 @@ export function SuperAdminVerificationDetail() {
         if (!rejectReason) return alert('Reason is required');
         setActionLoading(true);
         try {
-            const res = await apiFetch(`/api/super/agencies/${data?.agency.id}/kyc`, {
+            const res = await apiFetch(`/api/admin/agencies/${data?.agency.id}/kyc`, {
                 method: 'PUT',
                 body: JSON.stringify({ action: 'REJECT', reason: rejectReason })
             });

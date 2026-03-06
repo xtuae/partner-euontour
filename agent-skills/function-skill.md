@@ -247,6 +247,7 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
    - If successful, update the Prisma `Booking` record with `wp_order_id` and set `wp_sync_pending = false`.
 3. **Booking Route Integration (`src/routes/bookings.ts`):**
    - In the `POST /bookings` endpoint (after the `prisma.$transaction` successfully deducts the wallet and creates the local booking), trigger `pushBookingToWordPress(newBooking.id)` asynchronously. Do NOT `await` it in a way that blocks the user's HTTP response. Let it run in the background so the checkout feels instant.
+   
    ## Milestone 12: Advanced KYC & Compliance Workflow
 **Objective:** Expand the KYC system to capture Passport copies and License Expiry Dates, enforce a strict 6-month validity rule, allow Admins to trigger email reminders, and allow Super Admins to upload documents on behalf of Agencies.
 
@@ -270,3 +271,121 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
    - **Reject:** Update the `PUT /super/agencies/:id/kyc/reject` endpoint to accept a `reason` in the body. Save this to the database, set status to `REJECTED`, and trigger the rejection email including the reason.
    - **Approve:** Ensure status changes to `VERIFIED`.
    - **Proxy Upload:** When a Super Admin uploads via `POST /super/agencies/:id/kyc`, set the status to `PENDING` or `UNDER_REVIEW` so it still forces a formal visual verification check and audit log.
+   
+   ## Milestone 13: Admin Role-Based Access Control (RBAC) & UI Layout
+**Objective:** Implement strict frontend and backend segregation between `ADMIN` and `SUPER_ADMIN` roles. Hide sensitive sidebar menus, protect routes, and conditionally render CRUD buttons based on the user's role.
+
+**Target Files:**
+- **Frontend Routing:** `src/App.tsx` (or your Next.js/React router file)
+- **Frontend Layout:** `src/components/layouts/DashboardLayout.tsx` (Sidebar)
+- **Frontend Pages:** `AgencyManagementPage.tsx`, `TourList.tsx`
+- **Backend Auth:** `src/lib/auth.ts`
+
+**Implementation Prompts:**
+1. **Sidebar Navigation (`DashboardLayout.tsx`):**
+   - Access the current logged-in user's state.
+   - Conditionally render the "Settings" and "Staff/Admin Management" sidebar links. These must *only* be visible if `user.role === 'SUPER_ADMIN'`.
+2. **Frontend Route Protection:**
+   - Ensure routes like `/super/settings` or `/super/admins` bounce the user back to the `/dashboard` or show a "403 Unauthorized" page if their role is strictly `ADMIN`.
+3. **Component-Level Action Hiding:**
+   - In `AgencyManagementPage.tsx`: Wrap the "Delete" action button in a conditional statement so it completely disappears for `ADMIN` users.
+   - In the KYC Verification view: Allow Admins to Approve/Reject and send warnings, but ensure the "Proxy Upload" feature is restricted if you only want Super Admins handling raw documents.
+4. **Backend Enforcement (`auth.ts`):**
+   - Double-check the `requireRole` middleware. Ensure all routes under `/api/super/*` strictly enforce `requireRole(user, ['SUPER_ADMIN'])`. 
+   - Ensure all routes under `/api/admin/*` allow `requireRole(user, ['ADMIN', 'SUPER_ADMIN'])`.
+   
+   ## Milestone 14: Wallet Deposit Approval Workflow
+**Objective:** Allow Admins and Super Admins to review offline bank transfer receipts submitted by Agencies, and securely approve or reject them. Approval must strictly credit the Agency's wallet via a database transaction.
+
+**Target Files:**
+- **Database:** `prisma/schema.prisma`
+- **Backend API:** `src/routes/admin.ts` (or `src/routes/deposits.ts`)
+- **Frontend UI:** `src/features/admin/DepositManagementPage.tsx`
+
+**Implementation Prompts:**
+1. **Database Schema (`prisma/schema.prisma`):**
+   - Ensure a `DepositRequest` model exists with fields: `id`, `agencyId`, `amount` (Float), `receiptUrl` (String), `referenceNumber` (String?), `status` (Enum: PENDING, APPROVED, REJECTED), `rejectionReason` (String?), and timestamps.
+   - Ensure the `Wallet` and `WalletLedger` models are ready to receive credits.
+2. **Backend API Logic:**
+   - `GET /admin/deposits`: Fetch all deposits (allow filtering by status `?status=PENDING`). Include the associated Agency name.
+   - `POST /admin/deposits/:id/approve`: **CRITICAL:** Use `prisma.$transaction`. 
+     1. Find the deposit and verify it is currently `PENDING`.
+     2. Update the deposit status to `APPROVED`.
+     3. Increment the Agency's `Wallet` balance by the deposit `amount`.
+     4. Create a `WalletLedger` entry logging the credit (type: 'DEPOSIT', amount, description: 'Bank transfer approved').
+   - `POST /admin/deposits/:id/reject`: Update deposit status to `REJECTED` and save the `rejectionReason` provided in the request body.
+3. **Frontend Admin UI:**
+   - Create a 'Deposit Approvals' page.
+   - Display a data table of all pending deposits (Date, Agency Name, Amount, Ref Number).
+   - Include a 'View Receipt' button that opens the `receiptUrl` image in a new tab or a modal.
+   - Add 'Approve' and 'Reject' buttons. 
+   - The 'Reject' button must open a small prompt asking for the rejection reason before submitting.
+  
+  
+   ## Milestone 15: Agency-Facing Deposit & Wallet Interface
+**Objective:** Provide Agencies with a dedicated Wallet Dashboard to view their balance, track transaction history, and submit offline bank transfer receipts for Admin approval.
+
+**Target Files:**
+- **Backend API:** `src/routes/agency.ts` (or `src/routes/wallet.ts`)
+- **Frontend UI:** `frontend/src/features/agency/WalletPage.tsx`
+
+**Implementation Prompts:**
+1. **Backend Endpoints (`src/routes/agency.ts`):**
+   - `GET /agency/wallet`: Return the logged-in agency's current `Wallet` balance, their `WalletLedger` history (sorted by newest first), and their recent `DepositRequest` history.
+   - `POST /agency/deposits`: Accept `amount` (Float), `referenceNumber` (String), and an uploaded image/PDF file (`receiptUrl`). 
+   - **Upload Logic:** The endpoint must securely upload the receipt file to Vercel Blob (or your chosen storage), generate a public URL, and then create a new `DepositRequest` in Prisma with `status = 'PENDING'` linked to the `agencyId`.
+2. **Frontend Wallet Dashboard (`WalletPage.tsx`):**
+   - **Top Section:** Display a prominent "Current Balance: €X.XX" card. Add a primary button: "Top Up Wallet".
+   - **Top Up Modal:** When clicked, open a form with:
+     - Amount sent (Number input).
+     - Bank Reference / Transaction ID (Text input).
+     - Receipt Upload (File input).
+   - **History Tables:** Use tabs or stacked tables to display:
+     - *Approved Transactions (Ledger):* Shows historical deposits and booking deductions.
+     - *Pending Top-Ups:* Shows the status of recently submitted `DepositRequests` so the agency knows they are waiting for Admin approval.
+
+## Milestone 16: Agency Booking History & PDF Invoices
+**Objective:** Create a dashboard for Agencies to track all past and upcoming tour bookings, and provide an automated PDF invoice generator for their accounting records.
+
+**Target Files:**
+- **Backend API:** `src/routes/agency.ts` (or `src/routes/bookings.ts`)
+- **Frontend UI:** `frontend/src/features/agency/BookingHistoryPage.tsx`
+- **PDF Utility:** `frontend/src/utils/generateInvoice.ts` (or similar)
+
+**Implementation Prompts:**
+1. **Backend Booking Fetch (`src/routes/agency.ts`):**
+   - Create `GET /agency/bookings`. 
+   - Fetch all `Booking` records where `agencyId` matches the logged-in user's agency.
+   - Include the related `Tour` data (name, duration) and order it by `createdAt` descending.
+2. **Frontend Booking Dashboard (`BookingHistoryPage.tsx`):**
+   - Build a data table displaying: Booking Date, Tour Name, Travel Date, Passengers (Adults/Children), Total Paid, and Sync Status (`wp_order_id`).
+   - Add an 'Actions' column with a 'Download Invoice' button.
+3. **Frontend PDF Generation:**
+   - Install a lightweight frontend PDF library like `jspdf` and `jspdf-autotable` (or `html2pdf.js`).
+   - Create a utility function that takes the booking object and generates a professional B2B invoice.
+   - **Crucial:** The invoice must clearly display the Agency's Name, the EuOnTour company details, the Booking ID, the Tour Name, Travel Date, and the **exact B2B Wallet amount deducted** (not the retail price).
+
+   ## Milestone 17: Super Admin Analytics & Financial Dashboard
+**Objective:** Provide Super Admins with a real-time overview of platform financial health, including total wallet liabilities, realized revenue, pending deposits, and top-performing agencies.
+
+**Target Files:**
+- **Backend API:** `src/routes/super.ts` (or `src/routes/analytics.ts`)
+- **Frontend UI:** `frontend/src/features/super/DashboardOverview.tsx` (Update the existing blank dashboard)
+
+**Implementation Prompts:**
+1. **Backend Analytics Endpoint (`src/routes/super.ts`):**
+   - Create `GET /super/analytics`.
+   - **Total Liabilities:** Use `prisma.wallet.aggregate` to sum the `balance` of all active wallets.
+   - **Total Revenue:** Use `prisma.booking.aggregate` to sum the total amount of all successful bookings.
+   - **Pending Deposits:** Use `prisma.depositRequest.count` where `status = 'PENDING'`.
+   - **Top Agencies:** Use `prisma.booking.groupBy` to find the `agencyId` with the highest total spend or booking count, then join with the Agency table to get their names.
+2. **Frontend Dashboard UI (`DashboardOverview.tsx`):**
+   - **KPI Cards:** Build four high-visibility cards at the top of the dashboard: 
+     - "Total Realized Revenue"
+     - "Wallet Liabilities (Floating Funds)"
+     - "Pending Deposit Approvals"
+     - "Total Active Agencies"
+   - **Data Visualization:** Install a charting library like `recharts` or `chart.js`. Create a bar chart showing "Revenue over the last 30 days" or "Bookings by Top 5 Agencies".
+   - **Quick Actions:** Add a small table showing the 5 most recent activities (e.g., latest bookings or latest approved deposits) with quick links to view them.
+
+   

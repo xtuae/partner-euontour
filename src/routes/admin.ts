@@ -228,7 +228,51 @@ async function handleVerifications(req: Request, segments: string[], user: AuthU
         return Response.json({ kyc });
     }
 
-    // KYC approve/reject moved to super.ts
+    if (id && action === 'kyc' && req.method === 'PUT') {
+        const { action: kycAction, reason } = z.object({
+            action: z.enum(['APPROVE', 'REJECT']),
+            reason: z.string().optional()
+        }).parse(await req.json());
+
+        const kyc = await prisma.agencyOwnerKyc.findFirst({ where: { agencyId: id }, orderBy: { createdAt: 'desc' }, include: { agency: true } });
+        if (!kyc) return Response.json({ error: 'KYC Not Found' }, { status: 404 });
+
+        if (kycAction === 'APPROVE') {
+            await prisma.$transaction([
+                prisma.agencyOwnerKyc.update({ where: { id: kyc.id }, data: { status: 'VERIFIED' } }),
+                prisma.agency.update({ where: { id }, data: { verification_status: 'VERIFIED' } }),
+                prisma.auditLog.create({ data: { actor_id: user.userId, action: 'APPROVE_KYC_BY_ADMIN', entity: 'AGENCY_KYC', entity_id: kyc.id } })
+            ]);
+            await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_APPROVED_AGENCY(kyc.agency.name, `${process.env.NEXT_PUBLIC_APP_URL}/login`) });
+        } else if (kycAction === 'REJECT') {
+            await prisma.$transaction([
+                prisma.agencyOwnerKyc.update({ where: { id: kyc.id }, data: { status: 'REJECTED', rejectionReason: reason } }),
+                prisma.agency.update({ where: { id }, data: { verification_status: 'REJECTED' } }),
+                prisma.auditLog.create({ data: { actor_id: user.userId, action: 'REJECT_KYC_BY_ADMIN', entity: 'AGENCY_KYC', entity_id: kyc.id } })
+            ]);
+            await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_REJECTED_AGENCY(kyc.agency.name, reason || 'No reason provided', `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`) });
+        }
+        return Response.json({ success: true });
+    }
+
+    if (id && action === 'kyc-warning' && req.method === 'POST') {
+        const agency = await prisma.agency.findUnique({ where: { id } });
+        if (!agency) return Response.json({ error: 'Agency not found' }, { status: 404 });
+
+        await prisma.$transaction([
+            prisma.agency.update({ where: { id }, data: { kycWarningSentAt: new Date() } }),
+            prisma.auditLog.create({
+                data: { actor_id: user.userId, action: 'KYC_WARNING_SENT_BY_ADMIN', entity: 'AGENCY', entity_id: id }
+            })
+        ]);
+
+        await sendEmail({
+            to: agency.email,
+            ...EMAIL_TEMPLATES.KYC_WARNING_DEACTIVATION(agency.name, 7, `${process.env.NEXT_PUBLIC_APP_URL}/login`)
+        });
+
+        return Response.json({ success: true, message: "Warning Sent" });
+    }
 
     return Response.json({ error: 'Not Found' }, { status: 404 });
 }
