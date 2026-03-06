@@ -16,6 +16,7 @@ import { AgencyDashboard } from './features/agency/AgencyDashboard';
 import { AgencyVerificationPage } from './features/agency/AgencyVerificationPage';
 import { UnauthorizedPage } from './pages/Unauthorized';
 import { BookingPage } from './features/agency/BookingPage';
+import { BookingHistoryPage } from './features/agency/BookingHistoryPage';
 import { ToursPage } from './features/agency/ToursPage';
 import { SettingsPage } from './features/agency/SettingsPage';
 import { NotificationsPage } from './features/notifications/NotificationsPage';
@@ -56,6 +57,7 @@ function App() {
                 <Route path="deposits" element={<DepositPage />} />
                 <Route path="tours" element={<ToursPage />} />
                 <Route path="bookings" element={<BookingPage />} />
+                <Route path="booking-history" element={<BookingHistoryPage />} />
                 <Route path="verification" element={<AgencyVerificationPage />} />
                 <Route path="notifications" element={<NotificationsPage />} />
                 <Route path="settings" element={<SettingsPage />} />
