@@ -594,6 +594,25 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
 
             const refundAmount = booking.amount;
 
+            if (booking.isRetail) {
+                await prisma.$transaction(async (tx: any) => {
+                    await tx.booking.update({
+                        where: { id: bookingId },
+                        data: { status: 'CANCELLED_BY_ADMIN' }
+                    });
+                    await tx.auditLog.create({
+                        data: {
+                            actorId: user.userId, actorRole: 'UNKNOWN',
+                            action: 'SUPER_CANCEL_RETAIL_BOOKING',
+                            entityType: 'BOOKING',
+                            entityId: bookingId,
+                            metadata: { tourName: booking.tour.name }
+                        }
+                    });
+                });
+                return Response.json({ success: true, message: `Retail booking for ${booking.tour.name} has been cancelled.` });
+            }
+
             await prisma.$transaction(async (tx: any) => {
                 // 1. Cancel the booking
                 await tx.booking.update({

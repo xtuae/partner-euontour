@@ -73,40 +73,47 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
                     include: { tour: true, agency: true }
                 });
 
-                if (booking && booking.status === 'PENDING_PAYMENT') {
-                    await prisma.booking.update({
-                        where: { id: bookingId },
-                        data: { status: 'CONFIRMED' }
-                    });
-
-                    // Trigger WordPress sync
-                    pushBookingToWordPress(bookingId).catch(err => console.error('[WP Async Sync Error]', err));
-
-                    // Send Confirmation Email
-                    if (booking.customerEmail) {
-                        const template = EMAIL_TEMPLATES.RETAIL_BOOKING_CONFIRMED(
-                            booking.contactPerson || 'Customer',
-                            booking.tour.name,
-                            booking.guests,
-                            booking.travel_date.toISOString().split('T')[0],
-                            String(booking.amount)
-                        );
-                        sendEmail({
-                            to: booking.customerEmail,
-                            subject: template.subject,
-                            body: template.body
-                        }).catch(e => console.error('[Email Failed]', e));
+                if (booking) {
+                    if (booking.status === 'CANCELLED' || booking.status === 'CANCELLED_BY_ADMIN') {
+                        console.error(`[Stripe Webhook] WARNING: A payment was completed for a CANCELLED retail booking: ${bookingId}. Customer requires manual refund in Stripe dashboard.`);
+                        return new Response(JSON.stringify({ received: true }), { status: 200 });
                     }
-                    console.log(`[Stripe Webhook] Retail Booking ${bookingId} marked as CONFIRMED.`);
 
-                    await createAuditLog({
-                        actorId: 'SYSTEM',
-                        actorRole: 'SYSTEM',
-                        action: 'RETAIL_BOOKING_CONFIRMED_BY_STRIPE',
-                        entityType: 'BOOKING',
-                        entityId: bookingId,
-                        ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1'
-                    });
+                    if (booking.status === 'PENDING_PAYMENT') {
+                        await prisma.booking.update({
+                            where: { id: bookingId },
+                            data: { status: 'CONFIRMED' }
+                        });
+
+                        // Trigger WordPress sync
+                        pushBookingToWordPress(bookingId).catch(err => console.error('[WP Async Sync Error]', err));
+
+                        // Send Confirmation Email
+                        if (booking.customerEmail) {
+                            const template = EMAIL_TEMPLATES.RETAIL_BOOKING_CONFIRMED(
+                                booking.contactPerson || 'Customer',
+                                booking.tour.name,
+                                booking.guests,
+                                booking.travel_date.toISOString().split('T')[0],
+                                String(booking.amount)
+                            );
+                            sendEmail({
+                                to: booking.customerEmail,
+                                subject: template.subject,
+                                body: template.body
+                            }).catch(e => console.error('[Email Failed]', e));
+                        }
+                        console.log(`[Stripe Webhook] Retail Booking ${bookingId} marked as CONFIRMED.`);
+
+                        await createAuditLog({
+                            actorId: 'SYSTEM',
+                            actorRole: 'SYSTEM',
+                            action: 'RETAIL_BOOKING_CONFIRMED_BY_STRIPE',
+                            entityType: 'BOOKING',
+                            entityId: bookingId,
+                            ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1'
+                        });
+                    }
                 }
             }
         }
