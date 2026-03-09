@@ -53,7 +53,7 @@ export function WalletPage() {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-brand-black">My Wallet</h1>
-                <Link to="/wallet/deposit">
+                <Link to="/agency/deposits">
                     <Button className="flex items-center gap-2">
                         <ArrowUpRight className="w-4 h-4" /> Deposit Funds
                     </Button>
