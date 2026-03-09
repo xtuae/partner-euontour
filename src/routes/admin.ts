@@ -75,7 +75,7 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
             });
 
             await tx.auditLog.create({
-                data: { actor_id: user.userId, action: 'AGENCY_CREATED_BY_ADMIN', entity: 'AGENCY', entity_id: a.id }
+                data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'AGENCY_CREATED_BY_ADMIN', entityType: 'AGENCY', entityId: a.id }
             });
 
             return a;
@@ -94,7 +94,7 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
             const [agency, stats, auditLogs, bookings, deposits] = await Promise.all([
                 prisma.agency.findUnique({ where: { id: agencyId } }),
                 prisma.booking.groupBy({ by: ['status'], where: { agency_id: agencyId }, _count: true, _sum: { amount: true } }),
-                prisma.auditLog.findMany({ where: { OR: [{ entity_id: agencyId }] }, orderBy: { created_at: 'desc' }, take: 10 }),
+                prisma.auditLog.findMany({ where: { OR: [{ entityId: agencyId }] }, orderBy: { createdAt: 'desc' }, take: 10 }),
                 prisma.booking.findMany({ where: { agency_id: agencyId }, orderBy: { created_at: 'desc' }, take: 5 }),
                 prisma.deposit.findMany({ where: { agency_id: agencyId }, orderBy: { created_at: 'desc' }, take: 5 })
             ]);
@@ -113,7 +113,7 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
 
         await prisma.$transaction(async (tx: any) => {
             await tx.agency.update({ where: { id: agencyId }, data: { name, type, email } });
-            await tx.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_UPDATED_BY_ADMIN', entity: 'AGENCY', entity_id: agencyId } });
+            await tx.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'AGENCY_UPDATED_BY_ADMIN', entityType: 'AGENCY', entityId: agencyId } });
         });
         return Response.json({ success: true });
     }
@@ -124,7 +124,7 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
         await prisma.$transaction(async (tx: any) => {
             await tx.agency.update({ where: { id: agencyId }, data: { status } });
             await tx.auditLog.create({
-                data: { actor_id: user.userId, action: `AGENCY_STATUS_${status}_BY_ADMIN`, entity: 'AGENCY', entity_id: agencyId }
+                data: { actorId: user.userId, actorRole: 'UNKNOWN', action: `AGENCY_STATUS_${status}_BY_ADMIN`, entityType: 'AGENCY', entityId: agencyId }
             });
 
             if (status === 'SUSPENDED' || status === 'BLOCKED') {
@@ -148,7 +148,7 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
         if (!agency) return Response.json({ error: 'Agency not found' }, { status: 404 });
 
         await sendEmail({ to: agency.email, subject, body: message });
-        await prisma.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_NOTIFIED', entity: 'AGENCY', entity_id: agencyId } });
+        await prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'AGENCY_NOTIFIED', entityType: 'AGENCY', entityId: agencyId } });
         return Response.json({ success: true, message: 'Sent' });
     }
 
@@ -156,7 +156,7 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
         const { locked } = LockSchema.parse(await req.json());
         await prisma.$transaction(async (tx: any) => {
             await tx.agency.update({ where: { id: agencyId }, data: { wallet_locked: locked } });
-            await tx.auditLog.create({ data: { actor_id: user.userId, action: `WALLET_${locked ? 'LOCKED' : 'UNLOCKED'}`, entity: 'AGENCY', entity_id: agencyId } });
+            await tx.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: `WALLET_${locked ? 'LOCKED' : 'UNLOCKED'}`, entityType: 'AGENCY', entityId: agencyId } });
         });
         return Response.json({ success: true });
     }
@@ -172,7 +172,7 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
             body: `<p>Dear ${agency.name},</p><p>We have noticed that your KYC documents are either missing, expired, or require updates.</p><p>Please log in and securely upload your documents to maintain your account actively: <a href="${uploadLink}">Upload KYC Documents</a></p><p>Thank you.</p>`
         });
 
-        await prisma.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_KYC_REMINDER_SENT', entity: 'AGENCY', entity_id: agencyId } });
+        await prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'AGENCY_KYC_REMINDER_SENT', entityType: 'AGENCY', entityId: agencyId } });
         return Response.json({ success: true, message: 'KYC Reminder Sent' });
     }
 
@@ -242,14 +242,14 @@ async function handleVerifications(req: Request, segments: string[], user: AuthU
             await prisma.$transaction([
                 prisma.agencyOwnerKyc.update({ where: { id: kyc.id }, data: { status: 'VERIFIED' } }),
                 prisma.agency.update({ where: { id }, data: { verification_status: 'VERIFIED' } }),
-                prisma.auditLog.create({ data: { actor_id: user.userId, action: 'APPROVE_KYC_BY_ADMIN', entity: 'AGENCY_KYC', entity_id: kyc.id } })
+                prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'APPROVE_KYC_BY_ADMIN', entityType: 'AGENCY_KYC', entityId: kyc.id } })
             ]);
             await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_APPROVED_AGENCY(kyc.agency.name, `${process.env.NEXT_PUBLIC_APP_URL}/login`) });
         } else if (kycAction === 'REJECT') {
             await prisma.$transaction([
                 prisma.agencyOwnerKyc.update({ where: { id: kyc.id }, data: { status: 'REJECTED', rejectionReason: reason } }),
                 prisma.agency.update({ where: { id }, data: { verification_status: 'REJECTED' } }),
-                prisma.auditLog.create({ data: { actor_id: user.userId, action: 'REJECT_KYC_BY_ADMIN', entity: 'AGENCY_KYC', entity_id: kyc.id } })
+                prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'REJECT_KYC_BY_ADMIN', entityType: 'AGENCY_KYC', entityId: kyc.id } })
             ]);
             await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_REJECTED_AGENCY(kyc.agency.name, reason || 'No reason provided', `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`) });
         }
@@ -263,7 +263,7 @@ async function handleVerifications(req: Request, segments: string[], user: AuthU
         await prisma.$transaction([
             prisma.agency.update({ where: { id }, data: { kycWarningSentAt: new Date() } }),
             prisma.auditLog.create({
-                data: { actor_id: user.userId, action: 'KYC_WARNING_SENT_BY_ADMIN', entity: 'AGENCY', entity_id: id }
+                data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'KYC_WARNING_SENT_BY_ADMIN', entityType: 'AGENCY', entityId: id }
             })
         ]);
 
@@ -366,7 +366,7 @@ async function handleDeposits(req: Request, segments: string[], user: AuthUser) 
 
             // Log Audit
             await tx.auditLog.create({
-                data: { actor_id: user.userId, action: 'ADMIN_APPROVE_DEPOSIT', entity: 'DEPOSIT', entity_id: d.id }
+                data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'ADMIN_APPROVE_DEPOSIT', entityType: 'DEPOSIT', entityId: d.id }
             });
         });
 
@@ -402,7 +402,7 @@ async function handleDeposits(req: Request, segments: string[], user: AuthUser) 
                 data: { status: 'REJECTED', rejectionReason: reason, reviewed_by: user.userId, reviewed_at: new Date() }
             }),
             prisma.auditLog.create({
-                data: { actor_id: user.userId, action: 'ADMIN_REJECT_DEPOSIT', entity: 'DEPOSIT', entity_id: d.id }
+                data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'ADMIN_REJECT_DEPOSIT', entityType: 'DEPOSIT', entityId: d.id }
             })
         ]);
         // Background Email

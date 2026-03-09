@@ -98,7 +98,6 @@ model User {
 
   // System tables
   refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]
   reviewed_deposits Deposit[]
   // app_notifications AppNotification[] // Not assigning to users directly anymore, only agencies
   
@@ -128,6 +127,7 @@ model WalletLedger {
 
   @@index([agency_id])
   @@index([agency_id, created_at])
+  @@index([reference_id])
 }
 
 // 1.4 DEPOSITS (BANK TRANSFER)
@@ -141,12 +141,15 @@ model Deposit {
   thumbnail_url   String?
   status          DepositStatus @default(PENDING_ADMIN)
   rejectionReason String?
+  stripeSessionId String?       @unique
   reviewed_by     String?
   reviewer        User?         @relation(fields: [reviewed_by], references: [id])
   reviewed_at     DateTime?
   created_at      DateTime      @default(now())
 
   @@index([agency_id, status])
+  @@index([agency_id])
+  @@index([status])
 }
 
 // 1.5 TOURS & BOOKINGS
@@ -203,12 +206,19 @@ model Booking {
   status              BookingStatus      @default(CONFIRMED)
   notes               String?
   rejectionReason     String?
+  // Retail Booking Details
+  customerEmail       String?
+  isRetail            Boolean            @default(false)
+  stripeSessionId     String?            @unique
+
   wp_booking_id       Int?               // To track ID from WordPress
   sync_status         String             @default("PENDING") // PENDING, SYNCED, FAILED
   created_at          DateTime           @default(now())
   updated_at          DateTime           @default(now()) @updatedAt
 
   @@index([agency_id, created_at])
+  @@index([agency_id])
+  @@index([status])
 }
 
 // 1.6 VERIFICATION DOCUMENTS (Business)
@@ -258,17 +268,18 @@ model AgencyOwnerKyc {
 // 1.7 AUDIT LOGS (IMMUTABLE)
 model AuditLog {
   id          String   @id @default(uuid())
-  actor_id    String?
-  actor       User?    @relation(fields: [actor_id], references: [id])
+  actorId     String
+  actorRole   String
   action      String
-  entity      String
-  entity_id   String?
-  agency_id   String?
-  metadata    Json?
-  ip_address  String?
-  created_at  DateTime @default(now())
+  entityType  String
+  entityId    String
+  details     Json?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
 
-  @@index([created_at])
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 // SYSTEM / AUTH (Not in Business Logic Schema but required for functionality)

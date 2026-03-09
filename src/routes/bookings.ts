@@ -3,6 +3,7 @@ import { prisma } from '../lib/db/prisma.js';
 import { AuthUser, requireRole } from '../lib/auth.js';
 import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
 import { pushBookingToWordPress } from '../lib/wp-booking-sync.js';
+import { createAuditLog } from '../lib/logger.js';
 import { z } from 'zod';
 
 const CreateBookingSchema = z.object({
@@ -91,9 +92,7 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
                 await tx.walletLedger.create({ data: { agency_id: agencyIdToUse, type: 'DEBIT', amount: finalTotal, reference_type: 'BOOKING', reference_id: b.id } });
 
                 if (user.role === 'SUPER_ADMIN') {
-                    await tx.auditLog.create({
-                        data: { actor_id: user.userId, action: 'PROXY_BOOKING_CREATED', entity: 'BOOKING', entity_id: b.id }
-                    });
+                    // Replaced by system-wide log outside transaction
                 }
 
                 // In-App Notifications
@@ -119,6 +118,15 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
             // Fetch agency details for emails
             const bookingAgency = await prisma.agency.findUnique({ where: { id: agencyIdToUse }, include: { users: true } });
             const agencyEmailUrl = bookingAgency?.email || (bookingAgency?.users[0]?.email);
+
+            await createAuditLog({
+                actorId: user.userId,
+                actorRole: user.role,
+                action: user.role === 'SUPER_ADMIN' ? 'PROXY_BOOKING_CREATED' : 'BOOKING_CREATED',
+                entityType: 'BOOKING',
+                entityId: booking.id,
+                ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1'
+            });
 
             // Async trigger WP Sync & Emails
             pushBookingToWordPress(booking.id).catch(err => console.error('[WP Async Sync Error]', err));
@@ -174,6 +182,16 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
             await tx.agency.update({ where: { id: b.agency_id }, data: { wallet_balance: { increment: b.amount } } });
             await tx.walletLedger.create({ data: { agency_id: b.agency_id, type: 'CREDIT', amount: b.amount, reference_type: 'REFUND', reference_id: b.id } });
         });
+
+        await createAuditLog({
+            actorId: user.userId,
+            actorRole: user.role,
+            action: 'BOOKING_CANCELLED_BY_ADMIN',
+            entityType: 'BOOKING',
+            entityId: bookingId,
+            ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1'
+        });
+
         return Response.json({ success: true });
     }
 

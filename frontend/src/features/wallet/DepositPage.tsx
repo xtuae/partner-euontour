@@ -50,7 +50,7 @@ export function DepositPage() {
         setLoading(true);
 
         try {
-            const res = await apiFetch('/api/wallet/topup/online', {
+            const res = await apiFetch('/api/stripe/create-topup-session', {
                 method: 'POST',
                 body: JSON.stringify({ amount }),
             });
@@ -58,8 +58,8 @@ export function DepositPage() {
             if (!res.ok) throw new Error('Failed to initiate online payment');
             const data = await res.json();
 
-            if (data.checkoutUrl) {
-                window.location.href = data.checkoutUrl;
+            if (data.checkout_url) {
+                window.location.href = data.checkout_url;
             } else {
                 throw new Error('No checkout URL returned');
             }

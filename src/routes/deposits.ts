@@ -79,10 +79,10 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
             // 5. Audit Log
             await prisma.auditLog.create({
                 data: {
-                    actor_id: user.userId,
+                    actorId: user.userId, actorRole: 'UNKNOWN',
                     action: 'AGENCY_DEPOSIT_SUBMITTED',
-                    entity: 'DEPOSIT',
-                    entity_id: depositId
+                    entityType: 'DEPOSIT',
+                    entityId: depositId
                 }
             });
 

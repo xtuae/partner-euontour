@@ -2,6 +2,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { Readable } from 'stream';
 import { authHandler } from "../src/lib/auth.js";
 import { cors } from "../src/lib/cors.js";
+import { checkRateLimit, applySecurityHeaders } from "../src/lib/rate-limit.js";
 
 // domain handlers
 import { authRoutes } from "../src/routes/auth.js";
@@ -15,6 +16,8 @@ import { filesRoutes } from "../src/routes/files.js";
 import { webhookRoutes } from "../src/routes/webhooks.js";
 import { notificationsRoutes } from "../src/routes/notifications.js";
 import { toursRoutes } from "../src/routes/tours.js";
+import { stripeRoutes } from "../src/routes/stripe.js";
+import { analyticsRoutes } from "../src/routes/analytics.js";
 
 export const config = {
     api: {
@@ -33,10 +36,28 @@ async function appHandler(req: Request): Promise<Response> {
     const url = new URL(req.url);
     const path = url.pathname.replace("/api", "");
 
+    // 🔴 Security: Rate Limiting
+    const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
+
+    // Global Limit: 100 requests per 15 minutes
+    if (!checkRateLimit(ip, 100, 15 * 60 * 1000, 'global')) {
+        return new Response(JSON.stringify({ error: 'Too many requests' }), { status: 429, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // Strict Limit: /auth/login (5 per 15 mins)
+    if (path === '/auth/login' && req.method === 'POST') {
+        if (!checkRateLimit(ip, 5, 15 * 60 * 1000, 'login')) {
+            return new Response(JSON.stringify({ error: 'Too many login attempts, please try again later' }), { status: 429, headers: { 'Content-Type': 'application/json' } });
+        }
+    }
+
     let response: Response;
 
     if (path.startsWith("/auth")) {
         response = await authRoutes(req, path);
+    } else if (path.startsWith("/stripe/webhook")) {
+        // Run webhook without require user auth handler wrapping it
+        response = await stripeRoutes(req, path);
     } else if (path.startsWith("/webhooks")) {
         response = await webhookRoutes(req, path);
     } else if (path.startsWith("/cron/sync")) {
@@ -71,6 +92,8 @@ async function appHandler(req: Request): Promise<Response> {
                     response = await superRoutes(req, path, user);
                 } else if (path.startsWith("/deposits")) {
                     response = await depositsRoutes(req, path, user);
+                } else if (path.startsWith("/stripe")) {
+                    response = await stripeRoutes(req, path, user);
                 } else if (path.startsWith("/bookings")) {
                     response = await bookingsRoutes(req, path, user);
                 } else if (path.startsWith("/wallet")) {
@@ -81,6 +104,8 @@ async function appHandler(req: Request): Promise<Response> {
                     response = await notificationsRoutes(req, path, user);
                 } else if (path.startsWith("/tours")) {
                     response = await toursRoutes(req, path, user);
+                } else if (path.startsWith("/analytics")) {
+                    response = await analyticsRoutes(req, path, user);
                 } else {
                     response = new Response("Not Found", { status: 404 });
                 }
@@ -102,7 +127,7 @@ async function appHandler(req: Request): Promise<Response> {
         response.headers.set("Vary", "Origin");
     }
 
-    return response;
+    return applySecurityHeaders(response);
 }
 
 // --- Node.js Adapter (Vercel Entrypoint) ---

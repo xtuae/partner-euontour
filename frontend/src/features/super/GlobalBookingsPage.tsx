@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import { Badge } from '../../app/components/ui/Badge';
 import { Button } from '../../app/components/ui/Button';
+import { Download } from 'lucide-react';
+import { exportToCSV, exportToPDF } from '../../utils/exportUtils';
 
 interface Booking {
     id: string;
     agency: { id: string; name: string; email: string };
     tour: { id: string; name: string };
     travel_date: string;
+    guests: number;
     amount: string | number;
     status: string;
     created_at: string;
@@ -56,6 +59,28 @@ export function GlobalBookingsPage() {
         }
     };
 
+    const getExportData = () => {
+        return bookings.map(b => ({
+            ID: b.id.slice(0, 8),
+            'Agency Name': b.agency?.name || 'N/A',
+            'Tour Name': b.tour?.name || 'N/A',
+            Date: new Date(b.travel_date).toLocaleDateString(),
+            Guests: b.guests || 1,
+            Status: b.status,
+            Amount: `€${Number(b.amount).toFixed(2)}`
+        }));
+    };
+
+    const handleExportCSV = () => {
+        exportToCSV(getExportData(), 'global_bookings');
+    };
+
+    const handleExportPDF = () => {
+        const data = getExportData();
+        const columns = ['ID', 'Agency Name', 'Tour Name', 'Date', 'Guests', 'Status', 'Amount'];
+        exportToPDF(data, columns, 'global_bookings', 'Global Bookings');
+    };
+
     const statusBadge = (status: string) => {
         const variant = status === 'CONFIRMED' ? 'success' :
             status === 'CANCELLED' || status === 'CANCELLED_BY_ADMIN' ? 'destructive' : 'default';
@@ -75,7 +100,13 @@ export function GlobalBookingsPage() {
                     <p className="text-sm text-gray-500 mt-1">Manage all agency bookings across the platform.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <div className="text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100">
+                    <Button variant="outline" size="sm" onClick={handleExportCSV} className="flex items-center gap-2">
+                        <Download className="w-4 h-4" /> CSV
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={handleExportPDF} className="flex items-center gap-2">
+                        <Download className="w-4 h-4" /> PDF
+                    </Button>
+                    <div className="text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded-lg border border-gray-100 hidden sm:block">
                         <span className="font-semibold text-gray-900">{bookings.length}</span> Total Bookings
                     </div>
                 </div>

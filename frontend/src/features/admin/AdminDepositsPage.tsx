@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
-import { RefreshCw, CheckCircle, XCircle, Eye, AlertCircle } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, Eye, AlertCircle, Download } from 'lucide-react';
 import { apiFetch } from '../../lib/api-client';
 import { ImageModal } from '../../app/components/ui/ImageModal';
+import { exportToCSV, exportToPDF } from '../../utils/exportUtils';
 
 interface Deposit {
     id: string;
@@ -95,13 +96,42 @@ export function AdminDepositsPage() {
         }
     };
 
+    const getExportData = () => {
+        return deposits.map(dep => ({
+            ID: dep.id.slice(0, 8),
+            'Agency Name': dep.agency?.name || 'Unknown',
+            'Agency Email': dep.agency?.email || 'N/A',
+            Amount: `AED ${dep.amount}`,
+            Date: new Date(dep.created_at).toLocaleDateString(),
+            Status: dep.status
+        }));
+    };
+
+    const handleExportCSV = () => {
+        exportToCSV(getExportData(), 'agency_deposits');
+    };
+
+    const handleExportPDF = () => {
+        const data = getExportData();
+        const columns = ['ID', 'Agency Name', 'Agency Email', 'Amount', 'Date', 'Status'];
+        exportToPDF(data, columns, 'agency_deposits', 'Agency Deposits');
+    };
+
     if (loading && deposits.length === 0) return <div className="p-8 text-center text-gray-500">Loading deposits...</div>;
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 flex flex-col min-h-full">
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-brand-black">Manage Deposits</h1>
-                <Button variant="outline" onClick={fetchDeposits}><RefreshCw className="w-4 h-4 mr-2" /> Refresh</Button>
+                <div className="flex gap-3">
+                    <Button variant="outline" onClick={handleExportCSV} className="flex items-center gap-2">
+                        <Download className="w-4 h-4" /> CSV
+                    </Button>
+                    <Button variant="outline" onClick={handleExportPDF} className="flex items-center gap-2">
+                        <Download className="w-4 h-4" /> PDF
+                    </Button>
+                    <Button variant="outline" onClick={fetchDeposits}><RefreshCw className="w-4 h-4 mr-2" /> Refresh</Button>
+                </div>
             </div>
 
             {error && <div className="bg-red-50 text-red-600 p-4 rounded mb-4 flex items-center"><AlertCircle className="w-5 h-5 mr-2" />{error}</div>}

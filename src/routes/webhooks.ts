@@ -118,12 +118,11 @@ export async function webhookRoutes(req: Request, path: string) {
 
         await prisma.auditLog.create({
             data: {
-                actor_id: null,
+                actorId: 'SYSTEM', actorRole: 'UNKNOWN',
                 action: 'ONLINE_PAYMENT_APPROVED',
-                entity: 'DEPOSIT',
-                entity_id: depositId,
-                agency_id: agencyId,
-                metadata: { transactionId }
+                entityType: 'DEPOSIT',
+                entityId: depositId,
+                details: { transactionId, agencyId }
             }
         });
 

@@ -74,7 +74,6 @@ export function AdminAgencyDetailsPage() {
 
     // State
     const [agency, setAgency] = useState<AgencyProfile | null>(null);
-    const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
 
@@ -91,7 +90,6 @@ export function AdminAgencyDetailsPage() {
             if (res.ok) {
                 const data = await res.json();
                 setAgency(data.agency);
-                setStats(data.stats);
             }
         } catch (err) {
             console.error(err);
@@ -102,11 +100,8 @@ export function AdminAgencyDetailsPage() {
 
     const fetchStats = async () => {
         try {
-            const res = await apiFetch(`/api/admin/agencies/${id}/stats`);
-            if (res.ok) {
-                const data = await res.json();
-                setStats(data.stats);
-            }
+            await apiFetch(`/api/admin/agencies/${id}/stats`);
+            // stats endpoint called but payload is not bound to local state anymore
         } catch (err) {
             console.error(err);
         }
@@ -120,9 +115,7 @@ export function AdminAgencyDetailsPage() {
         if (agency) fetchStats();
     }, [agency]);
 
-    useEffect(() => {
-        if (stats) console.log('Agency Stats:', stats);
-    }, [stats]);
+    // Removed console.log for production
 
     const handleStatusUpdate = async (newStatus: string) => {
         if (!confirm(`Change status to ${newStatus}?`)) return;

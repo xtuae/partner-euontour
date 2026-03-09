@@ -2,6 +2,7 @@
 import { prisma } from '../lib/db/prisma.js';
 import { AuthUser, requireRole } from '../lib/auth.js';
 import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
+import { stripe } from '../lib/stripe.js';
 import { z } from 'zod';
 import * as crypto from 'crypto';
 
@@ -25,6 +26,8 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
     const entity = parts[1];
 
     if (entity === 'analytics' && req.method === 'GET') return handleAnalytics(req, user);
+    if (entity === 'logs' && req.method === 'GET') return handleAuditLogs(req, user);
+
     if (entity === 'agencies') {
         if (!parts[2] && req.method === 'GET') {
             const agencies = await prisma.agency.findMany({
@@ -60,7 +63,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                 });
 
                 await tx.auditLog.create({
-                    data: { actor_id: user.userId, action: 'AGENCY_CREATED', entity: 'AGENCY', entity_id: a.id }
+                    data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'AGENCY_CREATED', entityType: 'AGENCY', entityId: a.id }
                 });
 
                 return a;
@@ -81,7 +84,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
 
             await prisma.$transaction(async (tx: any) => {
                 await tx.agency.update({ where: { id: agencyId }, data: { name, type, email } });
-                await tx.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_UPDATED', entity: 'AGENCY', entity_id: agencyId } });
+                await tx.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'AGENCY_UPDATED', entityType: 'AGENCY', entityId: agencyId } });
             });
             return Response.json({ success: true });
         }
@@ -96,7 +99,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                     // Also soft-delete the users associated directly
                     await tx.user.updateMany({ where: { agency_id: agencyId }, data: { active: false } });
                 }
-                await tx.auditLog.create({ data: { actor_id: user.userId, action: 'AGENCY_SOFT_DELETED', entity: 'AGENCY', entity_id: agencyId } });
+                await tx.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'AGENCY_SOFT_DELETED', entityType: 'AGENCY', entityId: agencyId } });
             });
             return Response.json({ success: true });
         }
@@ -107,7 +110,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             await prisma.$transaction(async (tx: any) => {
                 await tx.agency.update({ where: { id: agencyId }, data: { status } });
                 await tx.auditLog.create({
-                    data: { actor_id: user.userId, action: `AGENCY_STATUS_${status}`, entity: 'AGENCY', entity_id: agencyId }
+                    data: { actorId: user.userId, actorRole: 'UNKNOWN', action: `AGENCY_STATUS_${status}`, entityType: 'AGENCY', entityId: agencyId }
                 });
 
                 if (status === 'SUSPENDED' || status === 'BLOCKED') {
@@ -205,7 +208,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                 });
 
                 await tx.auditLog.create({
-                    data: { actor_id: user.userId, action: 'PROXY_KYC_UPLOAD', entity: 'AGENCY', entity_id: agencyId }
+                    data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'PROXY_KYC_UPLOAD', entityType: 'AGENCY', entityId: agencyId }
                 });
             });
 
@@ -224,7 +227,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                 data: { agencyId: targetAgencyId, title, message }
             }),
             prisma.auditLog.create({
-                data: { actor_id: user.userId, action: 'SYSTEM_NOTIFICATION_SENT', entity: 'AGENCY', entity_id: targetAgencyId }
+                data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'SYSTEM_NOTIFICATION_SENT', entityType: 'AGENCY', entityId: targetAgencyId }
             })
         ]);
 
@@ -246,7 +249,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             await syncToursFromWordPress();
 
             await prisma.auditLog.create({
-                data: { actor_id: user.userId, action: 'MANUAL_TOUR_SYNC', entity: 'SYSTEM', entity_id: 'SYSTEM' }
+                data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'MANUAL_TOUR_SYNC', entityType: 'SYSTEM', entityId: 'SYSTEM' }
             });
             return Response.json({ success: true, message: "Sync completed" });
         }
@@ -259,7 +262,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             await prisma.$transaction(async (tx: any) => {
                 await tx.tour.update({ where: { id: tourId }, data: { active } });
                 await tx.auditLog.create({
-                    data: { actor_id: user.userId, action: `TOUR_${active ? 'ENABLED' : 'DISABLED'}`, entity: 'TOUR', entity_id: tourId }
+                    data: { actorId: user.userId, actorRole: 'UNKNOWN', action: `TOUR_${active ? 'ENABLED' : 'DISABLED'}`, entityType: 'TOUR', entityId: tourId }
                 });
             });
             return Response.json({ success: true });
@@ -269,7 +272,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             await prisma.$transaction(async (tx: any) => {
                 await tx.tour.update({ where: { id: tourId }, data: { deletedAt: new Date(), active: false } });
                 await tx.auditLog.create({
-                    data: { actor_id: user.userId, action: 'TOUR_SOFT_DELETED', entity: 'TOUR', entity_id: tourId }
+                    data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'TOUR_SOFT_DELETED', entityType: 'TOUR', entityId: tourId }
                 });
             });
             return Response.json({ success: true });
@@ -286,7 +289,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
 
             const u = await prisma.user.create({ data: { email, role, password_hash: ph, resetToken: inviteToken, resetTokenExpiry: new Date(Date.now() + 86400000), email_verified: true } });
             await sendEmail({ to: email, subject: 'Invite', body: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${inviteToken}">Join</a>` });
-            await prisma.auditLog.create({ data: { actor_id: user.userId, action: 'ADMIN_INVITED', entity: 'USER', entity_id: u.id } });
+            await prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'ADMIN_INVITED', entityType: 'USER', entityId: u.id } });
             return Response.json({ success: true });
         }
 
@@ -313,7 +316,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             const newAdmin = await prisma.user.create({
                 data: { name, email, role, password_hash: ph, email_verified: true, active: true }
             });
-            await prisma.auditLog.create({ data: { actor_id: user.userId, action: 'ADMIN_CREATED', entity: 'USER', entity_id: newAdmin.id } });
+            await prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'ADMIN_CREATED', entityType: 'USER', entityId: newAdmin.id } });
             return Response.json({ success: true });
         }
 
@@ -329,7 +332,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
 
             await prisma.$transaction(async (tx: any) => {
                 await tx.user.update({ where: { id: adminId }, data: { name, email, active } });
-                await tx.auditLog.create({ data: { actor_id: user.userId, action: 'ADMIN_UPDATED', entity: 'USER', entity_id: adminId } });
+                await tx.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'ADMIN_UPDATED', entityType: 'USER', entityId: adminId } });
 
                 if (active === false) {
                     await tx.refreshToken.updateMany({ where: { user_id: adminId }, data: { revoked: true } });
@@ -342,7 +345,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             await prisma.$transaction(async (tx: any) => {
                 await tx.user.update({ where: { id: adminId }, data: { active: false } }); // Soft Delete 
                 await tx.refreshToken.updateMany({ where: { user_id: adminId }, data: { revoked: true } });
-                await tx.auditLog.create({ data: { actor_id: user.userId, action: 'ADMIN_DELETED', entity: 'USER', entity_id: adminId } });
+                await tx.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'ADMIN_DELETED', entityType: 'USER', entityId: adminId } });
             });
             return Response.json({ success: true });
         }
@@ -356,7 +359,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             if (type === 'DEBIT' && a.wallet_balance < amount) throw new Error('Insufficient funds');
             await tx.walletLedger.create({ data: { agency_id: agencyId, type, amount, reference_type: 'MANUAL_ADJUSTMENT', reference_id: user.userId, description: reason } });
             await tx.agency.update({ where: { id: agencyId }, data: { wallet_balance: type === 'CREDIT' ? { increment: amount } : { decrement: amount } } });
-            await tx.auditLog.create({ data: { actor_id: user.userId, action: `WALLET_ADJUST_${type}`, entity: 'WALLET', entity_id: agencyId } });
+            await tx.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: `WALLET_ADJUST_${type}`, entityType: 'WALLET', entityId: agencyId } });
         });
         return Response.json({ success: true });
     }
@@ -395,7 +398,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                 for (const s of settings) {
                     await tx.systemSettings.upsert({ where: { key: s.key }, update: { value: s.value }, create: { key: s.key, value: s.value } });
                 }
-                await tx.auditLog.create({ data: { actor_id: user.userId, action: 'SYSTEM_SETTINGS_UPDATED', entity: 'SYSTEM', entity_id: 'GLOBAL' } });
+                await tx.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'SYSTEM_SETTINGS_UPDATED', entityType: 'SYSTEM', entityId: 'GLOBAL' } });
             });
             return Response.json({ success: true });
         }
@@ -406,7 +409,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
         // But prompt said "Strong RBAC". Super logic in Super. Admin logic in Admin.
         // If Admin needs Audit, I should put it in Admin too OR shared.
         // I'll stick to Super only here.
-        const logs = await prisma.auditLog.findMany({ orderBy: { created_at: 'desc' }, take: 100 });
+        const logs = await prisma.auditLog.findMany({ orderBy: { createdAt: 'desc' }, take: 100 });
         return Response.json({ logs });
     }
 
@@ -422,6 +425,94 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                 orderBy: { created_at: 'desc' }
             });
             return Response.json({ bookings });
+        }
+
+        // POST /super/bookings/retail — Create retail booking via Stripe link
+        if (parts[2] === 'retail' && req.method === 'POST') {
+            const body = await req.json();
+            const { tourId, pax, customerEmail, travelDate, hotelName, hotelAddress, contactPerson, contactPhone, additionalInfo } = z.object({
+                tourId: z.string().uuid(),
+                pax: z.number().int().min(1),
+                customerEmail: z.string().email(),
+                travelDate: z.string().transform(s => new Date(s)),
+                hotelName: z.string().optional(),
+                hotelAddress: z.string().optional(),
+                contactPerson: z.string().optional(),
+                contactPhone: z.string().optional(),
+                additionalInfo: z.string().optional(),
+            }).parse(body);
+
+            const tour = await prisma.tour.findUnique({ where: { id: tourId } });
+            if (!tour) return Response.json({ error: 'Tour not found' }, { status: 404 });
+
+            // Retail Pricing Math (No Agency Discount)
+            const subtotal = Number(tour.price) * pax;
+            const vatAmount = subtotal * 0.19; // 19% MWST on full retail
+            const finalTotal = subtotal + vatAmount;
+
+            // Save PENDING_PAYMENT booking. (AgencyId is technically required on Booking model.
+            // But wait, the Booking model requires an agency. For retail bookings, we can assign it to a "SYSTEM" agency or the super admin's ID, or let it throw if we don't handle it. Let's see how agency is defined. 
+            // In the DB `agency_id` is required. I'll fetch the Super Admin's dummy agency (if they have one) or create one for retail system.
+            // Let me check if Super Admin has an agency. If not, I'll assume they have to select one or we create a system agency.)
+            let sysAgency = await prisma.agency.findFirst({ where: { type: 'System Retail' } });
+            if (!sysAgency) {
+                sysAgency = await prisma.agency.create({ data: { name: 'EuOnTour Direct Retail', email: 'retail@euontour.com', type: 'System Retail', status: 'ACTIVE', verification_status: 'VERIFIED' } });
+            }
+
+            const booking = await prisma.booking.create({
+                data: {
+                    agency_id: sysAgency.id,
+                    tour_id: tour.id,
+                    travel_date: travelDate,
+                    guests: pax,
+                    amount: finalTotal,
+                    subtotal: subtotal,
+                    vatAmount: vatAmount,
+                    discountAmount: 0,
+                    status: 'PENDING_PAYMENT',
+                    isRetail: true,
+                    customerEmail: customerEmail,
+                    hotelName,
+                    hotelAddress,
+                    contactPerson: contactPerson || 'Retail Customer',
+                    contactPhone,
+                    additionalInfo
+                }
+            });
+
+            // Create Stripe Checkout Session
+            try {
+                const session = await stripe.checkout.sessions.create({
+                    payment_method_types: ['card'],
+                    line_items: [{
+                        price_data: {
+                            currency: 'eur',
+                            product_data: { name: `${tour.name} Retail Booking` },
+                            unit_amount: Math.round(finalTotal * 100), // cents
+                        },
+                        quantity: 1,
+                    }],
+                    customer_email: customerEmail,
+                    mode: 'payment',
+                    success_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/#/payment-success`,
+                    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/#/payment-cancel`,
+                    metadata: {
+                        type: 'retail_booking',
+                        bookingId: booking.id
+                    }
+                });
+
+                // Save session ID to booking
+                await prisma.booking.update({
+                    where: { id: booking.id },
+                    data: { stripeSessionId: session.id }
+                });
+
+                return Response.json({ checkout_url: session.url });
+            } catch (error: any) {
+                console.error('Stripe Session Error:', error);
+                return Response.json({ error: 'Failed to create payment link' }, { status: 500 });
+            }
         }
 
         // POST /super/bookings/:id/cancel — cancel & refund
@@ -467,10 +558,10 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                 // 4. Audit log
                 await tx.auditLog.create({
                     data: {
-                        actor_id: user.userId,
+                        actorId: user.userId, actorRole: 'UNKNOWN',
                         action: 'SUPER_CANCEL_BOOKING_REFUND',
-                        entity: 'BOOKING',
-                        entity_id: bookingId,
+                        entityType: 'BOOKING',
+                        entityId: bookingId,
                         agency_id: booking.agency_id,
                         metadata: { refundAmount: refundAmount.toString(), tourName: booking.tour.name }
                     }
@@ -571,5 +662,18 @@ async function handleAnalytics(req: Request, user: AuthUser) {
     } catch (e) {
         console.error('Analytics Error:', e);
         return Response.json({ error: 'Failed to aggregate analytics' }, { status: 500 });
+    }
+}
+
+async function handleAuditLogs(req: Request, user: AuthUser) {
+    try {
+        const logs = await prisma.auditLog.findMany({
+            orderBy: { createdAt: 'desc' },
+            take: 1000
+        });
+        return Response.json({ logs });
+    } catch (e: any) {
+        console.error('Logs Error:', e);
+        return Response.json({ error: 'Failed to fetch logs' }, { status: 500 });
     }
 }

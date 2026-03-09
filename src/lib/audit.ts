@@ -4,36 +4,36 @@ const USE_MOCK_DB = process.env.USE_MOCK_DB === 'true';
 
 export async function logAudit({
     actorId,
+    actorRole,
     action,
-    entity,
+    entityType,
     entityId,
     details,
     ipAddress
 }: {
-    actorId: string | undefined;
+    actorId: string;
+    actorRole?: string;
     action: string;
-    entity: string;
-    entityId: string | undefined;
+    entityType: string;
+    entityId: string;
     details?: any;
     ipAddress?: string;
 }) {
     if (USE_MOCK_DB) {
-        console.log(`[MOCK AUDIT] Action: ${action}, Actor: ${actorId}, Entity: ${entity}/${entityId}`, details);
+        console.log(`[MOCK AUDIT] Action: ${action}, actorRole: ${actorRole || 'UNKNOWN'}, Actor: ${actorId}, Entity: ${entityType}/${entityId}`, details);
         return;
     }
 
     try {
         await prisma.auditLog.create({
             data: {
-                actor_id: actorId,
+                actorId,
+                actorRole: actorRole || 'UNKNOWN',
                 action,
-                entity,
-                entity_id: entityId,
-                ip_address: ipAddress
-                // details: details ? JSON.stringify(details) : undefined // schema doesn't have details?
-                // Checking schema... AuditLog has: actor_id, action, entity, entity_id, ip_address, created_at
-                // No details column!
-                // We'll ignore details for now to match schema.
+                entityType,
+                entityId,
+                details: details ? details : undefined,
+                ipAddress
             }
         });
     } catch (error) {

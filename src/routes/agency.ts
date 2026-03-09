@@ -250,10 +250,10 @@ async function submitVerification(req: Request, userToken: AuthUser) {
 
             await tx.auditLog.create({
                 data: {
-                    actor_id: userToken.userId,
+                    actorId: userToken.userId, actorRole: 'UNKNOWN',
                     action: 'KYC Documents Re-submitted (Status Reset)',
-                    entity: 'AGENCY',
-                    entity_id: agencyId,
+                    entityType: 'AGENCY',
+                    entityId: agencyId,
                     agency_id: agencyId
                 }
             });

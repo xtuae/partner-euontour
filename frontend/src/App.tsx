@@ -31,8 +31,11 @@ import { SuperAdminVerificationDetail } from './features/admin/SuperAdminVerific
 import { SuperAdminToursPage } from './features/admin/SuperAdminToursPage';
 import { AdminManagementPage } from './features/super/AdminManagementPage';
 import { GlobalBookingsPage } from './features/super/GlobalBookingsPage';
+import { RetailBookingForm } from './features/super/RetailBookingForm';
 import { ManageAgencyTours } from './features/admin/ManageAgencyTours';
 import { AdminAgencyDetailsPage } from './features/admin/AdminAgencyDetailsPage';
+import { AuditLogsPage } from './features/super/AuditLogsPage';
+import { AnalyticsDashboard } from './features/super/AnalyticsDashboard';
 
 function App() {
   return (
@@ -91,9 +94,11 @@ function App() {
                 <Route path="deposits" element={<AdminDepositsPage />} />
                 <Route path="tours" element={<SuperAdminToursPage />} />
                 <Route path="bookings" element={<GlobalBookingsPage />} />
+                <Route path="retail-booking" element={<RetailBookingForm />} />
                 <Route path="staff" element={<AdminManagementPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
-                <Route path="audit" element={<PlaceholderPage title="Global Audit" />} />
+                <Route path="audit" element={<AuditLogsPage />} />
+                <Route path="analytics" element={<AnalyticsDashboard />} />
                 <Route path="notifications" element={<NotificationsPage />} />
               </Route>
             </Route>

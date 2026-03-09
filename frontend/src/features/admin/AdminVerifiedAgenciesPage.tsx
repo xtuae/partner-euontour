@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
-import { CheckCircle, ExternalLink, RefreshCw, Trash2, Bell } from 'lucide-react';
+import { CheckCircle, ExternalLink, RefreshCw, Trash2, Bell, Download } from 'lucide-react';
 import { apiFetch } from '../../lib/api-client';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { exportToCSV, exportToPDF } from '../../utils/exportUtils';
 
 interface Agency {
     id: string;
@@ -12,6 +13,8 @@ interface Agency {
     email: string;
     verification_status: string;
     created_at: string;
+    wallet_balance?: string | number;
+    status?: string;
 }
 
 export function AdminVerifiedAgenciesPage() {
@@ -169,6 +172,25 @@ export function AdminVerifiedAgenciesPage() {
         fetchAgencies();
     }, []);
 
+    const getExportData = () => {
+        return agencies.map(agency => ({
+            'Agency Name': agency.name,
+            Email: agency.email,
+            'KYC Status': agency.verification_status,
+            'Wallet Balance': agency.wallet_balance !== undefined ? `€${Number(agency.wallet_balance).toFixed(2)}` : '€0.00'
+        }));
+    };
+
+    const handleExportCSV = () => {
+        exportToCSV(getExportData(), 'agency_list');
+    };
+
+    const handleExportPDF = () => {
+        const data = getExportData();
+        const columns = ['Agency Name', 'Email', 'KYC Status', 'Wallet Balance'];
+        exportToPDF(data, columns, 'agency_list', 'Verified Agencies Platform Liability');
+    };
+
     if (loading) return <div className="p-8 text-center">Loading agencies...</div>;
 
     return (
@@ -176,6 +198,12 @@ export function AdminVerifiedAgenciesPage() {
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-brand-black">Agency Management</h1>
                 <div className="flex gap-3">
+                    <Button variant="outline" onClick={handleExportCSV} className="flex items-center gap-2">
+                        <Download className="w-4 h-4" /> CSV
+                    </Button>
+                    <Button variant="outline" onClick={handleExportPDF} className="flex items-center gap-2">
+                        <Download className="w-4 h-4" /> PDF
+                    </Button>
                     <Button variant="outline" onClick={fetchAgencies}><RefreshCw className="w-4 h-4 mr-2" /> Refresh</Button>
                     {isSuperAdmin && (
                         <Button onClick={() => handleOpenModal('create')} className="bg-brand-red text-white hover:bg-red-700">

@@ -41,7 +41,7 @@ export async function filesRoutes(req: Request, path: string, user: AuthUser) {
             blob = await put(`uploads/${category}/${file.name}`, buf, { access: 'public', token: process.env.BLOB_READ_WRITE_TOKEN });
         }
 
-        await prisma.auditLog.create({ data: { actor_id: user.userId, action: 'UPLOAD', entity: 'FILE', entity_id: blob.url } });
+        await prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'UPLOAD', entityType: 'FILE', entityId: blob.url } });
         return Response.json({ url: blob.url });
     }
 
