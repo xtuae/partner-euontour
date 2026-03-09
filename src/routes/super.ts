@@ -551,7 +551,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                     }
                 });
 
-                const smartLink = `https://partners.euontour.com/pay/${booking.id}`;
+                const smartLink = `https://partners.euontour.com/#/pay/${booking.id}`;
 
                 // Send email to customer with link
                 const { sendEmail } = await import('../lib/email.js');
