@@ -44,6 +44,7 @@ enum BookingStatus {
   CONFIRMED
   CANCELLED
   CANCELLED_BY_ADMIN
+  PENDING_PAYMENT
 }
 
 enum AgencyStatus {
@@ -150,18 +151,19 @@ model Deposit {
 
 // 1.5 TOURS & BOOKINGS
 model Tour {
-  id         String   @id @default(uuid())
-  wp_tour_id Int      @unique
-  name       String
-  duration   String?
-  price            Decimal  @db.Decimal(12, 2)
-  agency_net_price Decimal  @default(0.00) @db.Decimal(12, 2)
-  active           Boolean  @default(true)
-  image_url  String?
-  deletedAt  DateTime?
+  id               String       @id @default(uuid())
+  wp_tour_id       Int          @unique
+  name             String
+  location         String?
+  duration         String?
+  price            Decimal      @db.Decimal(12, 2)
+  agency_net_price Decimal      @default(0.00) @db.Decimal(12, 2)
+  active           Boolean      @default(true)
+  image_url        String?
+  deletedAt        DateTime?
 
-  bookings  Booking[]
-  agency_tours AgencyTour[]
+  bookings         Booking[]
+  agency_tours     AgencyTour[]
 }
 
 model AgencyTour {
@@ -185,12 +187,22 @@ model Booking {
   tour_id             String
   tour                Tour               @relation(fields: [tour_id], references: [id])
   travel_date         DateTime           @db.Date
-  amount              Decimal            @db.Decimal(12, 2)
+  amount              Decimal            @default(0) @db.Decimal(12, 2)
   subtotal            Decimal?           @db.Decimal(12, 2)
   discountAmount      Decimal?           @db.Decimal(12, 2)
   vatAmount           Decimal?           @db.Decimal(12, 2)
   guests              Int                @default(1)
+  
+  // Pickup Details
+  hotelName       String?
+  hotelAddress    String?
+  contactPerson   String?
+  contactPhone    String?
+  additionalInfo  String?
+  
   status              BookingStatus      @default(CONFIRMED)
+  notes               String?
+  rejectionReason     String?
   wp_booking_id       Int?               // To track ID from WordPress
   sync_status         String             @default("PENDING") // PENDING, SYNCED, FAILED
   created_at          DateTime           @default(now())

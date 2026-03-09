@@ -44,6 +44,7 @@ export async function syncToursFromWordPress() {
                 update: {
                     name: tour.name,
                     price: retailPrice,
+                    location: tour.location || tour.destination || null,
                     duration: tour.duration || null,
                     agency_net_price: agencyNetPrice,
                     active: tour.active !== undefined ? tour.active : true,
@@ -53,6 +54,7 @@ export async function syncToursFromWordPress() {
                     wp_tour_id: Number(tour.wp_tour_id),
                     name: tour.name,
                     price: retailPrice,
+                    location: tour.location || tour.destination || null,
                     duration: tour.duration || null,
                     agency_net_price: agencyNetPrice,
                     active: tour.active !== undefined ? tour.active : true,

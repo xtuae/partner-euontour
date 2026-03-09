@@ -29,6 +29,12 @@ export function BookingPage() {
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
 
+    const [hotelName, setHotelName] = useState('');
+    const [hotelAddress, setHotelAddress] = useState('');
+    const [contactPerson, setContactPerson] = useState('');
+    const [contactPhone, setContactPhone] = useState('');
+    const [additionalInfo, setAdditionalInfo] = useState('');
+
     const [agencies, setAgencies] = useState<{ id: string, name: string }[]>([]);
     const [selectedAgency, setSelectedAgency] = useState('');
 
@@ -91,6 +97,11 @@ export function BookingPage() {
                 tourId: selectedTour,
                 travelDate: date || new Date().toISOString().split('T')[0],
                 pax: parseInt(pax, 10),
+                hotelName,
+                hotelAddress,
+                contactPerson,
+                contactPhone,
+                additionalInfo
             };
 
             if (isSuperAdmin && selectedAgency) {
@@ -194,11 +205,38 @@ export function BookingPage() {
                             <Input
                                 id="pax"
                                 type="number"
-                                min="1"
+                                min="2"
+                                max="7"
                                 value={pax}
                                 onChange={(e) => setPax(e.target.value)}
                                 required
                             />
+                        </div>
+
+                        <div className="pt-4 border-t border-gray-100">
+                            <h3 className="font-semibold text-gray-800 mb-4">Pickup Details</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="hotelName">Hotel Name *</Label>
+                                    <Input id="hotelName" value={hotelName} onChange={e => setHotelName(e.target.value)} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="hotelAddress">Hotel Address *</Label>
+                                    <Input id="hotelAddress" value={hotelAddress} onChange={e => setHotelAddress(e.target.value)} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="contactPerson">Contact Person *</Label>
+                                    <Input id="contactPerson" value={contactPerson} onChange={e => setContactPerson(e.target.value)} required />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="contactPhone">Contact Phone *</Label>
+                                    <Input id="contactPhone" type="tel" value={contactPhone} onChange={e => setContactPhone(e.target.value)} required />
+                                </div>
+                            </div>
+                            <div className="space-y-2 mt-4">
+                                <Label htmlFor="additionalInfo">Additional information from customer for tour (optional)</Label>
+                                <textarea id="additionalInfo" className="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-transparent px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-red disabled:cursor-not-allowed disabled:opacity-50" value={additionalInfo} onChange={e => setAdditionalInfo(e.target.value)} />
+                            </div>
                         </div>
 
                         {orderSummary && (

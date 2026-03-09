@@ -483,3 +483,116 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
 4. **Frontend Price Summary (`NewBooking.tsx`):**
    - Add a dynamic "Order Summary" box above the Confirm button.
    - Use `useEffect` to watch the `selectedTour` and `numberOfGuests` state. Calculate and display the Subtotal, Discount, 19% MWST, and Final Total in real-time so the agency knows exactly what will be deducted from their wallet.
+
+   ## Milestone 22: Stripe Integration (B2B Wallet & B2C Retail Links)
+**Objective:** Integrate Stripe to allow Agencies to top up wallets online, and allow Super Admins to generate retail booking payment links that auto-confirm upon payment. The system must be configured to use Stripe Test Keys via environment variables.
+
+**Target Files:**
+- **Database:** `prisma/schema.prisma`
+- **Backend Setup:** `.env.example` and Stripe initialization.
+- **Backend Stripe API:** `src/routes/stripe.ts` (New webhook and checkout endpoints)
+- **Frontend Wallet:** `frontend/src/features/agency/WalletPage.tsx`
+- **Frontend Super Admin:** `frontend/src/features/super/RetailBookingForm.tsx` (New)
+
+**Implementation Prompts:**
+1. **Database Schema Updates:**
+   - Update `DepositRequest`: Add `stripeSessionId String? @unique`.
+   - Update `Booking`: Add `stripeSessionId String? @unique`, `customerEmail String?`, `isRetail Boolean @default(false)`.
+   - Update `BookingStatus` Enum: Add `PENDING_PAYMENT`.
+2. **Stripe Initialization:**
+   - Install `stripe`.
+   - Initialize Stripe using `process.env.STRIPE_SECRET_KEY`. Ensure the AI knows we are using test mode keys (`sk_test_...`).
+3. **Backend Stripe Setup & Webhook (`src/routes/stripe.ts`):**
+   - Create a raw body parser specifically for the webhook route `POST /api/stripe/webhook`. Verify signature using `process.env.STRIPE_WEBHOOK_SECRET`.
+   - **Listen for `checkout.session.completed`:**
+     - If `session.metadata.type === 'wallet_topup'`: Find the `DepositRequest`, mark as `APPROVED`, credit the Agency `Wallet`.
+     - If `session.metadata.type === 'retail_booking'`: Find the `Booking`, mark as `CONFIRMED`, trigger the `pushBookingToWordPress` sync to block Tourfic dates.
+4. **Checkout Endpoints (`src/routes/stripe.ts`):**
+   - `POST /api/stripe/create-topup-session`: Create Stripe Checkout Session (Line Item: 'Wallet Top-Up'). Save `PENDING` `DepositRequest` with `sessionId`. Return checkout URL.
+   - `POST /api/super/bookings/retail`: Super Admin route. Calculates retail price (Base * Guests) + 19% MWST. Save `PENDING_PAYMENT` booking. Create Stripe Session. Return URL.
+5. **Frontend UI:**
+   - Wire 'Pay Online' in Agency Wallet to the top-up endpoint.
+   - Create Super Admin retail form to generate and copy the payment link.
+
+   ## Milestone 23: Super Admin Data Exports (CSV & PDF)
+**Objective:** Provide Super Admins with the ability to export any major data table (Global Bookings, Deposit Requests, Agency Wallets) into raw CSV format for Excel/accounting software, and formatted PDF format for physical archiving.
+
+**Target Files:**
+- **Frontend Utilities:** `frontend/src/utils/exportUtils.ts` (New)
+- **Frontend UI:** `frontend/src/features/super/GlobalBookingsPage.tsx` and `DepositManagementPage.tsx`
+- **Dependencies:** `jspdf`, `jspdf-autotable`
+
+**Implementation Prompts:**
+1. **Create the Export Utilities (`exportUtils.ts`):**
+   - **`exportToCSV(data, filename)`:** Create a vanilla JS function that takes an array of JSON objects, extracts the keys for the header row, maps the values into comma-separated strings, creates a `Blob` with `type: 'text/csv;charset=utf-8;'`, and triggers a temporary `<a>` tag download.
+   - **`exportToPDF(data, columns, filename, title)`:** Create a function utilizing `jspdf` and `jspdf-autotable`. It should render a professional document header (e.g., "EuOnTour - [Title] Report"), stamp the current date/time, and render the data into a clean, striped table.
+2. **Global Bookings Export:**
+   - Open `GlobalBookingsPage.tsx`. Add a visually distinct 'Export' button group (CSV | PDF) next to the page title or search bar.
+   - Wire the buttons to pass the currently fetched `bookings` state to the export utilities. Map the data to show Booking ID, Agency, Tour, Travel Date, Status, Guests, and Total Paid.
+3. **Deposits Export:**
+   - Open `DepositManagementPage.tsx`. Add the 'Export' button group.
+   - Map the data to show Deposit ID, Agency Name, Amount, Reference Number, Date, and Status.
+4. **All Agencies/Wallets Export:**
+   - Open `AgencyManagementPage.tsx` (or your main Agency list). Add the 'Export' button group so you can download a snapshot of all active agencies and their current Wallet Liabilities.
+
+   ## Milestone 24: Enterprise Audit Logging & Activity Trail
+**Objective:** Create an immutable system log tracking every critical action taken by Agencies, Admins, and Super Admins (e.g., wallet top-ups, booking creations, KYC approvals, cancellations). Provide a Super Admin dashboard to view, filter, and export these logs.
+
+**Target Files:**
+- **Database:** `prisma/schema.prisma`
+- **Backend Utility:** `src/lib/logger.ts` (New)
+- **Backend API:** Various routes (Injecting the logger) and `src/routes/super.ts` (Fetch logs)
+- **Frontend UI:** `frontend/src/features/super/AuditLogsPage.tsx` (New)
+
+**Implementation Prompts:**
+1. **Database Schema (`schema.prisma`):**
+   - Create an `AuditLog` model with fields: `id`, `actorId` (String, who did it), `actorRole` (String), `action` (String, e.g., 'APPROVED_DEPOSIT', 'CANCELLED_BOOKING', 'CREATED_RETAIL_LINK'), `entityType` (String, e.g., 'DepositRequest', 'Booking'), `entityId` (String), `details` (JSON, to store the before/after state or amounts), `ipAddress` (String?), and `createdAt`.
+2. **Backend Logger Utility (`logger.ts`):**
+   - Create a reusable function `createAuditLog(actorId, actorRole, action, entityType, entityId, details, req)`.
+   - Inject this function into critical endpoints: Wallet top-ups, Booking creations/cancellations, KYC Approval/Rejection, and Stripe Webhook triggers (actor would be 'SYSTEM').
+3. **Super Admin API (`src/routes/super.ts`):**
+   - Create `GET /super/logs`. Fetch all `AuditLog` records, ordered by `createdAt` descending. Allow filtering by `actorRole` or `action` via query parameters.
+4. **Frontend UI (`AuditLogsPage.tsx`):**
+   - Build a dense, highly readable data table showing: Date/Time, Actor (User ID/Email), Role, Action, Entity, and a 'View Details' button that opens a modal to show the JSON `details`.
+   - Include date range pickers and a search bar to easily find specific transactions.
+   - Include the 'Export CSV' button from Milestone 23 so the Super Admin can download the security logs.
+
+ ## Milestone 25: Production Readiness & Security Lockdown
+**Objective:** Optimize the platform for live traffic. Implement rate limiting, security headers, database indexing for performance, and prepare the environment for live production keys.
+
+**Target Files:**
+- **Database:** `prisma/schema.prisma`
+- **Backend Setup:** `src/index.ts` (or `app.ts`)
+- **Frontend/Backend:** Global cleanup.
+
+**Implementation Prompts:**
+1. **Security & Rate Limiting (`src/index.ts`):**
+   - Install `helmet` for HTTP security headers and `express-rate-limit` to prevent brute-force and DDoS attacks.
+   - Apply a strict rate limiter to the `/api/auth/login` and `/api/stripe/webhook` routes.
+   - Ensure CORS is strictly set to only allow requests from the official frontend domain (`https://partners.euontour.com`).
+2. **Database Performance Indexing (`schema.prisma`):**
+   - Add `@@index` to frequently queried fields to speed up the application. 
+   - Add indexes to: `Booking` (`agencyId`, `status`), `WalletLedger` (`agencyId`), `DepositRequest` (`agencyId`, `status`), and `AuditLog` (`actorId`, `action`).
+3. **Codebase Cleanup:**
+   - Write a script or instruct the AI to remove all stray `console.log()` statements from the frontend components so sensitive data isn't exposed in the browser console. (Keep `console.error` for backend logging).
+
+   ## Milestone 26: Advanced Analytics Dashboard & Revenue Visualization
+**Objective:** Provide the Super Admin with visual data insights, including revenue trends, top-performing agencies, most popular tours, and total platform wallet liabilities, using interactive charts.
+
+**Target Files:**
+- **Dependencies:** `recharts` (for React charting)
+- **Backend API:** `src/routes/analytics.ts` (New)
+- **Frontend UI:** `frontend/src/features/super/AnalyticsDashboard.tsx` (New)
+
+**Implementation Prompts:**
+1. **Install Charting Library:**
+   - Install `recharts` in the frontend for responsive, highly customizable React charts.
+2. **Backend Aggregation API (`src/routes/analytics.ts`):**
+   - Create `GET /api/super/analytics/kpis`: Return total revenue (sum of all confirmed booking totals), total bookings count, pending deposit count, and total wallet liabilities (sum of all active agency wallet balances).
+   - Create `GET /api/super/analytics/revenue-trends`: Group confirmed bookings by month/day to return an array of `{ date, revenue, bookingsCount }` for a line chart.
+   - Create `GET /api/super/analytics/top-agencies`: Aggregate bookings by `agencyId`, join the Agency name, and sort descending to find the top 5 highest-grossing agencies.
+   - Create `GET /api/super/analytics/top-tours`: Aggregate bookings by `tourId` (or tour name) to find the top 5 most booked tours.
+3. **Frontend Dashboard UI (`AnalyticsDashboard.tsx`):**
+   - Build a grid layout. The top row should feature 4 KPI Stat Cards (Total Revenue, Wallet Liabilities, Total Bookings, Pending Deposits).
+   - Below the KPI cards, implement a large `LineChart` from `recharts` displaying revenue over the last 30 days or 12 months.
+   - Add a bottom row with two `BarChart` components: one for 'Top 5 Agencies' and one for 'Most Popular Tours'.

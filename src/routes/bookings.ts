@@ -5,7 +5,17 @@ import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
 import { pushBookingToWordPress } from '../lib/wp-booking-sync.js';
 import { z } from 'zod';
 
-const CreateBookingSchema = z.object({ tourId: z.string().uuid(), travelDate: z.string().transform(s => new Date(s)), pax: z.number().int().min(1).default(1), targetAgencyId: z.string().uuid().optional() });
+const CreateBookingSchema = z.object({
+    tourId: z.string().uuid(),
+    travelDate: z.string().transform(s => new Date(s)),
+    pax: z.number().int().min(2).max(7).default(2),
+    targetAgencyId: z.string().uuid().optional(),
+    hotelName: z.string(),
+    hotelAddress: z.string(),
+    contactPerson: z.string(),
+    contactPhone: z.string(),
+    additionalInfo: z.string().optional()
+});
 
 export async function bookingsRoutes(req: Request, path: string, user: AuthUser) {
     const parts = path.split('/').filter(Boolean); // ["bookings"]
@@ -25,7 +35,7 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
     // CREATE
     if (parts.length === 1 && req.method === 'POST') {
         requireRole(user, ['AGENCY', 'SUPER_ADMIN']);
-        const { tourId, travelDate, pax, targetAgencyId } = CreateBookingSchema.parse(await req.json());
+        const { tourId, travelDate, pax, targetAgencyId, hotelName, hotelAddress, contactPerson, contactPhone, additionalInfo } = CreateBookingSchema.parse(await req.json());
 
         let agencyIdToUse: string;
 
@@ -69,7 +79,12 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
                         discountAmount: discountAmount,
                         vatAmount: vatAmount,
                         guests: pax,
-                        status: 'CONFIRMED'
+                        status: 'CONFIRMED',
+                        hotelName,
+                        hotelAddress,
+                        contactPerson,
+                        contactPhone,
+                        additionalInfo
                     }
                 });
 

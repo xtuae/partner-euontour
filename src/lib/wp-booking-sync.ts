@@ -31,6 +31,11 @@ export async function pushBookingToWordPress(bookingId: string) {
             children: 0,
             agency_name: booking.agency.name,
             total_amount_paid: Number(booking.amount), // EXACT deducted amount
+            hotel_name: booking.hotelName || '',
+            hotel_address: booking.hotelAddress || '',
+            contact_name: booking.contactPerson || '',
+            contact_phone: booking.contactPhone || '',
+            additional_info: booking.additionalInfo || ''
         };
 
         console.log("[WP Sync] Sending WP Payload:", payload);
