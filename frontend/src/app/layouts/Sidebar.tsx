@@ -11,7 +11,9 @@ import {
     Bell,
     CreditCard,
     ShieldCheck,
-    UserPlus
+    UserPlus,
+    Link as LinkIcon,
+    Map as MapIcon
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import logo from '../../assets/logo.webp';
@@ -57,9 +59,15 @@ export function Sidebar() {
             roles: [ROLES.AGENCY],
         },
         {
-            label: 'Bookings',
+            label: 'Global Bookings',
             href: '/super-admin/bookings',
-            icon: CheckCircle,
+            icon: MapIcon,
+            roles: [ROLES.SUPER_ADMIN],
+        },
+        {
+            label: 'Direct Retail Link',
+            href: '/super-admin/retail-booking',
+            icon: LinkIcon,
             roles: [ROLES.SUPER_ADMIN],
         },
         {
