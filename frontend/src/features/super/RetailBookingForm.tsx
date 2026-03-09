@@ -12,6 +12,12 @@ export function RetailBookingForm() {
     const [date, setDate] = useState('');
     const [pax, setPax] = useState('1');
     const [customerEmail, setCustomerEmail] = useState('');
+    const [hotelName, setHotelName] = useState('');
+    const [hotelAddress, setHotelAddress] = useState('');
+    const [contactPerson, setContactPerson] = useState('');
+    const [contactPhone, setContactPhone] = useState('');
+    const [additionalInfo, setAdditionalInfo] = useState('');
+
     const [loading, setLoading] = useState(false);
     const [checkoutUrl, setCheckoutUrl] = useState('');
     const [error, setError] = useState('');
@@ -40,7 +46,12 @@ export function RetailBookingForm() {
                 tourId: selectedTour,
                 travelDate: date || new Date().toISOString().split('T')[0],
                 pax: parseInt(pax, 10),
-                customerEmail
+                customerEmail,
+                hotelName,
+                hotelAddress,
+                contactPerson,
+                contactPhone,
+                additionalInfo
             };
 
             const res = await apiFetch('/api/super/bookings/retail', {
@@ -90,6 +101,11 @@ export function RetailBookingForm() {
                     onClick={() => {
                         setCheckoutUrl('');
                         setCustomerEmail('');
+                        setHotelName('');
+                        setHotelAddress('');
+                        setContactPerson('');
+                        setContactPhone('');
+                        setAdditionalInfo('');
                     }}
                 >
                     Create Another Link
@@ -134,6 +150,69 @@ export function RetailBookingForm() {
                                 value={customerEmail}
                                 onChange={(e) => setCustomerEmail(e.target.value)}
                                 required
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="hotelName">Hotel Name</Label>
+                                <Input
+                                    id="hotelName"
+                                    type="text"
+                                    placeholder="Hilton Berlin"
+                                    value={hotelName}
+                                    onChange={(e) => setHotelName(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="hotelAddress">Hotel Address</Label>
+                                <Input
+                                    id="hotelAddress"
+                                    type="text"
+                                    placeholder="Mohrenstr. 30, 10117"
+                                    value={hotelAddress}
+                                    onChange={(e) => setHotelAddress(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="contactPerson">Lead Guest Name</Label>
+                                <Input
+                                    id="contactPerson"
+                                    type="text"
+                                    placeholder="John Doe"
+                                    value={contactPerson}
+                                    onChange={(e) => setContactPerson(e.target.value)}
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="contactPhone">Contact Phone</Label>
+                                <Input
+                                    id="contactPhone"
+                                    type="tel"
+                                    placeholder="+49 152 12345678"
+                                    value={contactPhone}
+                                    onChange={(e) => setContactPhone(e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="additionalInfo">Additional Information</Label>
+                            <textarea
+                                id="additionalInfo"
+                                className="flex min-h-[80px] w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-brand-red outline-none"
+                                placeholder="Flight numbers, delays, special requests..."
+                                value={additionalInfo}
+                                onChange={(e) => setAdditionalInfo(e.target.value)}
                             />
                         </div>
 

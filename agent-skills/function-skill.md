@@ -596,3 +596,27 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
    - Build a grid layout. The top row should feature 4 KPI Stat Cards (Total Revenue, Wallet Liabilities, Total Bookings, Pending Deposits).
    - Below the KPI cards, implement a large `LineChart` from `recharts` displaying revenue over the last 30 days or 12 months.
    - Add a bottom row with two `BarChart` components: one for 'Top 5 Agencies' and one for 'Most Popular Tours'.
+
+   ## Milestone 27: Direct Retail Booking Engine (Smart Links & Full WP Sync)
+**Objective:** Enable Super Admins to create direct B2C retail bookings that capture full guest/pickup details, generate branded smart payment links (`/pay/[id]`), dispatch automated emails, and automatically sync to WordPress/Tourfic upon Stripe payment completion.
+
+**Target Files:**
+- **Backend API:** `src/routes/stripe.ts` (Checkout creation & Webhook) and `src/routes/public.ts` (New)
+- **Frontend Super Admin:** `frontend/src/features/super/RetailBookingForm.tsx`
+- **Frontend Public:** `frontend/src/features/public/PaymentRedirect.tsx` (New)
+- **Email Service:** `src/lib/email.ts`
+
+**Implementation Prompts:**
+1. **Expand Retail Booking Form & Schema:**
+   - Update `RetailBookingForm.tsx` to require: `travelDate`, `hotelName`, `hotelAddress`, `contactPerson`, `contactPhone`, and optional `additionalInfo`, alongside Tour, Guests, and `customerEmail`.
+   - Update the `POST /api/super/bookings/retail` route to accept these fields and save them to the `Booking` record. 
+   - Store the generated `stripeSessionUrl` in the database.
+2. **Branded Smart Links:**
+   - Create a public React route at `/pay/:id` (`PaymentRedirect.tsx`). This page shows a loading spinner, fetches the raw Stripe URL from a new `GET /api/public/pay/:id` endpoint, and redirects the user (`window.location.href`).
+   - The Super Admin 'Copy Link' button must copy `https://partners.euontour.com/pay/[bookingId]`, not the raw Stripe URL.
+3. **Automated Emails:**
+   - On creation: Email the `customerEmail` with their branded payment link.
+   - On payment success (Webhook): Email the customer a 'Booking Confirmed' receipt and alert the Admin.
+4. **Stripe Webhook & WordPress Sync:**
+   - On `checkout.session.completed` for a `retail_booking`, update status to `CONFIRMED`.
+   - Fire the `pushBookingToWordPress` utility using the fully queried booking data. Map `agency_name` to the `contactPerson` (or 'Direct Retail Customer') and include all hotel/contact details so WooCommerce records them and Tourfic blocks the dates.

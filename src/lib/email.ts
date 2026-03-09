@@ -342,5 +342,23 @@ ${note ? `<p style="background:#fef2f2;padding:12px;border-left:4px solid #ef444
 <p>If you have any questions about this cancellation, please contact your account manager.</p>
 <p>Regards,<br/><strong>EuOnTour Partner Team</strong></p>
 ` + getFooter()
+  }),
+
+  // 13. RETAIL BOOKING CONFIRMED (CUSTOMER)
+  RETAIL_BOOKING_CONFIRMED: (customerName: string, tourName: string, guests: number, travelDate: string, total: string) => ({
+    subject: `Booking Confirmed: ${tourName} with EuOnTour`,
+    body: getHeader() + `
+<h2 style="color:#047857; margin-top:0;">Your Booking is Confirmed!</h2>
+<p>Hello ${customerName},</p>
+<p>Thank you for booking with EuOnTour! Your payment of <strong>€${total}</strong> was successful.</p>
+<ul style="padding-left: 20px;">
+  <li><strong>Tour:</strong> ${tourName}</li>
+  <li><strong>Travel Date:</strong> ${travelDate}</li>
+  <li><strong>Guests:</strong> ${guests}</li>
+</ul>
+<p>Our operations team will reach out to you if any further details are needed for pick-up arrangements.</p>
+<p>We look forward to hosting you!</p>
+<p>Regards,<br/><strong>The EuOnTour Team</strong></p>
+` + getFooter()
   })
 };

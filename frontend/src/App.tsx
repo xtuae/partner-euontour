@@ -36,6 +36,7 @@ import { ManageAgencyTours } from './features/admin/ManageAgencyTours';
 import { AdminAgencyDetailsPage } from './features/admin/AdminAgencyDetailsPage';
 import { AuditLogsPage } from './features/super/AuditLogsPage';
 import { AnalyticsDashboard } from './features/super/AnalyticsDashboard';
+import { PaymentRedirect } from './features/public/PaymentRedirect';
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
+          <Route path="/pay/:id" element={<PaymentRedirect />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />

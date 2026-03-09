@@ -29,7 +29,7 @@ export async function pushBookingToWordPress(bookingId: string) {
             travel_date: booking.travel_date.toISOString().split('T')[0],
             adults: booking.guests || 1, // Map from booking.guests instead of hardcoding 1
             children: 0,
-            agency_name: booking.agency.name,
+            agency_name: booking.isRetail ? `${booking.contactPerson || 'Direct Retail Customer'} (Retail)` : booking.agency.name,
             total_amount_paid: Number(booking.amount), // EXACT deducted amount
             hotel_name: booking.hotelName || '',
             hotel_address: booking.hotelAddress || '',

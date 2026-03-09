@@ -210,6 +210,7 @@ model Booking {
   customerEmail       String?
   isRetail            Boolean            @default(false)
   stripeSessionId     String?            @unique
+  stripeSessionUrl    String?
 
   wp_booking_id       Int?               // To track ID from WordPress
   sync_status         String             @default("PENDING") // PENDING, SYNCED, FAILED

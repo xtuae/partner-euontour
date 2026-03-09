@@ -84,10 +84,17 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
 
                     // Send Confirmation Email
                     if (booking.customerEmail) {
+                        const template = EMAIL_TEMPLATES.RETAIL_BOOKING_CONFIRMED(
+                            booking.contactPerson || 'Customer',
+                            booking.tour.name,
+                            booking.guests,
+                            booking.travel_date.toISOString().split('T')[0],
+                            String(booking.amount)
+                        );
                         sendEmail({
                             to: booking.customerEmail,
-                            subject: 'Your Booking is Confirmed! - EuOnTour',
-                            body: `Thank you for your retail booking for ${booking.tour.name}. Total Paid: €${booking.amount}. We look forward to seeing you!`
+                            subject: template.subject,
+                            body: template.body
                         }).catch(e => console.error('[Email Failed]', e));
                     }
                     console.log(`[Stripe Webhook] Retail Booking ${bookingId} marked as CONFIRMED.`);

@@ -18,6 +18,7 @@ import { notificationsRoutes } from "../src/routes/notifications.js";
 import { toursRoutes } from "../src/routes/tours.js";
 import { stripeRoutes } from "../src/routes/stripe.js";
 import { analyticsRoutes } from "../src/routes/analytics.js";
+import { publicRoutes } from "../src/routes/public.js";
 
 export const config = {
     api: {
@@ -58,6 +59,8 @@ async function appHandler(req: Request): Promise<Response> {
     } else if (path.startsWith("/stripe/webhook")) {
         // Run webhook without require user auth handler wrapping it
         response = await stripeRoutes(req, path);
+    } else if (path.startsWith("/public")) {
+        response = await publicRoutes(req, path);
     } else if (path.startsWith("/webhooks")) {
         response = await webhookRoutes(req, path);
     } else if (path.startsWith("/cron/sync")) {
