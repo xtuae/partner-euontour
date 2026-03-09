@@ -120,6 +120,9 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
         if (!u?.agency_id) return Response.json({ error: 'No agency' }, { status: 403 });
 
         try {
+            const reqUrl = new URL(req.url);
+            const baseUrl = `${reqUrl.protocol}//${reqUrl.host}`;
+
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
                 line_items: [{
@@ -131,8 +134,8 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
                     quantity: 1,
                 }],
                 mode: 'payment',
-                success_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/#/agency/wallet?topup=success`,
-                cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/#/agency/wallet?topup=canceled`,
+                success_url: `${baseUrl}/#/agency/wallet?topup=success`,
+                cancel_url: `${baseUrl}/#/agency/wallet?topup=canceled`,
                 metadata: {
                     type: 'wallet_topup',
                     agencyId: u.agency_id

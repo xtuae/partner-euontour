@@ -127,6 +127,46 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             return Response.json({ success: true });
         }
 
+        if (action === 'wallet' && parts[4] === 'credit' && req.method === 'POST') {
+            const body = await req.json();
+            const { amount, reference, notes } = z.object({
+                amount: z.number().positive(),
+                reference: z.string().optional(),
+                notes: z.string().optional()
+            }).parse(body);
+
+            await prisma.$transaction(async (tx) => {
+                await tx.agency.update({
+                    where: { id: agencyId },
+                    data: { wallet_balance: { increment: amount } }
+                });
+
+                await tx.walletLedger.create({
+                    data: {
+                        agency_id: agencyId,
+                        type: 'CREDIT',
+                        amount,
+                        reference_type: 'MANUAL_DEPOSIT',
+                        reference_id: reference || 'SUPER_ADMIN_PROXY',
+                        description: notes || 'Manual credit by Super Admin'
+                    }
+                });
+
+                await tx.auditLog.create({
+                    data: {
+                        actorId: user.userId,
+                        actorRole: 'SUPER_ADMIN',
+                        action: 'MANUAL_WALLET_CREDIT',
+                        entityType: 'AGENCY',
+                        entityId: agencyId,
+                        details: { amount, notes }
+                    }
+                });
+            });
+
+            return Response.json({ success: true, message: `Credited €${amount} to agency wallet` });
+        }
+
         if (action === 'kyc' && req.method === 'POST') {
             const { put } = await import('@vercel/blob');
             const formData = await req.formData();

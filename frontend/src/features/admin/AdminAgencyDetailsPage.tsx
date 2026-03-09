@@ -163,13 +163,11 @@ export function AdminAgencyDetailsPage() {
 
         setActionLoading(true);
         try {
-            await apiFetch('/api/super/wallet/adjust', {
+            await apiFetch(`/api/super/agencies/${id}/wallet/credit`, {
                 method: 'POST',
                 body: JSON.stringify({
-                    agencyId: id,
-                    type,
-                    amount: parseFloat(adjustAmount),
-                    reason: adjustReason
+                    amount: type === 'CREDIT' ? parseFloat(adjustAmount) : -parseFloat(adjustAmount),
+                    notes: adjustReason
                 })
             });
             setAdjustAmount('');
