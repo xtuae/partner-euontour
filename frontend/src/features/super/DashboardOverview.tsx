@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent } from '../../app/components/ui/Card';
-import { Activity, CreditCard, DollarSign, Users, TrendingUp } from 'lucide-react';
+import { Activity, CreditCard, Euro, Users, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface AnalyticsData {
@@ -78,7 +78,7 @@ export function DashboardOverview() {
                                 <h3 className="text-2xl font-bold text-red-600 mt-1">€{(data.liabilities).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
                             </div>
                             <div className="p-3 bg-red-50 text-red-500 rounded-full">
-                                <DollarSign className="w-6 h-6" />
+                                <Euro className="w-6 h-6" />
                             </div>
                         </div>
                     </CardContent>
