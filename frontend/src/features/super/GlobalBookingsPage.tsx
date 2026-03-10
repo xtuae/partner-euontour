@@ -4,6 +4,7 @@ import { Badge } from '../../app/components/ui/Badge';
 import { Button } from '../../app/components/ui/Button';
 import { Download, Eye, Copy, CheckCircle } from 'lucide-react';
 import { exportToCSV, exportToPDF } from '../../utils/exportUtils';
+import { toast } from 'react-hot-toast';
 
 interface Booking {
     id: string;
@@ -56,13 +57,13 @@ export function GlobalBookingsPage() {
             if (res.ok) {
                 // Refresh bookings
                 await fetchBookings();
-                alert(`Booking cancelled. €${Number(cancelTarget.amount).toFixed(2)} refunded to ${cancelTarget.agency.name}.`);
+                toast.success(cancelTarget.isRetail ? 'Retail booking cancelled.' : `Booking cancelled. €${Number(cancelTarget.amount).toFixed(2)} refunded to ${cancelTarget.agency.name}.`);
             } else {
                 const data = await res.json();
-                alert(`Error: ${data.error || 'Failed to cancel booking'}`);
+                toast.error(`Error: ${data.error || 'Failed to cancel booking'}`);
             }
         } catch (e) {
-            alert('Network error. Please try again.');
+            toast.error('Failed to cancel booking. Please check server logs.');
         } finally {
             setCancelling(false);
             setCancelTarget(null);
