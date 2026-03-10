@@ -29,22 +29,38 @@ export async function sendEmail(params: EmailParams) {
 const baseUrl = process.env.FRONTEND_URL || 'https://partners.euontour.com';
 
 const getHeader = () => `
-    < div style = "font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);" >
-      <div style="background-color: #f8f9fa; padding: 24px 20px; text-align: center; border-bottom: 3px solid #D32F2F;" >
-        <img src="https://partners.euontour.com/logo.webp" alt="EuOnTour Logo" style="max-height: 45px; width: auto;" />
-          </div>
-          < div style = "padding: 32px 24px; color: #334155; line-height: 1.6; font-size: 15px;" >
-            `;
+    <div style="background-color: #f3f4f6; padding: 40px 0; width: 100%;">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#f3f4f6">
+        <tr>
+          <td align="center">
+            <div style="background-color: #ffffff; color: #1f2937; font-family: sans-serif; padding: 20px; border-radius: 8px; max-width: 600px; margin: 0 auto; border: 1px solid #e5e5e5; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#ffffff">
+                <tr>
+                  <td align="center" style="padding: 24px 20px; border-bottom: 3px solid #D32F2F; background-color: #ffffff;">
+                    <img src="${baseUrl}/logo.webp" alt="EuOnTour Logo" style="max-width: 200px; display: block; margin: 0 auto;" />
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 32px 24px; color: #1f2937; line-height: 1.6; font-size: 15px; background-color: #ffffff;">
+`;
 
 const getFooter = () => `
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="background-color: #f8f9fa; padding: 24px; border-top: 1px solid #e5e5e5;">
+                    <p style="margin: 0; font-size: 13px; font-weight: 600; color: #475569;">EuOnTour Partners</p>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">This is a system-generated email. Please do not reply.</p>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">If you need help, contact <a href="mailto:support@euontour.com" style="color: #D32F2F; text-decoration: none;">support@euontour.com</a></p>
+                  </td>
+                </tr>
+              </table>
             </div>
-            < div style = "background-color: #f8f9fa; padding: 24px; text-align: center; border-top: 1px solid #e5e5e5;" >
-              <p style="margin: 0; font-size: 13px; font-weight: 600; color: #475569;" > EuOnTour Partners </p>
-                < p style = "margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;" > This is a system - generated email.Please do not reply.</p>
-                  < p style = "margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;" > If you need help, contact < a href = "mailto:support@euontour.com" style = "color: #D32F2F; text-decoration: none;" > support@euontour.com</a></p >
-                    </div>
-                    </div>
-                      `;
+          </td>
+        </tr>
+      </table>
+    </div>
+`;
 
 export const EMAIL_TEMPLATES = {
   // 1. AGENCY REGISTRATION VERIFICATION
