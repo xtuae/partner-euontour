@@ -134,7 +134,7 @@ export function AgencyDashboard() {
             <Card className="overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-gray-900">Recent Bookings</h3>
-                    <Button variant="link" size="sm">View all</Button>
+                    <Button variant="link" size="sm" onClick={() => navigate('/agency/bookings')}>View all</Button>
                 </div>
                 <div className="overflow-x-auto">
                     {loading ? (
