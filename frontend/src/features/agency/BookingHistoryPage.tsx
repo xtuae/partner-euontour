@@ -100,7 +100,7 @@ export function BookingHistoryPage() {
         // Items Table using autoTable
         autoTable(doc, {
             startY: 95,
-            head: [['Description', 'Travel Date', 'Status', 'Total (AED)']],
+            head: [['Description', 'Travel Date', 'Status', 'Total (€)']],
             body: [
                 [
                     booking.tour?.name || 'Custom Tour',
@@ -122,7 +122,7 @@ export function BookingHistoryPage() {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0);
         doc.text('Total Paid:', 140, finalY + 15);
-        doc.text(`AED ${Number(booking.amount).toFixed(2)}`, 195, finalY + 15, { align: 'right' });
+        doc.text(`€${Number(booking.amount).toFixed(2)}`, 195, finalY + 15, { align: 'right' });
 
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
@@ -185,7 +185,7 @@ export function BookingHistoryPage() {
                                                 {new Date(booking.travel_date).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4 font-bold text-gray-900">
-                                                AED {booking.amount}
+                                                €{booking.amount}
                                             </td>
                                             <td className="px-6 py-4">
                                                 <Badge variant={

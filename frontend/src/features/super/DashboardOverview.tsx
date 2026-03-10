@@ -61,7 +61,7 @@ export function DashboardOverview() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-500">Total Valid Revenue</p>
-                                <h3 className="text-2xl font-bold text-gray-900 mt-1">AED {(data.revenue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
+                                <h3 className="text-2xl font-bold text-gray-900 mt-1">€{(data.revenue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
                             </div>
                             <div className="p-3 bg-blue-50 text-brand-blue rounded-full">
                                 <TrendingUp className="w-6 h-6" />
@@ -75,7 +75,7 @@ export function DashboardOverview() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-gray-500">Agency Liabilities (Wallets)</p>
-                                <h3 className="text-2xl font-bold text-red-600 mt-1">AED {(data.liabilities).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
+                                <h3 className="text-2xl font-bold text-red-600 mt-1">€{(data.liabilities).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h3>
                             </div>
                             <div className="p-3 bg-red-50 text-red-500 rounded-full">
                                 <DollarSign className="w-6 h-6" />
@@ -125,7 +125,7 @@ export function DashboardOverview() {
                             <BarChart data={data.topAgencies} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                 <XAxis dataKey="agencyName" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
-                                <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `AED ${value}`} tick={{ fontSize: 12, fill: '#6B7280' }} />
+                                <YAxis axisLine={false} tickLine={false} tickFormatter={(value) => `€${value}`} tick={{ fontSize: 12, fill: '#6B7280' }} />
                                 <Tooltip cursor={{ fill: '#F3F4F6' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }} />
                                 <Bar dataKey="revenue" fill="#3B82F6" radius={[4, 4, 0, 0]} barSize={40} />
                             </BarChart>
@@ -158,7 +158,7 @@ export function DashboardOverview() {
                                                 <span className="text-xs text-gray-400">{new Date(b.date).toLocaleTimeString()} - {new Date(b.date).toLocaleDateString()}</span>
                                             </td>
                                             <td className="px-6 py-4 font-medium text-gray-700 truncate max-w-[200px]">{b.tour}</td>
-                                            <td className="px-6 py-4 text-right font-bold text-brand-black">AED {Number(b.amount).toFixed(2)}</td>
+                                            <td className="px-6 py-4 text-right font-bold text-brand-black">€{Number(b.amount).toFixed(2)}</td>
                                         </tr>
                                     ))
                                 )}

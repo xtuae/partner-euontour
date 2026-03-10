@@ -5,6 +5,7 @@ import { RefreshCw, CheckCircle, XCircle, Eye, AlertCircle, Download } from 'luc
 import { apiFetch } from '../../lib/api-client';
 import { ImageModal } from '../../app/components/ui/ImageModal';
 import { exportToCSV, exportToPDF } from '../../utils/exportUtils';
+import { toast } from 'react-hot-toast';
 
 interface Deposit {
     id: string;
@@ -27,6 +28,9 @@ export function AdminDepositsPage() {
     const [submitting, setSubmitting] = useState(false);
     const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
 
+    const [approveTarget, setApproveTarget] = useState<{ id: string; agencyName: string; amount: number } | null>(null);
+    const [approving, setApproving] = useState(false);
+
     const fetchDeposits = async () => {
         setLoading(true);
         try {
@@ -48,20 +52,27 @@ export function AdminDepositsPage() {
         fetchDeposits();
     }, []);
 
-    const handleApprove = async (id: string, agencyName: string, amount: number) => {
-        if (!confirm(`Are you sure you want to approve this deposit of AED ${amount} for ${agencyName}? This will credit their wallet instantly.`)) return;
+    const handleApprove = (id: string, agencyName: string, amount: number) => {
+        setApproveTarget({ id, agencyName, amount });
+    };
 
+    const confirmApprove = async () => {
+        if (!approveTarget) return;
+        setApproving(true);
         try {
-            const res = await apiFetch(`/api/admin/deposits/${id}/approve`, { method: 'POST' });
+            const res = await apiFetch(`/api/admin/deposits/${approveTarget.id}/approve`, { method: 'POST' });
             if (res.ok) {
-                alert('Deposit approved successfully.');
+                toast.success('Deposit approved successfully.');
                 fetchDeposits();
             } else {
                 const data = await res.json();
-                alert(data.error || 'Failed to approve deposit.');
+                toast.error(data.error || 'Failed to approve deposit.');
             }
         } catch (err) {
-            alert('Error approving deposit.');
+            toast.error('Error approving deposit.');
+        } finally {
+            setApproving(false);
+            setApproveTarget(null);
         }
     };
 
@@ -73,7 +84,10 @@ export function AdminDepositsPage() {
 
     const handleReject = async () => {
         if (!selectedDepositId) return;
-        if (!rejectionReason.trim()) return alert('Please enter a rejection reason.');
+        if (!rejectionReason.trim()) {
+            toast.error('Please enter a rejection reason.');
+            return;
+        }
 
         setSubmitting(true);
         try {
@@ -82,15 +96,15 @@ export function AdminDepositsPage() {
                 body: JSON.stringify({ rejectionReason })
             });
             if (res.ok) {
-                alert('Deposit rejected.');
+                toast.success('Deposit rejected.');
                 setRejectModalOpen(false);
                 fetchDeposits();
             } else {
                 const data = await res.json();
-                alert(data.error || 'Failed to reject deposit.');
+                toast.error(data.error || 'Failed to reject deposit.');
             }
         } catch (err) {
-            alert('Error rejecting deposit.');
+            toast.error('Error rejecting deposit.');
         } finally {
             setSubmitting(false);
         }
@@ -101,7 +115,7 @@ export function AdminDepositsPage() {
             ID: dep.id.slice(0, 8),
             'Agency Name': dep.agency?.name || 'Unknown',
             'Agency Email': dep.agency?.email || 'N/A',
-            Amount: `AED ${dep.amount}`,
+            Amount: `€${dep.amount}`,
             Date: new Date(dep.created_at).toLocaleDateString(),
             Status: dep.status
         }));
@@ -164,7 +178,7 @@ export function AdminDepositsPage() {
                                                 <div className="text-xs text-gray-500">{dep.agency?.email || dep.agency_id.substring(0, 8)}</div>
                                             </td>
                                             <td className="px-6 py-4 font-bold text-gray-900">
-                                                AED {dep.amount}
+                                                €{dep.amount}
                                             </td>
                                             <td className="px-6 py-4">
                                                 {dep.proof_url ? (
@@ -214,6 +228,26 @@ export function AdminDepositsPage() {
                             <Button variant="outline" onClick={() => setRejectModalOpen(false)} disabled={submitting}>Cancel</Button>
                             <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={handleReject} disabled={submitting}>
                                 {submitting ? 'Rejecting...' : 'Confirm Rejection'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {approveTarget && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-500" /> Approve Deposit
+                        </h2>
+                        <p className="text-sm text-gray-600 mb-6 font-medium">
+                            Are you sure you want to approve this deposit of €{approveTarget.amount} for {approveTarget.agencyName}?
+                            This will credit their wallet instantly.
+                        </p>
+                        <div className="flex justify-end gap-3 border-t border-gray-100 pt-5">
+                            <Button variant="outline" onClick={() => setApproveTarget(null)} disabled={approving}>Cancel</Button>
+                            <Button className="bg-green-600 hover:bg-green-700 text-white shadow-sm" onClick={confirmApprove} disabled={approving}>
+                                {approving ? 'Processing...' : 'Confirm Approval'}
                             </Button>
                         </div>
                     </div>
