@@ -1,3 +1,4 @@
+import { Toaster } from 'react-hot-toast';
 import './styles/globals.css'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './features/auth/AuthContext';
@@ -40,74 +41,77 @@ import { PaymentRedirect } from './features/public/PaymentRedirect';
 
 function App() {
   return (
-    <HashRouter>
-      <AuthProvider>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/pay/:id" element={<PaymentRedirect />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
-          <Route path="/unauthorized" element={<UnauthorizedPage />} />
+    <>
+      <Toaster position="top-right" />
+      <HashRouter>
+        <AuthProvider>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/pay/:id" element={<PaymentRedirect />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-          {/* Protected Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Navigate to="/login" replace />} />
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<Navigate to="/login" replace />} />
 
-              {/* Agency Routes */}
-              <Route path="/agency" element={<ProtectedRoute allowedRoles={[ROLES.AGENCY]} />}>
-                <Route path="dashboard" element={<AgencyDashboard />} />
-                <Route path="wallet" element={<WalletPage />} />
-                <Route path="deposits" element={<DepositPage />} />
-                <Route path="tours" element={<ToursPage />} />
-                <Route path="bookings" element={<BookingPage />} />
-                <Route path="booking-history" element={<BookingHistoryPage />} />
-                <Route path="verification" element={<AgencyVerificationPage />} />
-                <Route path="notifications" element={<NotificationsPage />} />
-                <Route path="settings" element={<SettingsPage />} />
-                <Route path="security" element={<PlaceholderPage title="Security" />} />
-                <Route path="support" element={<PlaceholderPage title="Support" />} />
-              </Route>
+                {/* Agency Routes */}
+                <Route path="/agency" element={<ProtectedRoute allowedRoles={[ROLES.AGENCY]} />}>
+                  <Route path="dashboard" element={<AgencyDashboard />} />
+                  <Route path="wallet" element={<WalletPage />} />
+                  <Route path="deposits" element={<DepositPage />} />
+                  <Route path="tours" element={<ToursPage />} />
+                  <Route path="bookings" element={<BookingPage />} />
+                  <Route path="booking-history" element={<BookingHistoryPage />} />
+                  <Route path="verification" element={<AgencyVerificationPage />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
+                  <Route path="settings" element={<SettingsPage />} />
+                  <Route path="security" element={<PlaceholderPage title="Security" />} />
+                  <Route path="support" element={<PlaceholderPage title="Support" />} />
+                </Route>
 
 
-              {/* Admin Routes */}
-              <Route path="/admin" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]} />}>
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="deposits" element={<AdminDepositsPage />} />
-                <Route path="verification" element={<AdminVerificationPage />} />
-                <Route path="verified-agencies" element={<AdminVerifiedAgenciesPage />} />
-                <Route path="agencies/:id" element={<AdminAgencyDetailsPage />} />
-                <Route path="agencies/:id/tours" element={<ManageAgencyTours />} />
-                <Route path="finance" element={<PlaceholderPage title="Finance" />} />
-                <Route path="users" element={<PlaceholderPage title="Users" />} />
-                <Route path="audit" element={<PlaceholderPage title="Audit Logs" />} />
-                <Route path="notifications" element={<NotificationsPage />} />
-              </Route>
+                {/* Admin Routes */}
+                <Route path="/admin" element={<ProtectedRoute allowedRoles={[ROLES.ADMIN, ROLES.SUPER_ADMIN]} />}>
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="deposits" element={<AdminDepositsPage />} />
+                  <Route path="verification" element={<AdminVerificationPage />} />
+                  <Route path="verified-agencies" element={<AdminVerifiedAgenciesPage />} />
+                  <Route path="agencies/:id" element={<AdminAgencyDetailsPage />} />
+                  <Route path="agencies/:id/tours" element={<ManageAgencyTours />} />
+                  <Route path="finance" element={<PlaceholderPage title="Finance" />} />
+                  <Route path="users" element={<PlaceholderPage title="Users" />} />
+                  <Route path="audit" element={<PlaceholderPage title="Audit Logs" />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
+                </Route>
 
-              {/* Super Admin Routes */}
-              <Route path="/super-admin" element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]} />}>
-                {/* Reuse Admin components for now or create specific ones */}
-                <Route path="dashboard" element={<DashboardOverview />} />
-                <Route path="agency-verifications" element={<SuperAdminVerificationList />} />
-                <Route path="agency-verifications/:agencyId" element={<SuperAdminVerificationDetail />} />
-                <Route path="deposits" element={<AdminDepositsPage />} />
-                <Route path="tours" element={<SuperAdminToursPage />} />
-                <Route path="bookings" element={<GlobalBookingsPage />} />
-                <Route path="retail-booking" element={<RetailBookingForm />} />
-                <Route path="staff" element={<AdminManagementPage />} />
-                <Route path="settings" element={<AdminSettingsPage />} />
-                <Route path="audit" element={<AuditLogsPage />} />
-                <Route path="analytics" element={<AnalyticsDashboard />} />
-                <Route path="notifications" element={<NotificationsPage />} />
+                {/* Super Admin Routes */}
+                <Route path="/super-admin" element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]} />}>
+                  {/* Reuse Admin components for now or create specific ones */}
+                  <Route path="dashboard" element={<DashboardOverview />} />
+                  <Route path="agency-verifications" element={<SuperAdminVerificationList />} />
+                  <Route path="agency-verifications/:agencyId" element={<SuperAdminVerificationDetail />} />
+                  <Route path="deposits" element={<AdminDepositsPage />} />
+                  <Route path="tours" element={<SuperAdminToursPage />} />
+                  <Route path="bookings" element={<GlobalBookingsPage />} />
+                  <Route path="retail-booking" element={<RetailBookingForm />} />
+                  <Route path="staff" element={<AdminManagementPage />} />
+                  <Route path="settings" element={<AdminSettingsPage />} />
+                  <Route path="audit" element={<AuditLogsPage />} />
+                  <Route path="analytics" element={<AnalyticsDashboard />} />
+                  <Route path="notifications" element={<NotificationsPage />} />
+                </Route>
               </Route>
             </Route>
-          </Route>
-        </Routes>
-      </AuthProvider>
-    </HashRouter>
+          </Routes>
+        </AuthProvider>
+      </HashRouter>
+    </>
   );
 }
 

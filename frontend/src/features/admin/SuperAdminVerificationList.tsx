@@ -3,9 +3,10 @@ import { apiFetch } from '../../lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, XCircle, Clock, Trash2, Edit2, Play, Square, Upload, AlertTriangle } from 'lucide-react';
+import { BadgeCheck, XCircle, Clock, Trash2, Edit2, Play, Ban, Upload, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 import { ProxyKycUploadModal } from './ProxyKycUploadModal';
+import { toast } from 'react-hot-toast';
 
 interface Verification {
     agencyId: string;
@@ -125,10 +126,10 @@ export function SuperAdminVerificationList() {
                 if (res.ok) {
                     setIsModalOpen(false);
                     fetchAgencies();
-                    alert('Agency created successfully');
+                    toast.success('Agency created successfully');
                 } else {
                     const data = await res.json();
-                    alert(data.error || 'Failed to create agency');
+                    toast.error(data.error || 'Failed to create agency');
                 }
             } else if (modalMode === 'edit' && selectedAgencyId) {
                 const res = await apiFetch(`/api/super/agencies/${selectedAgencyId}`, {
@@ -142,15 +143,15 @@ export function SuperAdminVerificationList() {
                 if (res.ok) {
                     setIsModalOpen(false);
                     fetchAgencies();
-                    alert('Agency updated successfully');
+                    toast.success('Agency updated successfully');
                 } else {
                     const data = await res.json();
-                    alert(data.error || 'Failed to update agency');
+                    toast.error(data.error || 'Failed to update agency');
                 }
             }
         } catch (error) {
             console.error(error);
-            alert('An error occurred');
+            toast.error('An error occurred');
         } finally {
             setIsSubmitting(false);
         }
@@ -167,11 +168,12 @@ export function SuperAdminVerificationList() {
             });
             if (res.ok) {
                 fetchAgencies();
+                toast.success(`Agency status changed to ${newStatus}`);
             } else {
-                alert('Failed to change agency status');
+                toast.error('Failed to change agency status');
             }
         } catch (err) {
-            alert('Error toggling status');
+            toast.error('Error toggling status');
         }
     };
 
@@ -181,11 +183,12 @@ export function SuperAdminVerificationList() {
             const res = await apiFetch(`/api/super/agencies/${id}`, { method: 'DELETE' });
             if (res.ok) {
                 fetchAgencies();
+                toast.success('Agency deleted successfully');
             } else {
-                alert('Failed to delete agency');
+                toast.error('Failed to delete agency');
             }
         } catch (err) {
-            alert('Error deleting agency');
+            toast.error('Error deleting agency');
         }
     };
 
@@ -194,13 +197,13 @@ export function SuperAdminVerificationList() {
         try {
             const res = await apiFetch(`/api/admin/agencies/${id}/kyc-warning`, { method: 'POST' });
             if (res.ok) {
-                alert(`Warning sent to ${name}`);
+                toast.success(`Warning sent to ${name}`);
                 fetchAgencies();
             } else {
-                alert('Failed to send warning');
+                toast.error('Failed to send warning');
             }
         } catch (err) {
-            alert('Error sending warning');
+            toast.error('Error sending warning');
         }
     };
 
@@ -331,7 +334,7 @@ export function SuperAdminVerificationList() {
                                                             onClick={() => handleToggleStatus(agency.id, agency.status || 'ACTIVE')}
                                                             title={agency.status === 'ACTIVE' ? 'Suspend Agency' : 'Activate Agency'}
                                                         >
-                                                            {agency.status === 'ACTIVE' ? <Square size={14} className="text-orange-500" /> : <Play size={14} className="text-green-600" />}
+                                                            {agency.status === 'ACTIVE' ? <Ban size={14} className="text-orange-500" /> : <Play size={14} className="text-green-600" />}
                                                         </Button>
                                                         <Button variant="outline" size="sm" onClick={() => handleDelete(agency.id, agency.name)} className="w-8 h-8 p-0 bg-white hover:bg-red-50 hover:border-red-200" title="Delete Agency">
                                                             <Trash2 size={14} className="text-red-500" />
