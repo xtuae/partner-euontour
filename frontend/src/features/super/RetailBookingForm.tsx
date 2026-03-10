@@ -5,12 +5,13 @@ import { Button } from '../../app/components/ui/Button';
 import { Input } from '../../app/components/ui/Input';
 import { Label } from '../../app/components/ui/Label';
 import { CheckCircle, Copy, Link as LinkIcon } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export function RetailBookingForm() {
     const [tours, setTours] = useState<any[]>([]);
     const [selectedTour, setSelectedTour] = useState('');
     const [date, setDate] = useState('');
-    const [pax, setPax] = useState('1');
+    const [pax, setPax] = useState('2');
     const [customerEmail, setCustomerEmail] = useState('');
     const [hotelName, setHotelName] = useState('');
     const [hotelAddress, setHotelAddress] = useState('');
@@ -36,6 +37,13 @@ export function RetailBookingForm() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const paxNum = parseInt(pax, 10);
+        if (paxNum < 2) {
+            toast.error("A minimum of 2 guests is required.");
+            return;
+        }
+
         setLoading(true);
         setError('');
         setCheckoutUrl('');
@@ -249,7 +257,8 @@ export function RetailBookingForm() {
                                 <Input
                                     id="pax"
                                     type="number"
-                                    min="1"
+                                    min="2"
+                                    max="8"
                                     value={pax}
                                     onChange={(e) => setPax(e.target.value)}
                                     required
