@@ -1,10 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
 import { MapPin, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../../lib/api-client';
+import { TourDetailsModal } from './TourDetailsModal';
 
 const decodeHTML = (html: string) => {
     const txt = document.createElement("textarea");
@@ -13,9 +13,9 @@ const decodeHTML = (html: string) => {
 };
 
 export function ToursPage() {
-    const navigate = useNavigate();
     const [tours, setTours] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [selectedTour, setSelectedTour] = useState<any | null>(null);
 
     useEffect(() => {
         apiFetch('/api/tours')
@@ -36,9 +36,6 @@ export function ToursPage() {
         <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold text-brand-black">Available Tours</h1>
-                <Button onClick={() => navigate('/agency/bookings')}>
-                    Book a Tour
-                </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -47,12 +44,12 @@ export function ToursPage() {
                         No active tours available down this sales channel.
                     </div>
                 ) : tours.map((tour) => (
-                    <Card key={tour.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                    <Card key={tour.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer group" onClick={() => setSelectedTour(tour)}>
                         <div className="h-48 overflow-hidden bg-gray-200">
                             <img
                                 src={tour.image_url || 'https://via.placeholder.com/400x250?text=Tour+Image'}
                                 alt={decodeHTML(tour.name)}
-                                className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+                                className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
                             />
                         </div>
                         <CardHeader>
@@ -64,30 +61,37 @@ export function ToursPage() {
                             </div>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-2">{tour.description}</p>
-
-                            <div className="space-y-2 text-sm text-gray-500 mb-6">
+                            <div className="space-y-2 text-sm text-gray-500 mb-4">
                                 <div className="flex items-center">
                                     <MapPin className="w-4 h-4 mr-2 text-brand-red" />
-                                    {tour.location}
+                                    {tour.location || 'Location unavailable'}
                                 </div>
-                                <div className="flex items-center">
-                                    <Clock className="w-4 h-4 mr-2" />
-                                    {tour.duration}
-                                </div>
+                                {tour.duration && (
+                                    <div className="flex items-center">
+                                        <Clock className="w-4 h-4 mr-2" />
+                                        {tour.duration}
+                                    </div>
+                                )}
                             </div>
 
                             <Button
                                 variant="outline"
                                 className="w-full border-brand-red text-brand-red hover:bg-brand-red hover:text-white"
-                                onClick={() => navigate('/agency/bookings')}
+                                onClick={(e) => { e.stopPropagation(); setSelectedTour(tour); }}
                             >
-                                Book Now
+                                View Details
                             </Button>
                         </CardContent>
                     </Card>
                 ))}
             </div>
+
+            {selectedTour && (
+                <TourDetailsModal
+                    tour={selectedTour}
+                    onClose={() => setSelectedTour(null)}
+                />
+            )}
         </div>
     );
 }

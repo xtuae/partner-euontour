@@ -160,11 +160,17 @@ model Tour {
   wp_tour_id       Int          @unique
   name             String
   location         String?
+  description      String?      @db.Text
   duration         String?
   price            Decimal      @db.Decimal(12, 2)
   agency_net_price Decimal      @default(0.00) @db.Decimal(12, 2)
   active           Boolean      @default(true)
   image_url        String?
+  gallery          String[]     @default([])
+  inclusions       String[]     @default([])
+  exclusions       String[]     @default([])
+  itinerary        Json?
+  meetingPoint     String?
   deletedAt        DateTime?
 
   bookings         Booking[]

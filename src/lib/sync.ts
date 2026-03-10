@@ -39,26 +39,36 @@ export async function syncToursFromWordPress() {
             const retailPrice = parseFloat(tour.price);
             const agencyNetPrice = retailPrice - (retailPrice * discountMultiplier);
 
+            // Extract rich Tourfic metadata
+            const description = tour.description || tour.content || null;
+            const gallery = Array.isArray(tour.gallery) ? tour.gallery : [];
+            const inclusions = Array.isArray(tour.inclusions) ? tour.inclusions : [];
+            const exclusions = Array.isArray(tour.exclusions) ? tour.exclusions : [];
+            const itinerary = tour.itinerary || null;
+            const meetingPoint = tour.meeting_point || tour.meetingPoint || null;
+
+            const sharedData = {
+                name: tour.name,
+                price: retailPrice,
+                location: tour.location || tour.destination || null,
+                description,
+                duration: tour.duration || null,
+                agency_net_price: agencyNetPrice,
+                active: tour.active !== undefined ? tour.active : true,
+                image_url: tour.image_url || null,
+                gallery,
+                inclusions,
+                exclusions,
+                itinerary,
+                meetingPoint
+            };
+
             await prisma.tour.upsert({
                 where: { wp_tour_id: Number(tour.wp_tour_id) },
-                update: {
-                    name: tour.name,
-                    price: retailPrice,
-                    location: tour.location || tour.destination || null,
-                    duration: tour.duration || null,
-                    agency_net_price: agencyNetPrice,
-                    active: tour.active !== undefined ? tour.active : true,
-                    image_url: tour.image_url || null
-                },
+                update: sharedData,
                 create: {
                     wp_tour_id: Number(tour.wp_tour_id),
-                    name: tour.name,
-                    price: retailPrice,
-                    location: tour.location || tour.destination || null,
-                    duration: tour.duration || null,
-                    agency_net_price: agencyNetPrice,
-                    active: tour.active !== undefined ? tour.active : true,
-                    image_url: tour.image_url || null
+                    ...sharedData
                 }
             });
             syncedCount++;

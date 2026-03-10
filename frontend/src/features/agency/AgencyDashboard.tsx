@@ -8,8 +8,10 @@ import {
 import { Card } from '../../app/components/ui/Card';
 import { Button } from '../../app/components/ui/Button';
 import { Badge } from '../../app/components/ui/Badge';
+import { useNavigate } from 'react-router-dom';
 
 export function AgencyDashboard() {
+    const navigate = useNavigate();
     const [stats, setStats] = useState({
         balance: 0,
         activeBookings: 0,
@@ -77,10 +79,10 @@ export function AgencyDashboard() {
                     <p className="text-sm text-gray-500">Overview of your agency performance.</p>
                 </div>
                 <div className="flex gap-3">
-                    <Button variant="secondary" size="sm">
+                    <Button variant="secondary" size="sm" onClick={() => navigate('/agency/deposits')}>
                         Add Funds
                     </Button>
-                    <Button variant="primary" size="sm">
+                    <Button variant="primary" size="sm" onClick={() => navigate('/agency/tours')}>
                         New Booking
                     </Button>
                 </div>

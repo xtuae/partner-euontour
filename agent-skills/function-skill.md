@@ -640,3 +640,26 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
    - **If Role === SUPER_ADMIN:** Render a `SuperAdminSettings` component under the General tab. Include global toggles, default B2B discount percentages, and system notification preferences.
    - **If Role === AGENCY:** Render an `AgencySettings` component. Include Business Name, Tax/VAT ID, Public Contact Email, and Billing Address (separate from their immutable KYC data).
    - **If Role === ADMIN:** Hide the General Settings tab entirely, or only show limited notification preferences.
+
+
+## Milestone 29: Dashboard Routing & Rich Tour Details Sync
+**Objective:** Fix broken dashboard navigation buttons and expand the database schema to sync deep, rich content from WordPress/Tourfic. Build a comprehensive "Tour Details" view so agencies can see full itineraries, galleries, inclusions, and exact locations before booking.
+
+**Target Files:**
+- **Database:** `prisma/schema.prisma`
+- **Backend:** `src/lib/wp-sync.ts` (or the relevant WP fetch utility)
+- **Frontend Dashboard:** `frontend/src/features/agency/Dashboard.tsx`
+- **Frontend Tours:** `frontend/src/features/agency/TourList.tsx` and `TourDetailsModal.tsx` (New)
+
+**Implementation Prompts:**
+1. **Schema Expansion:**
+   - Expand the `Tour` model to hold rich WP data: `location String?`, `description String? @db.Text`, `inclusions String[]`, `exclusions String[]`, `itinerary Json?`, `gallery String[]`, and `meetingPoint String?`. 
+2. **Dashboard Navigation Fixes:**
+   - Import `useNavigate` in `Dashboard.tsx`. Attach `onClick={() => navigate('/agency/wallet')}` to 'Add Funds' and `onClick={() => navigate('/agency/tours')}` to 'New Booking'.
+3. **Deep WordPress Sync (Backend):**
+   - Update the WP sync utility. Extract the deep Tourfic meta-data from the API response (location, gallery images, rich text description, inclusions/exclusions, and itinerary) and map them to the new Prisma fields before saving.
+4. **Rich Tour UI & Booking Flow (Frontend):**
+   - Update `TourList.tsx` to display `{tour.location || 'Location unavailable'}` next to the map pin.
+   - Change the 'Book Now' button on the grid cards to 'View Details'.
+   - Create `TourDetailsModal.tsx`. When a card is clicked, open this modal to display the image `gallery`, rich `description`, `inclusions`/`exclusions` lists, and the `itinerary`. 
+   - Move the actual booking form (date selection, guest count) inside this rich modal.
