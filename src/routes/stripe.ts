@@ -159,8 +159,8 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
                     quantity: 1,
                 }],
                 mode: 'payment',
-                success_url: `${baseUrl}/#/agency/wallet?topup=success`,
-                cancel_url: `${baseUrl}/#/agency/wallet?topup=canceled`,
+                success_url: `${process.env.FRONTEND_URL}/#/agency/wallet?topup=success`,
+                cancel_url: `${process.env.FRONTEND_URL}/#/agency/wallet?topup=canceled`,
                 metadata: {
                     type: 'wallet_topup',
                     agencyId: u.agency_id
@@ -173,6 +173,7 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
                     agency_id: u.agency_id,
                     amount: numAmount,
                     bank_reference: 'STRIPE_ONLINE',
+                    paymentMethod: 'STRIPE',
                     status: 'PENDING_ADMIN', // We map standard PENDING to PENDING_ADMIN for deposits here
                     stripeSessionId: session.id
                 }

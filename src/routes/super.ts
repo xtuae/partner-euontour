@@ -674,21 +674,47 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
 
     if (entity === 'settings' && parts[2] === 'system') {
         if (req.method === 'GET') {
-            const setting = await prisma.systemSettings.findUnique({ where: { key: 'STRIPE_TEST_MODE' } });
-            return Response.json({ stripeTestMode: setting ? setting.value === 'true' : true });
+            const [stripeSetting, bankSetting] = await Promise.all([
+                prisma.systemSettings.findUnique({ where: { key: 'STRIPE_TEST_MODE' } }),
+                prisma.systemSettings.findUnique({ where: { key: 'BANK_DETAILS' } })
+            ]);
+            return Response.json({
+                stripeTestMode: stripeSetting ? stripeSetting.value === 'true' : true,
+                bankDetails: bankSetting ? bankSetting.value : ''
+            });
         }
         if (req.method === 'PUT') {
             const body = await req.json();
-            const { stripeTestMode } = z.object({ stripeTestMode: z.boolean() }).parse(body);
-            await prisma.systemSettings.upsert({
-                where: { key: 'STRIPE_TEST_MODE' },
-                update: { value: String(stripeTestMode) },
-                create: { key: 'STRIPE_TEST_MODE', value: String(stripeTestMode) }
+            const payload = z.object({
+                stripeTestMode: z.boolean().optional(),
+                bankDetails: z.string().optional()
+            }).parse(body);
+
+            await prisma.$transaction(async (tx) => {
+                if (payload.stripeTestMode !== undefined) {
+                    await tx.systemSettings.upsert({
+                        where: { key: 'STRIPE_TEST_MODE' },
+                        update: { value: String(payload.stripeTestMode) },
+                        create: { key: 'STRIPE_TEST_MODE', value: String(payload.stripeTestMode) }
+                    });
+                    await tx.auditLog.create({
+                        data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'SYSTEM_SETTINGS_UPDATED', entityType: 'SYSTEM', entityId: 'STRIPE_TEST_MODE' }
+                    });
+                }
+
+                if (payload.bankDetails !== undefined) {
+                    await tx.systemSettings.upsert({
+                        where: { key: 'BANK_DETAILS' },
+                        update: { value: payload.bankDetails },
+                        create: { key: 'BANK_DETAILS', value: payload.bankDetails }
+                    });
+                    await tx.auditLog.create({
+                        data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'SYSTEM_SETTINGS_UPDATED', entityType: 'SYSTEM', entityId: 'BANK_DETAILS' }
+                    });
+                }
             });
-            await prisma.auditLog.create({
-                data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'SYSTEM_SETTINGS_UPDATED', entityType: 'SYSTEM', entityId: 'STRIPE_TEST_MODE' }
-            });
-            return Response.json({ success: true, stripeTestMode });
+
+            return Response.json({ success: true, ...payload });
         }
     }
 

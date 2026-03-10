@@ -37,6 +37,7 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
             const amountRaw = formData.get('amount') as string;
             const proof = formData.get('proof_image') as File;
             const referenceNumber = formData.get('referenceNumber') as string || 'UPLOADED_PROOF';
+            const paymentMethodStr = formData.get('paymentMethod') as string || 'BANK_TRANSFER';
 
             // 2. Safer number parsing
             const amount = parseFloat(amountRaw);
@@ -71,6 +72,7 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
                     agency_id: u.agency_id,
                     amount: amount, // Prisma handles Decimal conversion if type matches
                     bank_reference: referenceNumber,
+                    paymentMethod: paymentMethodStr,
                     proof_url: blob.url,
                     status: 'PENDING_ADMIN'
                 } as any

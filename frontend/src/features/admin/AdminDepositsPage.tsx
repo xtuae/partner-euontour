@@ -15,6 +15,7 @@ interface Deposit {
     created_at: string;
     status: string;
     proof_url?: string;
+    paymentMethod?: string;
 }
 
 export function AdminDepositsPage() {
@@ -191,12 +192,26 @@ export function AdminDepositsPage() {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 <div className="flex justify-end gap-2">
-                                                    <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white shadow-sm" onClick={() => handleApprove(dep.id, dep.agency?.name || 'Unknown', dep.amount)}>
-                                                        <CheckCircle className="w-4 h-4 mr-1.5" /> Approve
-                                                    </Button>
-                                                    <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300" onClick={() => openRejectModal(dep.id)}>
-                                                        <XCircle className="w-4 h-4 mr-1.5" /> Reject
-                                                    </Button>
+                                                    {(!dep.paymentMethod || dep.paymentMethod === 'BANK_TRANSFER') ? (
+                                                        <>
+                                                            <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white shadow-sm" onClick={() => handleApprove(dep.id, dep.agency?.name || 'Unknown', dep.amount)}>
+                                                                <CheckCircle className="w-4 h-4 mr-1.5" /> Approve
+                                                            </Button>
+                                                            <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300" onClick={() => openRejectModal(dep.id)}>
+                                                                <XCircle className="w-4 h-4 mr-1.5" /> Reject
+                                                            </Button>
+                                                        </>
+                                                    ) : (
+                                                        dep.status === 'APPROVED' ? (
+                                                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-green-50 text-green-700 rounded-full border border-green-200">
+                                                                <CheckCircle className="w-3.5 h-3.5 mr-1" /> Automated via Stripe
+                                                            </span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center px-3 py-1.5 text-xs font-semibold bg-yellow-50 text-yellow-700 rounded-full border border-yellow-200">
+                                                                <AlertCircle className="w-3.5 h-3.5 mr-1" /> Awaiting Stripe Payment
+                                                            </span>
+                                                        )
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>

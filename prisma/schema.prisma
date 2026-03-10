@@ -141,6 +141,7 @@ model Deposit {
   proof_url       String?
   thumbnail_url   String?
   status          DepositStatus @default(PENDING_ADMIN)
+  paymentMethod   String        @default("BANK_TRANSFER")
   rejectionReason String?
   stripeSessionId String?       @unique
   reviewed_by     String?

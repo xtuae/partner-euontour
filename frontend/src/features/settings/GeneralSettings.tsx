@@ -104,6 +104,8 @@ function SuperAdminSettings() {
     const [discountValue, setDiscountValue] = useState<string>('10');
     const [isSavingDiscount, setIsSavingDiscount] = useState(false);
     const [stripeTestMode, setStripeTestMode] = useState<boolean>(true);
+    const [bankDetails, setBankDetails] = useState<string>('');
+    const [isSavingBank, setIsSavingBank] = useState(false);
 
     useEffect(() => {
         fetchSettings();
@@ -151,6 +153,7 @@ function SuperAdminSettings() {
             if (res.ok) {
                 const data = await res.json();
                 setStripeTestMode(data.stripeTestMode);
+                setBankDetails(data.bankDetails || '');
             }
         } catch (e) {
             console.error('Failed to fetch system settings', e);
@@ -174,6 +177,25 @@ function SuperAdminSettings() {
             }
         } catch (e) {
             toast.error('Update failed');
+        }
+    };
+
+    const saveBankDetails = async () => {
+        setIsSavingBank(true);
+        try {
+            const res = await apiFetch('/api/super/settings/system', {
+                method: 'PUT',
+                body: JSON.stringify({ bankDetails })
+            });
+            if (res.ok) {
+                toast.success('Bank wire instructions saved successfully.');
+            } else {
+                toast.error('Failed to save bank details.');
+            }
+        } catch (e) {
+            toast.error('Update failed');
+        } finally {
+            setIsSavingBank(false);
         }
     };
 
@@ -255,6 +277,28 @@ function SuperAdminSettings() {
                         >
                             {stripeTestMode ? 'Test Mode (Safe)' : 'Live Mode (Production)'}
                         </Button>
+                    </div>
+
+                    <div className="flex flex-col space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-lg">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h3 className="font-medium text-gray-900">Bank Wire Instructions</h3>
+                                <p className="text-sm text-gray-500">Global bank details shown to agencies when requesting an offline deposit.</p>
+                            </div>
+                            <Button
+                                onClick={saveBankDetails}
+                                disabled={isSavingBank}
+                                variant="outline"
+                            >
+                                {isSavingBank ? 'Saving...' : 'Save Details'}
+                            </Button>
+                        </div>
+                        <textarea
+                            className="w-full h-32 p-3 border border-gray-300 rounded-md focus:ring-brand-red focus:border-brand-red sm:text-sm font-mono"
+                            placeholder="Bank Name: Example Bank&#10;IBAN: DE12 3456 7890 0000 0000 00&#10;BIC: EXAMPLEDED0XX"
+                            value={bankDetails}
+                            onChange={(e) => setBankDetails(e.target.value)}
+                        />
                     </div>
                 </CardContent>
             </Card>

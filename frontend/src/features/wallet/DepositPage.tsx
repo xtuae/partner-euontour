@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Euro, UploadCloud, Zap } from 'lucide-react';
@@ -13,6 +13,14 @@ export function DepositPage() {
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [bankDetails, setBankDetails] = useState('');
+
+    useEffect(() => {
+        apiFetch('/api/agency/settings/bank')
+            .then(res => res.json())
+            .then(data => setBankDetails(data.bankDetails || 'Bank Name: Euro Bank\nIBAN: DE12345\nBIC: OOOXOOX'))
+            .catch(() => { });
+    }, []);
 
     // Manual State
     const [proofFile, setProofFile] = useState<File | null>(null);
@@ -29,6 +37,7 @@ export function DepositPage() {
             if (proofFile) {
                 formData.append('proof_image', proofFile);
             }
+            formData.append('paymentMethod', 'BANK_TRANSFER');
 
             const res = await apiFetch('/api/deposits', {
                 method: 'POST',
@@ -126,11 +135,8 @@ export function DepositPage() {
                                 <Euro className="w-4 h-4 text-gray-500" />
                                 Bank Details
                             </h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm text-gray-700">
-                                <div><span className="text-gray-400 block text-xs uppercase">IBAN</span>DE12 3456 7890 1234 5678 90</div>
-                                <div><span className="text-gray-400 block text-xs uppercase">BIC</span>EUONDEFF</div>
-                                <div><span className="text-gray-400 block text-xs uppercase">Bank</span>Deutsche Bank</div>
-                                <div><span className="text-gray-400 block text-xs uppercase">Reference</span>[YOUR_AGENCY_ID]</div>
+                            <div className="whitespace-pre-line text-sm text-gray-700 font-mono bg-white p-4 rounded-md border border-gray-200">
+                                {bankDetails}
                             </div>
                         </div>
 

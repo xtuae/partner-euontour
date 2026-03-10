@@ -35,6 +35,12 @@ export async function agencyRoutes(req: Request, path: string, user: AuthUser) {
         return Response.json({ tours: agencyTours.map((at: any) => at.tour) });
     }
 
+    // System Configs
+    if (path === '/agency/settings/bank' && req.method === 'GET') {
+        const bankSetting = await prisma.systemSettings.findUnique({ where: { key: 'BANK_DETAILS' } });
+        return Response.json({ bankDetails: bankSetting?.value || '' });
+    }
+
     // Wallet (Balance)
     // Was api/agency/wallet
     if (path === '/agency/wallet' && req.method === 'GET') {
