@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '../../lib/api-client';
 import { Badge } from '../../app/components/ui/Badge';
 import { Button } from '../../app/components/ui/Button';
-import { Download } from 'lucide-react';
+import { Download, Eye, Copy, CheckCircle } from 'lucide-react';
 import { exportToCSV, exportToPDF } from '../../utils/exportUtils';
 
 interface Booking {
@@ -14,6 +14,13 @@ interface Booking {
     amount: string | number;
     status: string;
     isRetail?: boolean;
+    customerEmail?: string | null;
+    hotelName?: string | null;
+    hotelAddress?: string | null;
+    contactPerson?: string | null;
+    contactPhone?: string | null;
+    additionalInfo?: string | null;
+    stripeSessionUrl?: string | null;
     created_at: string;
 }
 
@@ -22,6 +29,8 @@ export function GlobalBookingsPage() {
     const [loading, setLoading] = useState(true);
     const [cancelTarget, setCancelTarget] = useState<Booking | null>(null);
     const [cancelling, setCancelling] = useState(false);
+    const [selectedBookingForDetails, setSelectedBookingForDetails] = useState<Booking | null>(null);
+    const [copiedLink, setCopiedLink] = useState(false);
 
     const fetchBookings = async () => {
         try {
@@ -138,11 +147,16 @@ export function GlobalBookingsPage() {
                                 <td className="px-6 py-4 text-sm font-bold text-gray-900">€{Number(b.amount).toFixed(2)}</td>
                                 <td className="px-6 py-4">{statusBadge(b.status)}</td>
                                 <td className="px-6 py-4 text-right">
-                                    {(b.status === 'CONFIRMED' || b.status === 'PENDING_PAYMENT') && (
-                                        <Button variant="destructive" size="sm" onClick={() => setCancelTarget(b)}>
-                                            {b.isRetail || b.status === 'PENDING_PAYMENT' ? 'Cancel Booking' : 'Cancel & Refund'}
+                                    <div className="flex justify-end items-center gap-2">
+                                        <Button variant="outline" size="sm" onClick={() => setSelectedBookingForDetails(b)} className="px-2">
+                                            <Eye className="w-4 h-4 text-gray-500 hover:text-gray-900" />
                                         </Button>
-                                    )}
+                                        {(b.status === 'CONFIRMED' || b.status === 'PENDING_PAYMENT') && (
+                                            <Button variant="destructive" size="sm" onClick={() => setCancelTarget(b)}>
+                                                {b.isRetail || b.status === 'PENDING_PAYMENT' ? 'Cancel Link' : 'Cancel & Refund'}
+                                            </Button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ))}
@@ -204,6 +218,134 @@ export function GlobalBookingsPage() {
                             </Button>
                             <Button variant="destructive" onClick={handleCancel} disabled={cancelling}>
                                 {cancelling ? 'Processing...' : (cancelTarget.isRetail || cancelTarget.status === 'PENDING_PAYMENT' ? 'Yes, Cancel' : 'Yes, Cancel & Refund')}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Details Modal */}
+            {selectedBookingForDetails && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900">Booking Details</h3>
+                                <p className="text-sm text-gray-500 font-mono mt-1">ID: {selectedBookingForDetails.id}</p>
+                            </div>
+                            {statusBadge(selectedBookingForDetails.status)}
+                        </div>
+
+                        {/* Scrolling Body */}
+                        <div className="overflow-y-auto p-6 space-y-6">
+                            {/* Core Info */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Core Information</h4>
+                                <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4 border border-gray-100">
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Tour Name</p>
+                                        <p className="font-semibold text-gray-900">{selectedBookingForDetails.tour?.name}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Travel Date</p>
+                                        <p className="font-semibold text-gray-900">{new Date(selectedBookingForDetails.travel_date).toLocaleDateString()}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Guests</p>
+                                        <p className="font-semibold text-gray-900">{selectedBookingForDetails.guests}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Total Amount Paid</p>
+                                        <p className="font-semibold text-gray-900">€{Number(selectedBookingForDetails.amount).toFixed(2)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Customer / Agency Info */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Customer & Agency</h4>
+                                <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4 border border-gray-100">
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Booking Source / Agency</p>
+                                        <p className="font-semibold text-gray-900">
+                                            {selectedBookingForDetails.isRetail ? 'Direct Retail Customer' : selectedBookingForDetails.agency?.name}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Customer Email</p>
+                                        <p className="font-semibold text-gray-900">{selectedBookingForDetails.customerEmail || 'N/A'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Pickup Details */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Pickup & Contact Details</h4>
+                                <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4 border border-gray-100">
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Hotel Name</p>
+                                        <p className="font-semibold text-gray-900">{selectedBookingForDetails.hotelName || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Hotel Address</p>
+                                        <p className="font-semibold text-gray-900">{selectedBookingForDetails.hotelAddress || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Contact Person</p>
+                                        <p className="font-semibold text-gray-900">{selectedBookingForDetails.contactPerson || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Contact Phone</p>
+                                        <p className="font-semibold text-gray-900">{selectedBookingForDetails.contactPhone || 'N/A'}</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <p className="text-xs text-gray-500 mb-1">Additional Information</p>
+                                        <p className="font-medium text-gray-800 bg-white p-3 rounded border border-gray-200 mt-1 min-h-[60px]">
+                                            {selectedBookingForDetails.additionalInfo || 'No additional notes provided.'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Stripe Link (if Retail & Pending) */}
+                            {selectedBookingForDetails.isRetail && selectedBookingForDetails.status === 'PENDING_PAYMENT' && selectedBookingForDetails.stripeSessionUrl && (
+                                <div>
+                                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Requires Payment</h4>
+                                    <div className="bg-orange-50 border border-orange-100 rounded-lg p-4">
+                                        <p className="text-sm text-orange-800 mb-3">Copy this smart link to manually send to the customer:</p>
+                                        <div className="flex w-full items-center space-x-2">
+                                            <input
+                                                value={`https://partners.euontour.com/#/pay/${selectedBookingForDetails.id}`}
+                                                readOnly
+                                                className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded text-sm text-gray-600 outline-none"
+                                            />
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`https://partners.euontour.com/#/pay/${selectedBookingForDetails.id}`);
+                                                    setCopiedLink(true);
+                                                    setTimeout(() => setCopiedLink(false), 2000);
+                                                }}
+                                                className="shrink-0 flex gap-2"
+                                            >
+                                                {copiedLink ? <CheckCircle className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
+                                                {copiedLink ? 'Copied' : 'Copy'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* Footer Action */}
+                        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end shrink-0">
+                            <Button variant="outline" onClick={() => {
+                                setSelectedBookingForDetails(null);
+                                setCopiedLink(false);
+                            }}>
+                                Close Details
                             </Button>
                         </div>
                     </div>
