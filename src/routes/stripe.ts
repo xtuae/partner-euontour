@@ -16,8 +16,14 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
 
         try {
             const signature = req.headers.get('stripe-signature') || '';
-            const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
-            event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
+
+            const setting = await prisma.systemSettings.findUnique({ where: { key: 'STRIPE_TEST_MODE' } });
+            const isTestMode = setting ? setting.value === 'true' : true;
+            const activeSecret = isTestMode ? process.env.STRIPE_TEST_SECRET_KEY : process.env.STRIPE_LIVE_SECRET_KEY;
+            const webhookSecret = isTestMode ? process.env.STRIPE_TEST_WEBHOOK_SECRET : process.env.STRIPE_LIVE_WEBHOOK_SECRET;
+
+            const dynamicStripe = new Stripe(activeSecret || '', { apiVersion: '2023-10-16' as any });
+            event = dynamicStripe.webhooks.constructEvent(rawBody, signature, webhookSecret || '');
         } catch (err: any) {
             console.error(`⚠️ Webhook signature verification failed: ${err.message}`);
             return new Response(`Webhook Error: ${err.message}`, { status: 400 });
@@ -137,7 +143,12 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
             const reqUrl = new URL(req.url);
             const baseUrl = `${reqUrl.protocol}//${reqUrl.host}`;
 
-            const session = await stripe.checkout.sessions.create({
+            const setting = await prisma.systemSettings.findUnique({ where: { key: 'STRIPE_TEST_MODE' } });
+            const isTestMode = setting ? setting.value === 'true' : true;
+            const activeSecret = isTestMode ? process.env.STRIPE_TEST_SECRET_KEY : process.env.STRIPE_LIVE_SECRET_KEY;
+            const dynamicStripe = new Stripe(activeSecret || '', { apiVersion: '2023-10-16' as any });
+
+            const session = await dynamicStripe.checkout.sessions.create({
                 payment_method_types: ['card'],
                 line_items: [{
                     price_data: {

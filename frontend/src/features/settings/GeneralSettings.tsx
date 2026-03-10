@@ -103,9 +103,11 @@ function SuperAdminSettings() {
     const [settings, setSettings] = useState<Record<string, string>>({});
     const [discountValue, setDiscountValue] = useState<string>('10');
     const [isSavingDiscount, setIsSavingDiscount] = useState(false);
+    const [stripeTestMode, setStripeTestMode] = useState<boolean>(true);
 
     useEffect(() => {
         fetchSettings();
+        fetchSystemSettings();
     }, []);
 
     const fetchSettings = async () => {
@@ -139,6 +141,38 @@ function SuperAdminSettings() {
             setSettings(prev => ({ ...prev, [key]: newValue }));
             toast.success(`${key} updated`);
         } catch (error) {
+            toast.error('Update failed');
+        }
+    };
+
+    const fetchSystemSettings = async () => {
+        try {
+            const res = await apiFetch('/api/super/settings/system');
+            if (res.ok) {
+                const data = await res.json();
+                setStripeTestMode(data.stripeTestMode);
+            }
+        } catch (e) {
+            console.error('Failed to fetch system settings', e);
+        }
+    };
+
+    const toggleStripeMode = async () => {
+        const newValue = !stripeTestMode;
+        if (!confirm(`Are you sure you want to switch Stripe to ${newValue ? 'Test Mode' : 'Live Mode'}?`)) return;
+
+        try {
+            const res = await apiFetch('/api/super/settings/system', {
+                method: 'PUT',
+                body: JSON.stringify({ stripeTestMode: newValue })
+            });
+            if (res.ok) {
+                setStripeTestMode(newValue);
+                toast.success(`Stripe is now in ${newValue ? 'Test Mode (Safe)' : 'Live Mode (Production)'}`);
+            } else {
+                toast.error('Failed to update Stripe mode.');
+            }
+        } catch (e) {
             toast.error('Update failed');
         }
     };
@@ -197,6 +231,29 @@ function SuperAdminSettings() {
                             onClick={() => toggleSetting('DISABLE_DEPOSITS')}
                         >
                             {settings['DISABLE_DEPOSITS'] === 'true' ? 'Enabled' : 'Disabled'}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="border-blue-200">
+                <CardHeader>
+                    <CardTitle className="flex items-center text-blue-800">
+                        <Building className="w-5 h-5 mr-2" /> Financial Integrations
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                        <div>
+                            <h3 className="font-medium text-blue-900">Stripe Environment</h3>
+                            <p className="text-sm text-blue-700">Control active Stripe keys used across the platform.</p>
+                        </div>
+                        <Button
+                            variant={stripeTestMode ? 'outline' : undefined}
+                            className={!stripeTestMode ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
+                            onClick={toggleStripeMode}
+                        >
+                            {stripeTestMode ? 'Test Mode (Safe)' : 'Live Mode (Production)'}
                         </Button>
                     </div>
                 </CardContent>

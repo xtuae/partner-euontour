@@ -522,7 +522,13 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
 
             // Create Stripe Checkout Session
             try {
-                const session = await stripe.checkout.sessions.create({
+                const setting = await prisma.systemSettings.findUnique({ where: { key: 'STRIPE_TEST_MODE' } });
+                const isTestMode = setting ? setting.value === 'true' : true;
+                const activeSecret = isTestMode ? process.env.STRIPE_TEST_SECRET_KEY : process.env.STRIPE_LIVE_SECRET_KEY;
+                const Stripe = (await import('stripe')).default;
+                const dynamicStripe = new Stripe(activeSecret || '', { apiVersion: '2023-10-16' as any });
+
+                const session = await dynamicStripe.checkout.sessions.create({
                     payment_method_types: ['card'],
                     line_items: [{
                         price_data: {
@@ -663,6 +669,26 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             }).catch(e => console.error('Failed to send cancellation email:', e));
 
             return Response.json({ success: true, message: `Booking cancelled. €${Number(refundAmount).toFixed(2)} refunded to ${booking.agency.name}` });
+        }
+    }
+
+    if (entity === 'settings' && parts[2] === 'system') {
+        if (req.method === 'GET') {
+            const setting = await prisma.systemSettings.findUnique({ where: { key: 'STRIPE_TEST_MODE' } });
+            return Response.json({ stripeTestMode: setting ? setting.value === 'true' : true });
+        }
+        if (req.method === 'PUT') {
+            const body = await req.json();
+            const { stripeTestMode } = z.object({ stripeTestMode: z.boolean() }).parse(body);
+            await prisma.systemSettings.upsert({
+                where: { key: 'STRIPE_TEST_MODE' },
+                update: { value: String(stripeTestMode) },
+                create: { key: 'STRIPE_TEST_MODE', value: String(stripeTestMode) }
+            });
+            await prisma.auditLog.create({
+                data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'SYSTEM_SETTINGS_UPDATED', entityType: 'SYSTEM', entityId: 'STRIPE_TEST_MODE' }
+            });
+            return Response.json({ success: true, stripeTestMode });
         }
     }
 
