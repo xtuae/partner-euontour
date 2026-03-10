@@ -19,6 +19,8 @@ import { toursRoutes } from "../src/routes/tours.js";
 import { stripeRoutes } from "../src/routes/stripe.js";
 import { analyticsRoutes } from "../src/routes/analytics.js";
 import { publicRoutes } from "../src/routes/public.js";
+import { usersRoutes } from "../src/routes/users.js";
+import { settingsRoutes } from "../src/routes/settings.js";
 
 export const config = {
     api: {
@@ -109,6 +111,10 @@ async function appHandler(req: Request): Promise<Response> {
                     response = await toursRoutes(req, path, user);
                 } else if (path.startsWith("/analytics")) {
                     response = await analyticsRoutes(req, path, user);
+                } else if (path.startsWith("/users")) {
+                    response = await usersRoutes(req, path, user);
+                } else if (path.startsWith("/settings")) {
+                    response = await settingsRoutes(req, path, user);
                 } else {
                     response = new Response("Not Found", { status: 404 });
                 }

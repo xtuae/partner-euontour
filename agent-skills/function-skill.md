@@ -620,3 +620,23 @@ Since the project uses Neon (Serverless PostgreSQL) and the `@prisma/adapter-neo
 4. **Stripe Webhook & WordPress Sync:**
    - On `checkout.session.completed` for a `retail_booking`, update status to `CONFIRMED`.
    - Fire the `pushBookingToWordPress` utility using the fully queried booking data. Map `agency_name` to the `contactPerson` (or 'Direct Retail Customer') and include all hotel/contact details so WooCommerce records them and Tourfic blocks the dates.
+
+   ## Milestone 28: Profile & Role-Based Settings Separation
+**Objective:** Decouple personal "Profile" settings (photo, password, name) from "General Settings" (business/system configurations). Implement strict role-based rendering so Super Admins, Admins, and Agencies see completely different settings panels.
+
+**Target Files:**
+- **Database:** `prisma/schema.prisma`
+- **Frontend Layouts:** `frontend/src/features/settings/ProfileSettings.tsx` (New) and `GeneralSettings.tsx` (New)
+- **Backend API:** `src/routes/users.ts` (Profile updates) and `src/routes/settings.ts`
+
+**Implementation Prompts:**
+1. **Schema Update:**
+   - Add `profilePicture String?` to the `User` model.
+2. **Profile Component (Universal):**
+   - Create `ProfileSettings.tsx`. This applies to ALL roles.
+   - Include: Profile Picture upload (reusing the KYC upload utility), Full Name, Email (read-only), and a 'Change Password' form.
+3. **General Settings (Role-Based Routing):**
+   - Refactor the main `Settings` page to use a Tabbed interface or a Sidebar (e.g., 'My Profile' | 'General Settings').
+   - **If Role === SUPER_ADMIN:** Render a `SuperAdminSettings` component under the General tab. Include global toggles, default B2B discount percentages, and system notification preferences.
+   - **If Role === AGENCY:** Render an `AgencySettings` component. Include Business Name, Tax/VAT ID, Public Contact Email, and Billing Address (separate from their immutable KYC data).
+   - **If Role === ADMIN:** Hide the General Settings tab entirely, or only show limited notification preferences.
