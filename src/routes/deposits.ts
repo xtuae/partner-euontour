@@ -88,7 +88,7 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
 
             // 6. Email Notification
             const admins = await prisma.user.findMany({ where: { role: 'ADMIN' } });
-            const adminLink = `${process.env.NEXT_PUBLIC_APP_URL}/admin/deposits`;
+            const adminLink = `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/admin/deposits`;
 
             await Promise.all(admins.map(admin =>
                 sendEmail({
@@ -138,7 +138,7 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
 
             // Email Super Admins
             const superAdmins = await prisma.user.findMany({ where: { role: 'SUPER_ADMIN' } });
-            const superLink = `${process.env.NEXT_PUBLIC_APP_URL}/super-admin/deposits`;
+            const superLink = `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/super-admin/deposits`;
             await Promise.all(superAdmins.map(admin =>
                 sendEmail({
                     to: admin.email,

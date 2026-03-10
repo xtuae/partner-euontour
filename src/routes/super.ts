@@ -328,7 +328,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
             const ph = await import('bcryptjs').then(m => m.hash(pwd, 10));
 
             const u = await prisma.user.create({ data: { email, role, password_hash: ph, resetToken: inviteToken, resetTokenExpiry: new Date(Date.now() + 86400000), email_verified: true } });
-            await sendEmail({ to: email, subject: 'Invite', body: `<a href="${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${inviteToken}">Join</a>` });
+            await sendEmail({ to: email, subject: 'Invite', body: `<a href="${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/reset-password?token=${inviteToken}">Join</a>` });
             await prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'ADMIN_INVITED', entityType: 'USER', entityId: u.id } });
             return Response.json({ success: true });
         }
@@ -534,8 +534,8 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                     }],
                     customer_email: customerEmail,
                     mode: 'payment',
-                    success_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/#/payment-success`,
-                    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/#/payment-cancel`,
+                    success_url: `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/#/payment-success`,
+                    cancel_url: `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_FRONTEND_URL || 'http://localhost:5173'}/#/payment-cancel`,
                     metadata: {
                         type: 'retail_booking',
                         bookingId: booking.id
@@ -551,7 +551,8 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                     }
                 });
 
-                const smartLink = `https://partners.euontour.com/#/pay/${booking.id}`;
+                const baseUrl = process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://partners.euontour.com';
+                const smartLink = `${baseUrl}/#/pay/${booking.id}`;
 
                 // Send email to customer with link
                 const { sendEmail } = await import('../lib/email.js');

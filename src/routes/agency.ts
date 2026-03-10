@@ -271,7 +271,7 @@ async function submitVerification(req: Request, userToken: AuthUser) {
         // Actually, I'll allow simple Fire-And-Forget promise.
 
         const admins = await prisma.user.findMany({ where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } } });
-        const adminLink = `${process.env.NEXT_PUBLIC_APP_URL}/admin/agency-verifications`;
+        const adminLink = `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/super-admin/agency-verifications`;
         for (const admin of admins) {
             await sendEmail({
                 to: admin.email,

@@ -317,14 +317,14 @@ export function GlobalBookingsPage() {
                                         <p className="text-sm text-orange-800 mb-3">Copy this smart link to manually send to the customer:</p>
                                         <div className="flex w-full items-center space-x-2">
                                             <input
-                                                value={`https://partners.euontour.com/#/pay/${selectedBookingForDetails.id}`}
+                                                value={`${window.location.origin}/#/pay/${selectedBookingForDetails.id}`}
                                                 readOnly
                                                 className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded text-sm text-gray-600 outline-none"
                                             />
                                             <Button
                                                 variant="outline"
                                                 onClick={() => {
-                                                    navigator.clipboard.writeText(`https://partners.euontour.com/#/pay/${selectedBookingForDetails.id}`);
+                                                    navigator.clipboard.writeText(`${window.location.origin}/#/pay/${selectedBookingForDetails.id}`);
                                                     setCopiedLink(true);
                                                     setTimeout(() => setCopiedLink(false), 2000);
                                                 }}

@@ -44,7 +44,7 @@ export async function walletRoutes(req: Request, path: string, user: AuthUser) {
 
         // Mock Checkout Session Return
         // In a real scenario, you'd create a Stripe/Razorpay session here
-        const mockCheckoutUrl = `${process.env.NEXT_PUBLIC_APP_URL}/mock-checkout?amount=${numAmount}&agencyId=${u.agency_id}`;
+        const mockCheckoutUrl = `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/mock-checkout?amount=${numAmount}&agencyId=${u.agency_id}`;
 
         return Response.json({ checkoutUrl: mockCheckoutUrl }, { status: 200 });
     }

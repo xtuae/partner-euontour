@@ -12,7 +12,7 @@ import { checkRateLimit } from '../lib/rate-limit.js';
 import { sendEmail, EMAIL_TEMPLATES } from '../lib/email.js';
 
 const isProd = process.env.NODE_ENV === 'production';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_APP_URL || 'https://partners.euontour.com';
+const APP_URL = process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || process.env.VITE_APP_URL || 'https://partners.euontour.com';
 
 const COOKIE_OPTIONS = {
     httpOnly: true,

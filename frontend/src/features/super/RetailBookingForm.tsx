@@ -73,7 +73,7 @@ export function RetailBookingForm() {
             }
 
             const data = await res.json();
-            setCheckoutUrl(`https://partners.euontour.com/#/pay/${data.bookingId}`);
+            setCheckoutUrl(`${window.location.origin}/#/pay/${data.bookingId}`);
         } catch (err: any) {
             setError(err.message || 'Error creating retail link');
         } finally {

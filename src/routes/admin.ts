@@ -165,7 +165,7 @@ async function handleAgencies(req: Request, segments: string[], user: AuthUser) 
         const agency = await prisma.agency.findUnique({ where: { id: agencyId } });
         if (!agency) return Response.json({ error: 'Agency not found' }, { status: 404 });
 
-        const uploadLink = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/verification`;
+        const uploadLink = `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/agency/verification`;
         await sendEmail({
             to: agency.email,
             subject: 'Action Required: Update Your KYC Documents',
@@ -244,14 +244,14 @@ async function handleVerifications(req: Request, segments: string[], user: AuthU
                 prisma.agency.update({ where: { id }, data: { verification_status: 'VERIFIED' } }),
                 prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'APPROVE_KYC_BY_ADMIN', entityType: 'AGENCY_KYC', entityId: kyc.id } })
             ]);
-            await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_APPROVED_AGENCY(kyc.agency.name, `${process.env.NEXT_PUBLIC_APP_URL}/login`) });
+            await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_APPROVED_AGENCY(kyc.agency.name, `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/login`) });
         } else if (kycAction === 'REJECT') {
             await prisma.$transaction([
                 prisma.agencyOwnerKyc.update({ where: { id: kyc.id }, data: { status: 'REJECTED', rejectionReason: reason } }),
                 prisma.agency.update({ where: { id }, data: { verification_status: 'REJECTED' } }),
                 prisma.auditLog.create({ data: { actorId: user.userId, actorRole: 'UNKNOWN', action: 'REJECT_KYC_BY_ADMIN', entityType: 'AGENCY_KYC', entityId: kyc.id } })
             ]);
-            await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_REJECTED_AGENCY(kyc.agency.name, reason || 'No reason provided', `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`) });
+            await sendEmail({ to: kyc.agency.email, ...EMAIL_TEMPLATES.KYC_REJECTED_AGENCY(kyc.agency.name, reason || 'No reason provided', `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/agency/verification`) });
         }
         return Response.json({ success: true });
     }
@@ -269,7 +269,7 @@ async function handleVerifications(req: Request, segments: string[], user: AuthU
 
         await sendEmail({
             to: agency.email,
-            ...EMAIL_TEMPLATES.KYC_WARNING_DEACTIVATION(agency.name, 7, `${process.env.NEXT_PUBLIC_APP_URL}/login`)
+            ...EMAIL_TEMPLATES.KYC_WARNING_DEACTIVATION(agency.name, 7, `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/login`)
         });
 
         return Response.json({ success: true, message: "Warning Sent" });

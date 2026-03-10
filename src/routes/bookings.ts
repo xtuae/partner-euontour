@@ -157,7 +157,7 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
                         pax,
                         travelDate.toLocaleDateString(),
                         finalTotal.toFixed(2),
-                        `${process.env.NEXT_PUBLIC_APP_URL}/#/super-admin/bookings`
+                        `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/super-admin/bookings`
                     )
                 }).catch(e => console.error(e));
             });
