@@ -221,6 +221,24 @@ function SuperAdminSettings() {
         }
     };
 
+    const [isSyncingTours, setIsSyncingTours] = useState(false);
+
+    const forceSyncTours = async () => {
+        setIsSyncingTours(true);
+        try {
+            const res = await apiFetch('/api/super/tours/sync', { method: 'POST' });
+            if (res.ok) {
+                toast.success('WordPress tours synced successfully!');
+            } else {
+                toast.error('Failed to sync tours.');
+            }
+        } catch (e) {
+            toast.error('Sync request failed.');
+        } finally {
+            setIsSyncingTours(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             <Card className="border-red-200">
@@ -253,6 +271,29 @@ function SuperAdminSettings() {
                             onClick={() => toggleSetting('DISABLE_DEPOSITS')}
                         >
                             {settings['DISABLE_DEPOSITS'] === 'true' ? 'Enabled' : 'Disabled'}
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card className="border-purple-200">
+                <CardHeader>
+                    <CardTitle className="flex items-center text-purple-800">
+                        <Sliders className="w-5 h-5 mr-2" /> WordPress Integrations
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                        <div>
+                            <h3 className="font-medium text-purple-900">Tourfic Catalog Sync</h3>
+                            <p className="text-sm text-purple-700">Manually pull all latest active tours from the WordPress database.</p>
+                        </div>
+                        <Button
+                            onClick={forceSyncTours}
+                            disabled={isSyncingTours}
+                            className="bg-purple-600 hover:bg-purple-700 text-white"
+                        >
+                            {isSyncingTours ? 'Syncing...' : 'Force Sync WordPress Tours'}
                         </Button>
                     </div>
                 </CardContent>
