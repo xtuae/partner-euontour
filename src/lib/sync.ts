@@ -36,11 +36,40 @@ export async function syncToursFromWordPress() {
         // Upsert tours into your Prisma database
         let syncedCount = 0;
         for (const tour of tours) {
+            console.log("--- SYNCING WP TOUR ---");
+            console.log("Raw WP Tour object keys:", Object.keys(tour));
+            // Log nested options to help debugging
+            console.log("Structure sample:", JSON.stringify({
+                content: !!tour.content,
+                excerpt: !!tour.excerpt,
+                tf_destinations: tour.tf_destinations,
+                tf_tours_opt: tour.tf_tours_opt ? "Exists" : "Missing"
+            }));
+
             const retailPrice = parseFloat(tour.price);
             const agencyNetPrice = retailPrice - (retailPrice * discountMultiplier);
 
             // Extract rich Tourfic metadata
-            const description = tour.description || tour.content || null;
+            let description = tour.description || null;
+            if (!description) {
+                if (tour.content && typeof tour.content === 'object' && tour.content.rendered) {
+                    description = tour.content.rendered;
+                } else if (tour.content && typeof tour.content === 'string') {
+                    description = tour.content;
+                } else if (tour.excerpt && typeof tour.excerpt === 'object' && tour.excerpt.rendered) {
+                    description = tour.excerpt.rendered;
+                }
+            }
+
+            let locationName = tour.location || tour.destination || null;
+            if (!locationName) {
+                if (tour.tf_destinations && Array.isArray(tour.tf_destinations) && tour.tf_destinations.length > 0) {
+                    locationName = tour.tf_destinations[0].name || tour.tf_destinations[0];
+                } else if (tour.tf_tours_opt && tour.tf_tours_opt.location) {
+                    locationName = tour.tf_tours_opt.location;
+                }
+            }
+
             const gallery = Array.isArray(tour.gallery) ? tour.gallery : [];
             const inclusions = Array.isArray(tour.inclusions) ? tour.inclusions : [];
             const exclusions = Array.isArray(tour.exclusions) ? tour.exclusions : [];
@@ -50,7 +79,7 @@ export async function syncToursFromWordPress() {
             const sharedData = {
                 name: tour.name,
                 price: retailPrice,
-                location: tour.location || tour.destination || null,
+                location: locationName,
                 description,
                 duration: tour.duration || null,
                 agency_net_price: agencyNetPrice,

@@ -34,7 +34,7 @@ const decodeHTML = (html: string) => {
 export function TourDetailsModal({ tour, onClose }: TourDetailsModalProps) {
     const [selectedImage, setSelectedImage] = useState(tour.image_url || '');
     const [travelDate, setTravelDate] = useState('');
-    const [guests, setGuests] = useState(1);
+    const [guests, setGuests] = useState(2);
     const [booking, setBooking] = useState(false);
     const [openDay, setOpenDay] = useState<number | null>(null);
 
@@ -50,6 +50,10 @@ export function TourDetailsModal({ tour, onClose }: TourDetailsModalProps) {
         e.preventDefault();
         if (!travelDate) {
             toast.error('Please select a travel date.');
+            return;
+        }
+        if (guests < 2) {
+            toast.error('A minimum of 2 guests is required.');
             return;
         }
         setBooking(true);
@@ -244,8 +248,8 @@ export function TourDetailsModal({ tour, onClose }: TourDetailsModalProps) {
                                         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1.5">Guests</label>
                                         <input
                                             type="number"
-                                            min={1}
-                                            max={50}
+                                            min={2}
+                                            max={8}
                                             value={guests}
                                             onChange={(e) => setGuests(Number(e.target.value))}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-brand-red focus:border-brand-red text-sm outline-none"
