@@ -31,7 +31,7 @@ const baseUrl = process.env.FRONTEND_URL || 'https://partners.euontour.com';
 const getHeader = () => `
     < div style = "font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e5e5; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);" >
       <div style="background-color: #f8f9fa; padding: 24px 20px; text-align: center; border-bottom: 3px solid #D32F2F;" >
-        <img src="${baseUrl}/logo.webp" alt = "EuOnTour Logo" style = "max-height: 45px; width: auto;" />
+        <img src="https://partners.euontour.com/logo.webp" alt="EuOnTour Logo" style="max-height: 45px; width: auto;" />
           </div>
           < div style = "padding: 32px 24px; color: #334155; line-height: 1.6; font-size: 15px;" >
             `;
@@ -137,7 +137,7 @@ export const EMAIL_TEMPLATES = {
     < p style = "margin-bottom: 20px;" > <strong>${agencyName} </strong> has submitted a manual deposit request that requires your review.</p >
 
       <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin-bottom: 24px;" >
-        <p style="margin: 0 0 12px 0;" > <strong>Amount: </strong> <span style="color: #047857; font-weight: bold; font-size: 16px;">€${amount}</span > </p>
+        <p style="margin: 0 0 12px 0;"><strong>Amount:</strong> <span style="color: #047857; font-weight: bold; font-size: 16px;">€${Number(amount).toFixed(2)}</span></p>
           < p style = "margin: 0;" > <strong>Reference: </strong> ${reference}</p >
             </div>
 
@@ -159,10 +159,10 @@ export const EMAIL_TEMPLATES = {
           <p style="margin: 0 0 16px 0;" > <strong>Guests: </strong> ${guests}</p >
             <hr style="border: none; border-top: 1px solid #e2e8f0; margin-bottom: 16px;" />
               <table style="width: 100%; font-size: 14px;" >
-                <tr><td style="padding-bottom: 8px;" > Subtotal < /td><td style="text-align: right; padding-bottom: 8px;">€${subtotal}</td > </tr>
-                  < tr > <td style="padding-bottom: 8px; color: #D32F2F;" > Agency Discount < /td><td style="text-align: right; padding-bottom: 8px; color: #D32F2F;">-€${discount}</td > </tr>
-                    < tr > <td style="padding-bottom: 8px;" > MWST(19 %) < /td><td style="text-align: right; padding-bottom: 8px;">€${vat}</td > </tr>
-                      < tr > <td style="padding-top: 8px; font-weight: bold; font-size: 16px;" > Final Total < /td><td style="text-align: right; padding-top: 8px; font-weight: bold; font-size: 16px; color: #047857;">€${total}</td > </tr>
+                <tr><td style="padding-bottom: 8px;">Subtotal</td><td style="text-align: right; padding-bottom: 8px;">€${Number(subtotal).toFixed(2)}</td></tr>
+                <tr><td style="padding-bottom: 8px; color: #D32F2F;">Agency Discount</td><td style="text-align: right; padding-bottom: 8px; color: #D32F2F;">-€${Number(discount).toFixed(2)}</td></tr>
+                <tr><td style="padding-bottom: 8px;">MWST (19%)</td><td style="text-align: right; padding-bottom: 8px;">€${Number(vat).toFixed(2)}</td></tr>
+                <tr><td style="padding-top: 8px; font-weight: bold; font-size: 16px;">Final Total</td><td style="text-align: right; padding-top: 8px; font-weight: bold; font-size: 16px; color: #047857;">€${Number(total).toFixed(2)}</td></tr>
                         </table>
                         </div>
     ${getFooter()} `
@@ -178,7 +178,7 @@ export const EMAIL_TEMPLATES = {
         <p style="margin: 0 0 8px 0;" > <strong>Tour: </strong> ${tourName}</p >
           <p style="margin: 0 0 8px 0;" > <strong>Travel Date: </strong> ${travelDate}</p >
             <p style="margin: 0 0 8px 0;" > <strong>Guests: </strong> ${guests}</p >
-              <p style="margin: 0;" > <strong>Net Revenue: </strong> <span style="color: #047857; font-weight: bold;">€${total}</span > </p>
+              <p style="margin: 0;"><strong>Net Revenue:</strong> <span style="color: #047857; font-weight: bold;">€${Number(total).toFixed(2)}</span></p>
                 </div>
 
                 < div style = "text-align: center; margin-top: 32px;" >
@@ -215,7 +215,7 @@ export const EMAIL_TEMPLATES = {
                         < p > An agency has submitted a bank transfer deposit.</p>
                           < table style = "width:100%; border-collapse: collapse; margin-top: 10px;" >
                             <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > <strong>Agency: </strong></td > <td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > ${agencyName} </td></tr >
-                              <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > <strong>Amount: </strong></td > <td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > ${amount} </td></tr >
+                              <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;"><strong>Amount:</strong></td> <td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;">€${Number(amount).toFixed(2)}</td></tr>
                                 <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > <strong>Reference: </strong></td > <td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > ${ref} </td></tr >
                                   </table>
                                   < p style = "text-align:center; margin-top: 24px;" >
@@ -234,7 +234,7 @@ export const EMAIL_TEMPLATES = {
                                           < p > The following deposit has been verified by Admin and requires final approval.</p>
                                             < table style = "width:100%; border-collapse: collapse; margin-top: 10px;" >
                                               <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > <strong>Agency: </strong></td > <td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > ${agencyName} </td></tr >
-                                                <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > <strong>Amount: </strong></td > <td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > ${amount} </td></tr >
+                                                <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;"><strong>Amount:</strong></td> <td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;">€${Number(amount).toFixed(2)}</td></tr>
                                                   <tr><td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > <strong>Verified At: </strong></td > <td style="padding: 8px 0; border-bottom: 1px solid #e5e5e5;" > ${verifiedAt} </td></tr >
                                                     </table>
                                                     < p style = "text-align:center; margin-top: 24px;" >
@@ -253,8 +253,8 @@ export const EMAIL_TEMPLATES = {
                                                             < p > Hello ${agencyName}, </p>
                                                               < p > Your deposit has been approved and credited to your wallet.</p>
                                                                 < table style = "width:100%; border-collapse: collapse; background: #f8f9fa; border: 1px solid #e5e5e5; padding: 16px; border-radius: 4px; margin: 16px 0;" >
-                                                                  <tr><td style="padding: 12px; border-bottom: 1px solid #e5e5e5;" > <strong>Credited Amount: </strong></td > <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: bold; color: #15803d;" > ${amount} </td></tr >
-                                                                    <tr><td style="padding: 12px; border-bottom: 1px solid #e5e5e5;" > <strong>New Wallet Balance: </strong></td > <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: bold;" > ${balance} </td></tr >
+                                                                  <tr><td style="padding: 12px; border-bottom: 1px solid #e5e5e5;"><strong>Credited Amount:</strong></td> <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: bold; color: #15803d;">€${Number(amount).toFixed(2)}</td></tr>
+                                                                    <tr><td style="padding: 12px; border-bottom: 1px solid #e5e5e5;"><strong>New Wallet Balance:</strong></td> <td style="padding: 12px; border-bottom: 1px solid #e5e5e5; font-weight: bold;">€${Number(balance).toFixed(2)}</td></tr>
                                                                       <tr><td style="padding: 12px;" > <strong>Date: </strong></td > <td style="padding: 12px;" > ${creditedAt} </td></tr >
                                                                         </table>
                                                                         < p > You may now proceed with bookings.</p>
@@ -268,7 +268,7 @@ export const EMAIL_TEMPLATES = {
     body: getHeader() + `
     < h2 style = "color:#D32F2F; margin-top:0;" > Deposit Verification Failed </h2>
       < p > Hello ${agencyName}, </p>
-        < p > Your recent offline bank deposit request of < strong > AED ${amount} </strong> has unfortunately been rejected by our billing team.</p >
+        <p>Your recent offline bank deposit request of <strong>€${Number(amount).toFixed(2)}</strong> has unfortunately been rejected by our billing team.</p>
           <p><strong>Reason for Rejection: </strong></p >
             <p style="background:#fef2f2;padding:12px;border-left:4px solid #ef4444;border-radius:4px;color:#991b1b;" >
               <strong>${reason} </strong>
@@ -288,8 +288,8 @@ export const EMAIL_TEMPLATES = {
                         < ul style = "padding-left: 20px;" >
                           <li><strong>Booking Reference: </strong> ${ref}</li >
                             <li><strong>Tour: </strong> ${tourName}</li >
-                              <li><strong>Amount Debited: </strong> ${amount}</li >
-                                <li><strong>Remaining Wallet Balance: </strong> ${balance}</li >
+                              <li><strong>Amount Debited:</strong> €${Number(amount).toFixed(2)}</li>
+                                <li><strong>Remaining Wallet Balance:</strong> €${Number(balance).toFixed(2)}</li>
                                   </ul>
                                   < p > Thank you for partnering with EuOnTour.</p>
                                     < p > Regards, <br/><strong>EuOnTour Partner Team</strong > </p>
@@ -339,7 +339,7 @@ export const EMAIL_TEMPLATES = {
               <li><strong>Refund Amount: </strong> €${amount}</li >
                 </ul>
                 < p style = "background:#ecfdf5;padding:12px;border-left:4px solid #10b981;border-radius:4px;color:#065f46;margin-top:10px;" >
-                  <strong>€${amount} has been credited back to your wallet.</strong> You can view your updated balance in your dashboard.
+                  <strong>€${Number(amount).toFixed(2)} has been credited back to your wallet.</strong> You can view your updated balance in your dashboard.
                     </p>
                     < p > If you have any questions about this cancellation, please contact your account manager.</p>
                       < p > Regards, <br/><strong>EuOnTour Partner Team</strong > </p>
@@ -352,7 +352,7 @@ export const EMAIL_TEMPLATES = {
     body: getHeader() + `
   < h2 style = "color:#047857; margin-top:0;" > Your Booking is Confirmed! </h2>
     < p > Hello ${customerName}, </p>
-      < p > Thank you for booking with EuOnTour! Your payment of<strong>€${total} </strong> was successful.</p >
+      <p>Thank you for booking with EuOnTour! Your payment of <strong>€${Number(total).toFixed(2)}</strong> was successful.</p>
         <ul style="padding-left: 20px;" >
           <li><strong>Tour: </strong> ${tourName}</li >
             <li><strong>Travel Date: </strong> ${travelDate}</li >
