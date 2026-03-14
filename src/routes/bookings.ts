@@ -11,10 +11,10 @@ const CreateBookingSchema = z.object({
     travelDate: z.string().transform(s => new Date(s)),
     pax: z.number().int().min(2).max(7).default(2),
     targetAgencyId: z.string().uuid().optional(),
-    hotelName: z.string(),
-    hotelAddress: z.string(),
-    contactPerson: z.string(),
-    contactPhone: z.string(),
+    hotelName: z.string().optional(),
+    hotelAddress: z.string().optional(),
+    contactPerson: z.string().optional(),
+    contactPhone: z.string().optional(),
     additionalInfo: z.string().optional()
 });
 
