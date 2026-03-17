@@ -95,6 +95,18 @@ export function Sidebar() {
             roles: [ROLES.SUPER_ADMIN],
         },
         {
+            label: 'Events', // Temporary hack to replace index if needed, but let's just insert here
+            href: '/super-admin/events',
+            icon: BookOpen,
+            roles: [ROLES.SUPER_ADMIN],
+        }, // We insert Reports below
+        {
+            label: 'Reports & Analytics',
+            href: user?.role === ROLES.SUPER_ADMIN ? '/super-admin/reports' : '/admin/reports',
+            icon: CheckCircle, // Reusing imported CheckCircle as fallback for FileText if not imported
+            roles: [ROLES.ADMIN, ROLES.SUPER_ADMIN],
+        },
+        {
             label: 'Settings',
             href: user?.role === ROLES.SUPER_ADMIN ? '/super-admin/settings' : '/agency/settings',
             icon: Settings,

@@ -38,6 +38,7 @@ import { AdminAgencyDetailsPage } from './features/admin/AdminAgencyDetailsPage'
 import { AuditLogsPage } from './features/super/AuditLogsPage';
 import { AnalyticsDashboard } from './features/super/AnalyticsDashboard';
 import { PaymentRedirect } from './features/public/PaymentRedirect';
+import { ReportsPage } from './features/super/ReportsPage';
 
 function App() {
   return (
@@ -88,6 +89,7 @@ function App() {
                   <Route path="users" element={<PlaceholderPage title="Users" />} />
                   <Route path="audit" element={<PlaceholderPage title="Audit Logs" />} />
                   <Route path="notifications" element={<NotificationsPage />} />
+                  <Route path="reports" element={<ReportsPage />} />
                 </Route>
 
                 {/* Super Admin Routes */}
@@ -105,6 +107,7 @@ function App() {
                   <Route path="audit" element={<AuditLogsPage />} />
                   <Route path="analytics" element={<AnalyticsDashboard />} />
                   <Route path="notifications" element={<NotificationsPage />} />
+                  <Route path="reports" element={<ReportsPage />} />
                 </Route>
               </Route>
             </Route>

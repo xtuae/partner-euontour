@@ -21,6 +21,7 @@ import { analyticsRoutes } from "../src/routes/analytics.js";
 import { publicRoutes } from "../src/routes/public.js";
 import { usersRoutes } from "../src/routes/users.js";
 import { settingsRoutes } from "../src/routes/settings.js";
+import { reportsRoutes } from "../src/routes/reports.js";
 
 export const config = {
     api: {
@@ -115,6 +116,8 @@ async function appHandler(req: Request): Promise<Response> {
                     response = await usersRoutes(req, path, user);
                 } else if (path.startsWith("/settings")) {
                     response = await settingsRoutes(req, path, user);
+                } else if (path.startsWith("/reports")) {
+                    response = await reportsRoutes(req, path, user);
                 } else {
                     response = new Response("Not Found", { status: 404 });
                 }
