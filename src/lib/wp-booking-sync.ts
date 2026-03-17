@@ -1,18 +1,11 @@
 import { prisma } from './db/prisma.js';
 import * as crypto from 'crypto';
 
-export async function pushBookingToWordPress(bookingId: string) {
+export async function pushBookingToWordPress(bookingData: any) {
+    const bookingId = bookingData?.id;
     try {
-        const booking = await prisma.booking.findUnique({
-            where: { id: bookingId },
-            include: {
-                tour: true,
-                agency: true
-            }
-        });
-
-        if (!booking || !booking.tour || !booking.agency) {
-            console.error(`[WP Sync] Booking ${bookingId} not found or missing relations.`);
+        if (!bookingData || !bookingData.tour || !bookingData.agency) {
+            console.error(`[WP Sync] Booking data missing relations. Cannot sync.`);
             return;
         }
 
@@ -25,17 +18,17 @@ export async function pushBookingToWordPress(bookingId: string) {
 
         // Basic payload structure needed for the WP API
         const payload = {
-            wp_tour_id: booking.tour.wp_tour_id,
-            travel_date: booking.travel_date.toISOString().split('T')[0],
-            adults: booking.guests || 1, // Map from booking.guests instead of hardcoding 1
+            wp_tour_id: bookingData.tour.wp_tour_id,
+            travel_date: bookingData.travel_date.toISOString().split('T')[0],
+            adults: bookingData.guests || 1, // Map from booking.guests instead of hardcoding 1
             children: 0,
-            agency_name: booking.isRetail ? `${booking.contactPerson || 'Direct Retail Customer'} (Retail)` : booking.agency.name,
-            total_amount_paid: Number(booking.amount), // EXACT deducted amount
-            hotel_name: booking.hotelName || '',
-            hotel_address: booking.hotelAddress || '',
-            contact_name: booking.contactPerson || '',
-            contact_phone: booking.contactPhone || '',
-            additional_info: booking.additionalInfo || ''
+            agency_name: bookingData.isRetail ? `${bookingData.contactPerson || 'Direct Retail Customer'} (Retail)` : bookingData.agency.name,
+            total_amount_paid: Number(bookingData.amount), // EXACT deducted amount
+            hotel_name: bookingData.hotelName || '',
+            hotel_address: bookingData.hotelAddress || '',
+            contact_name: bookingData.contactPerson || '',
+            contact_phone: bookingData.contactPhone || '',
+            additional_info: bookingData.additionalInfo || ''
         };
 
         console.log("[WP Sync] Sending WP Payload:", payload);

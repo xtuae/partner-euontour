@@ -50,30 +50,29 @@ export async function syncToursFromWordPress() {
             const agencyNetPrice = retailPrice - (retailPrice * discountMultiplier);
 
             // Extract rich Tourfic metadata
-            let description = tour.description || null;
+            let description = tour?.content?.rendered || tour?.description || null;
             if (!description) {
-                if (tour.content && typeof tour.content === 'object' && tour.content.rendered) {
-                    description = tour.content.rendered;
-                } else if (tour.content && typeof tour.content === 'string') {
-                    description = tour.content;
-                } else if (tour.excerpt && typeof tour.excerpt === 'object' && tour.excerpt.rendered) {
+                if (tour.excerpt && typeof tour.excerpt === 'object' && tour.excerpt.rendered) {
                     description = tour.excerpt.rendered;
                 }
             }
 
             let locationName = tour.location || tour.destination || null;
             if (!locationName) {
-                if (tour.tf_destinations && Array.isArray(tour.tf_destinations) && tour.tf_destinations.length > 0) {
+                if (tour.tourfic_advanced_data?.destinations && Array.isArray(tour.tourfic_advanced_data.destinations) && tour.tourfic_advanced_data.destinations.length > 0) {
+                    locationName = tour.tourfic_advanced_data.destinations[0].name || tour.tourfic_advanced_data.destinations[0];
+                } else if (tour.tf_destinations && Array.isArray(tour.tf_destinations) && tour.tf_destinations.length > 0) {
                     locationName = tour.tf_destinations[0].name || tour.tf_destinations[0];
                 } else if (tour.tf_tours_opt && tour.tf_tours_opt.location) {
                     locationName = tour.tf_tours_opt.location;
                 }
             }
 
-            const gallery = Array.isArray(tour.gallery) ? tour.gallery : [];
-            const inclusions = Array.isArray(tour.inclusions) ? tour.inclusions : [];
-            const exclusions = Array.isArray(tour.exclusions) ? tour.exclusions : [];
-            const itinerary = tour.itinerary || null;
+            const meta = tour.tourfic_advanced_data?.meta || {};
+            const gallery = Array.isArray(meta.gallery) ? meta.gallery : (Array.isArray(tour.gallery) ? tour.gallery : []);
+            const inclusions = Array.isArray(meta.inclusions) ? meta.inclusions : (Array.isArray(tour.inclusions) ? tour.inclusions : []);
+            const exclusions = Array.isArray(meta.exclusions) ? meta.exclusions : (Array.isArray(tour.exclusions) ? tour.exclusions : []);
+            const itinerary = meta.itinerary || tour.itinerary || null;
             const meetingPoint = tour.meeting_point || tour.meetingPoint || null;
 
             const sharedData = {

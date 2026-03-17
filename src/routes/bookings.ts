@@ -129,7 +129,13 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
             });
 
             // Async trigger WP Sync & Emails
-            pushBookingToWordPress(booking.id).catch(err => console.error('[WP Async Sync Error]', err));
+            const bookingData = {
+                ...booking,
+                tour: tour,
+                agency: bookingAgency,
+                isRetail: false 
+            };
+            pushBookingToWordPress(bookingData).catch(err => console.error('[WP Async Sync Error]', err));
 
             if (agencyEmailUrl && bookingAgency) {
                 sendEmail({
@@ -147,20 +153,18 @@ export async function bookingsRoutes(req: Request, path: string, user: AuthUser)
                 }).catch(e => console.error(e));
             }
 
-            const superAdmins = await prisma.user.findMany({ where: { role: 'SUPER_ADMIN', active: true } });
-            superAdmins.forEach(admin => {
-                sendEmail({
-                    to: admin.email,
-                    ...EMAIL_TEMPLATES.NEW_BOOKING_ALERT(
-                        bookingAgency?.name || 'Unknown Agency',
-                        tour.name,
-                        pax,
-                        travelDate.toLocaleDateString(),
-                        finalTotal.toFixed(2),
-                        `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/super-admin/bookings`
-                    )
-                }).catch(e => console.error(e));
-            });
+            const adminEmail = process.env.ADMIN_EMAIL || 'admin@euontour.com';
+            sendEmail({
+                to: adminEmail,
+                ...EMAIL_TEMPLATES.NEW_BOOKING_ALERT(
+                    bookingAgency?.name || 'Unknown Agency',
+                    tour.name,
+                    pax,
+                    travelDate.toLocaleDateString(),
+                    finalTotal.toFixed(2),
+                    `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/super-admin/bookings`
+                )
+            }).catch(e => console.error(e));
 
             return Response.json({ success: true, booking });
         } catch (txError: any) {

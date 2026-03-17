@@ -34,44 +34,85 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
             const meta = session.metadata || {};
 
             if (meta.type === 'wallet_topup') {
+                const agencyId = meta.agencyId as string;
+                if (!agencyId) return new Response('Missing agencyId', { status: 400 });
+
                 const depositRaw = await prisma.deposit.findFirst({ where: { stripeSessionId: session.id } });
-                if (depositRaw && depositRaw.status === 'PENDING_ADMIN') {
-                    // Start transaction
-                    await prisma.$transaction(async (tx) => {
+                
+                if (depositRaw && depositRaw.status === 'APPROVED') {
+                    return new Response(JSON.stringify({ received: true }), { status: 200 });
+                }
+
+                const depositAmount = depositRaw ? Number(depositRaw.amount) : (session.amount_total ? session.amount_total / 100 : 0);
+
+                await prisma.$transaction(async (tx) => {
+                    let depositId = depositRaw?.id;
+                    if (depositRaw && depositRaw.status === 'PENDING_ADMIN') {
                         await tx.deposit.update({
                             where: { id: depositRaw.id },
                             data: { status: 'APPROVED' }
                         });
-
-                        await tx.agency.update({
-                            where: { id: depositRaw.agency_id },
-                            data: { wallet_balance: { increment: depositRaw.amount } }
-                        });
-
-                        await tx.walletLedger.create({
+                    } else {
+                        const newDeposit = await tx.deposit.create({
                             data: {
-                                agency_id: depositRaw.agency_id,
-                                type: 'CREDIT',
-                                amount: depositRaw.amount,
-                                reference_type: 'DEPOSIT',
-                                reference_id: depositRaw.id
+                                agency_id: agencyId,
+                                amount: depositAmount,
+                                paymentMethod: 'STRIPE',
+                                status: 'APPROVED',
+                                stripeSessionId: session.id,
+                                bank_reference: 'STRIPE_ONLINE'
                             }
                         });
+                        depositId = newDeposit.id;
+                    }
 
-                        // Log action (Using standard system user log logic or audit logger if implemented)
-                        console.log(`[Stripe Webhook] Approved Wallet Topup for deposit ${depositRaw.id}`);
+                    await tx.agency.update({
+                        where: { id: agencyId },
+                        data: { wallet_balance: { increment: depositAmount } }
                     });
 
-                    // Inject logger after successful transaction
-                    await createAuditLog({
-                        actorId: 'SYSTEM',
-                        actorRole: 'SYSTEM',
-                        action: 'WALLET_TOPUP_APPROVED_BY_STRIPE',
-                        entityType: 'DEPOSIT',
-                        entityId: depositRaw.id,
-                        ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1'
+                    await tx.walletLedger.create({
+                        data: {
+                            agency_id: agencyId,
+                            type: 'CREDIT',
+                            amount: depositAmount,
+                            reference_type: 'DEPOSIT',
+                            reference_id: depositId,
+                            description: 'Online Wallet Top-up via Stripe (Session: ' + session.id + ')'
+                        }
                     });
-                }
+
+                    console.log(`[Stripe Webhook] Approved Wallet Topup for deposit ${depositId}`);
+                });
+
+                const logEntityId = depositRaw ? depositRaw.id : session.id;
+
+                await createAuditLog({
+                    actorId: 'SYSTEM',
+                    actorRole: 'SYSTEM',
+                    action: 'WALLET_TOPUP_APPROVED_BY_STRIPE',
+                    entityType: 'DEPOSIT',
+                    entityId: logEntityId,
+                    ipAddress: req.headers.get('x-forwarded-for') || '127.0.0.1'
+                });
+
+                // Send Email to ADMIN_EMAIL
+                const adminEmail = process.env.ADMIN_EMAIL || 'admin@euontour.com';
+                const adminLink = `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/admin/deposits`;
+                
+                const agencyData = await prisma.agency.findUnique({ where: { id: agencyId }, select: { name: true }});
+                const agencyName = agencyData ? agencyData.name : 'Agency';
+
+                sendEmail({
+                    to: adminEmail,
+                    ...EMAIL_TEMPLATES.DEPOSIT_SUBMITTED_ADMIN(
+                        agencyName,
+                        depositAmount.toString(),
+                        'Stripe / ' + session.id,
+                        adminLink
+                    )
+                }).catch(e => console.error(e));
+
             } else if (meta.type === 'retail_booking') {
                 const bookingId = meta.bookingId;
                 const booking = await prisma.booking.findUnique({
@@ -109,6 +150,22 @@ export async function stripeRoutes(req: Request, path: string, user?: AuthUser) 
                                 body: template.body
                             }).catch(e => console.error('[Email Failed]', e));
                         }
+                        
+                        // Notify Super Admin per Task 4
+                        const adminEmail = process.env.ADMIN_EMAIL || 'admin@euontour.com';
+                        const adminLink = `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/admin/bookings`;
+                        sendEmail({
+                            to: adminEmail,
+                            ...EMAIL_TEMPLATES.NEW_BOOKING_ALERT(
+                                booking.contactPerson || 'Customer',
+                                booking.tour.name,
+                                booking.guests,
+                                booking.travel_date.toISOString().split('T')[0],
+                                String(booking.amount),
+                                adminLink
+                            )
+                        }).catch(e => console.error(e));
+
                         console.log(`[Stripe Webhook] Retail Booking ${bookingId} marked as CONFIRMED.`);
 
                         await createAuditLog({

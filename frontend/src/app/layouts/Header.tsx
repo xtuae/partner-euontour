@@ -39,6 +39,8 @@ export function Header() {
         };
         fetchNotifications();
 
+        let handleWalletUpdate: () => void;
+
         if (user?.role === 'AGENCY') {
             const fetchBalance = async () => {
                 try {
@@ -52,7 +54,16 @@ export function Header() {
                 }
             };
             fetchBalance();
+
+            handleWalletUpdate = () => fetchBalance();
+            window.addEventListener('wallet-update', handleWalletUpdate);
         }
+
+        return () => {
+            if (handleWalletUpdate) {
+                window.removeEventListener('wallet-update', handleWalletUpdate);
+            }
+        };
     }, [user]);
 
     // Close dropdown on click outside

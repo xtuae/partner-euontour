@@ -71,6 +71,7 @@ export function TourDetailsModal({ tour, onClose }: TourDetailsModalProps) {
             });
             if (res.ok) {
                 toast.success('Booking confirmed! Funds deducted from wallet.');
+                window.dispatchEvent(new Event('wallet-update'));
                 onClose();
             } else {
                 const data = await res.json();

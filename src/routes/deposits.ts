@@ -89,20 +89,18 @@ export async function depositsRoutes(req: Request, path: string, user: AuthUser)
             });
 
             // 6. Email Notification
-            const admins = await prisma.user.findMany({ where: { role: 'ADMIN' } });
+            const adminEmail = process.env.ADMIN_EMAIL || 'admin@euontour.com';
             const adminLink = `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL}/#/admin/deposits`;
 
-            await Promise.all(admins.map(admin =>
-                sendEmail({
-                    to: admin.email,
-                    ...EMAIL_TEMPLATES.DEPOSIT_SUBMITTED_ADMIN(
-                        u.agency?.name || 'Agency',
-                        amount.toString(),
-                        referenceNumber,
-                        adminLink
-                    )
-                })
-            ));
+            await sendEmail({
+                to: adminEmail,
+                ...EMAIL_TEMPLATES.DEPOSIT_SUBMITTED_ADMIN(
+                    u.agency?.name || 'Agency',
+                    amount.toString(),
+                    referenceNumber,
+                    adminLink
+                )
+            });
 
             return Response.json({ success: true }, { status: 201 });
 
