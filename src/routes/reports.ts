@@ -44,7 +44,7 @@ export async function reportsRoutes(req: Request, path: string, user: AuthUser) 
                 'Contact Person': a.owner_kyc?.[0]?.fullName || 'N/A',
                 'Email': a.email,
                 'Verification Status': a.verification_status,
-                'Current Balance': `€${Number(a.wallet_balance).toFixed(2)}`,
+                'Current Balance (€)': `€${Number(a.wallet_balance).toFixed(2)}`,
                 'Total Bookings': a._count?.bookings || 0
             }));
 
@@ -64,10 +64,10 @@ export async function reportsRoutes(req: Request, path: string, user: AuthUser) 
                 'Booking Date': b.created_at.toLocaleDateString('en-GB'),
                 'Travel Date': new Date(b.travel_date).toLocaleDateString('en-GB'),
                 'Booking ID': b.id,
-                'Client / Agency': b.isRetail ? 'Retail Direct' : (b.agency?.name || 'Unknown'),
-                'Tour / Destination': b.tour?.name || 'Unknown',
+                'Client/Agency': b.isRetail ? 'Retail Direct' : (b.agency?.name || 'Unknown'),
+                'Tour Name': b.tour?.name || 'Unknown',
                 'Guests': b.guests,
-                'Total Revenue': `€${Number(b.amount).toFixed(2)}`,
+                'Total Revenue (€)': `€${Number(b.amount).toFixed(2)}`,
                 'Status': b.status
             }));
 
@@ -83,10 +83,10 @@ export async function reportsRoutes(req: Request, path: string, user: AuthUser) 
             });
 
             result = result.map(d => ({
-                'Date Submitted': d.created_at.toLocaleDateString('en-GB'),
+                'Date': d.created_at.toLocaleDateString('en-GB'),
                 'Agency Name': d.agency?.name || 'Unknown',
-                'Method': d.paymentMethod === 'STRIPE' ? 'Stripe' : 'Bank Transfer',
-                'Amount': `€${Number(d.amount).toFixed(2)}`,
+                'Payment Method': d.paymentMethod === 'STRIPE' ? 'Stripe' : 'Bank Transfer',
+                'Amount (€)': `€${Number(d.amount).toFixed(2)}`,
                 'Status': d.status
             }));
 
@@ -103,9 +103,8 @@ export async function reportsRoutes(req: Request, path: string, user: AuthUser) 
 
             result = result.map(w => {
                 const dateStr = w.created_at.toLocaleDateString('en-GB');
-                const timeStr = w.created_at.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
                 return {
-                    'Date & Time': `${dateStr} ${timeStr}`,
+                    'Date': dateStr,
                     'Transaction ID': w.id,
                     'Agency Name': w.agency?.name || 'Unknown',
                     'Type': w.type,

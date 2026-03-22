@@ -45,7 +45,7 @@ export function exportToCSV(data: any[], filename: string) {
 /**
  * Generates a PDF report using jsPDF and autoTable.
  */
-export function exportToPDF(data: any[], columns: string[], filename: string, title: string) {
+export function exportToPDF(data: any[], columns: string[] | undefined | null, filename: string, title: string) {
     if (!data || data.length === 0) {
         alert("No data available to export.");
         return;
@@ -65,12 +65,14 @@ export function exportToPDF(data: any[], columns: string[], filename: string, ti
     doc.setTextColor(100);
     doc.text(dateStr, 14, 30);
 
+    const tableColumns = (columns && columns.length > 0) ? columns : Object.keys(data[0]);
+
     // Map data to match columns
-    const tableData = data.map(item => columns.map(col => item[col] || ''));
+    const tableData = data.map(item => tableColumns.map(col => item[col] || ''));
 
     // Render Table
     autoTable(doc, {
-        head: [columns],
+        head: [tableColumns],
         body: tableData,
         startY: 36,
         styles: { fontSize: 9 },
