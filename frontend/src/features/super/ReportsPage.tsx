@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CheckCircle, Download, FileText } from 'lucide-react';
 import { exportToCSV, generatePDFReport } from '../../utils/export';
+import { apiFetch } from '../../lib/api-client';
 
 // We will just use standard fetch with Authorization from local storage.
 
@@ -23,12 +24,7 @@ export function ReportsPage() {
         setData([]);
 
         try {
-            const token = localStorage.getItem('token') || '';
-            const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/reports?type=${reportType}&startDate=${startDate}&endDate=${endDate}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+            const res = await apiFetch(`/api/reports?type=${reportType}&startDate=${startDate}&endDate=${endDate}`);
 
             if (!res.ok) {
                 throw new Error('Failed to fetch report data');

@@ -121,7 +121,7 @@ export function DashboardOverview() {
                         <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2"><Activity className="w-5 h-5 text-gray-500" /> Top Agency Volume</h3>
                     </div>
                     <CardContent className="p-6 flex-1 min-h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                             <BarChart data={data.topAgencies} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                 <XAxis dataKey="agencyName" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />

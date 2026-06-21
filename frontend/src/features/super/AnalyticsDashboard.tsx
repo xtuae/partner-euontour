@@ -148,7 +148,7 @@ export function AnalyticsDashboard() {
                         </div>
                     ) : (
                         <div className="w-full h-80">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <LineChart data={revenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                                     <XAxis
@@ -197,7 +197,7 @@ export function AnalyticsDashboard() {
                             </div>
                         ) : (
                             <div className="w-full h-64">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                     <BarChart data={topAgencies} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
                                         <XAxis type="number" tickFormatter={(tick) => `€${tick}`} stroke="#9CA3AF" fontSize={12} />
@@ -224,7 +224,7 @@ export function AnalyticsDashboard() {
                             </div>
                         ) : (
                             <div className="w-full h-64">
-                                <ResponsiveContainer width="100%" height="100%">
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                     <BarChart data={topTours} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
                                         <XAxis type="number" stroke="#9CA3AF" fontSize={12} allowDecimals={false} />

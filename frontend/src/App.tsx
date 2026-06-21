@@ -96,6 +96,7 @@ function App() {
                 <Route path="/super-admin" element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN]} />}>
                   {/* Reuse Admin components for now or create specific ones */}
                   <Route path="dashboard" element={<DashboardOverview />} />
+                  <Route path="events" element={<PlaceholderPage title="Events" />} />
                   <Route path="agency-verifications" element={<SuperAdminVerificationList />} />
                   <Route path="agency-verifications/:agencyId" element={<SuperAdminVerificationDetail />} />
                   <Route path="deposits" element={<AdminDepositsPage />} />
