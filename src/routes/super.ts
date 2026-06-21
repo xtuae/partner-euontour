@@ -561,23 +561,27 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                 const smartLink = `${baseUrl}/#/pay/${booking.id}`;
 
                 // Send email to customer with link
-                const { sendEmail } = await import('../lib/email.js');
-                await sendEmail({
-                    to: customerEmail,
-                    subject: `EuOnTour - Payment Link for ${tour.name}`,
-                    body: `
-                        <h2>Complete Your Booking</h2>
-                        <p>Hi ${contactPerson || 'there'},</p>
-                        <p>Thank you for choosing EuOnTour. Please complete your payment for <strong>${tour.name}</strong> on ${new Date(travelDate).toLocaleDateString()}.</p>
-                        <p>Guests: ${pax}</p>
-                        <p>Total Amount: €${finalTotal.toFixed(2)}</p>
-                        <br/>
-                        <a href="${smartLink}" style="padding: 12px 24px; background-color: #E63946; color: white; text-decoration: none; border-radius: 6px; display: inline-block;">Pay Securely Now</a>
-                        <br/><br/>
-                        <p>If the button doesn't work, copy and paste this link:</p>
-                        <p>${smartLink}</p>
-                    `
-                });
+                try {
+                    const { sendEmail } = await import('../lib/email.js');
+                    await sendEmail({
+                        to: customerEmail,
+                        subject: `EuOnTour - Payment Link for ${tour.name}`,
+                        body: `
+                            <h2>Complete Your Booking</h2>
+                            <p>Hi ${contactPerson || 'there'},</p>
+                            <p>Thank you for choosing EuOnTour. Please complete your payment for <strong>${tour.name}</strong> on ${new Date(travelDate).toLocaleDateString()}.</p>
+                            <p>Guests: ${pax}</p>
+                            <p>Total Amount: €${finalTotal.toFixed(2)}</p>
+                            <br/>
+                            <a href="${smartLink}" style="padding: 12px 24px; background-color: #E63946; color: white; text-decoration: none; border-radius: 6px; display: inline-block;">Pay Securely Now</a>
+                            <br/><br/>
+                            <p>If the button doesn't work, copy and paste this link:</p>
+                            <p>${smartLink}</p>
+                        `
+                    });
+                } catch (emailError: any) {
+                    console.error('Failed to send booking link email. The payment link was still generated.', emailError.message);
+                }
 
                 return Response.json({ checkout_url: smartLink, bookingId: booking.id });
             } catch (error: any) {
