@@ -582,7 +582,7 @@ export async function superRoutes(req: Request, path: string, user: AuthUser) {
                 return Response.json({ checkout_url: smartLink, bookingId: booking.id });
             } catch (error: any) {
                 console.error('Stripe Session Error:', error);
-                return Response.json({ error: 'Failed to create payment link' }, { status: 500 });
+                return Response.json({ error: `Failed to create payment link: ${error.message}` }, { status: 500 });
             }
         }
 
