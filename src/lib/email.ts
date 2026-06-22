@@ -375,5 +375,38 @@ export const EMAIL_TEMPLATES = {
       <p>We look forward to hosting you!</p>
       <p>Regards,<br/><strong>The EuOnTour Team</strong></p>
     ` + getFooter()
+  }),
+
+  // 14. RETAIL PAYMENT LINK (CUSTOMER)
+  RETAIL_PAYMENT_LINK: (customerName: string, tourName: string, guests: number, travelDate: string, total: string, paymentLink: string, hotelName?: string, hotelAddress?: string, contactPhone?: string, additionalInfo?: string) => ({
+    subject: `EuOnTour - Payment Link for ${tourName}`,
+    body: getHeader() + `
+      <h2 style="color:#1f2937;margin-top:0;">Complete Your Booking</h2>
+      <p>Hi ${customerName},</p>
+      <p>Thank you for choosing EuOnTour. Please complete your payment for <strong>${tourName}</strong>.</p>
+      
+      <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:20px;margin:20px 0;">
+        <h3 style="margin-top:0;margin-bottom:15px;color:#334155;border-bottom:1px solid #e2e8f0;padding-bottom:10px;">Booking Details</h3>
+        <table style="width:100%;font-size:14px;color:#475569;border-collapse:collapse;">
+          <tr><td style="padding:4px 0;width:120px;"><strong>Travel Date:</strong></td><td style="padding:4px 0;">${travelDate}</td></tr>
+          <tr><td style="padding:4px 0;"><strong>Guests:</strong></td><td style="padding:4px 0;">${guests}</td></tr>
+          ${hotelName ? `<tr><td style="padding:4px 0;"><strong>Hotel Name:</strong></td><td style="padding:4px 0;">${hotelName}</td></tr>` : ''}
+          ${hotelAddress ? `<tr><td style="padding:4px 0;"><strong>Hotel Address:</strong></td><td style="padding:4px 0;">${hotelAddress}</td></tr>` : ''}
+          ${contactPhone ? `<tr><td style="padding:4px 0;"><strong>Phone:</strong></td><td style="padding:4px 0;">${contactPhone}</td></tr>` : ''}
+          ${additionalInfo ? `<tr><td style="padding:4px 0;"><strong>Additional Info:</strong></td><td style="padding:4px 0;">${additionalInfo}</td></tr>` : ''}
+          <tr><td style="padding:12px 0 4px 0;font-size:16px;"><strong>Total Amount:</strong></td><td style="padding:12px 0 4px 0;font-size:16px;color:#047857;font-weight:bold;">€${Number(total).toFixed(2)}</td></tr>
+        </table>
+      </div>
+
+      <div style="text-align:center;margin:32px 0;">
+        <a href="${paymentLink}" style="background-color:#D32F2F;color:white;padding:14px 32px;text-decoration:none;border-radius:6px;font-weight:bold;font-size:16px;display:inline-block;box-shadow:0 4px 6px rgba(211,47,47,0.25);">Pay Securely Now</a>
+      </div>
+      
+      <p style="font-size:13px;color:#64748b;">If the button doesn't work, copy and paste this link into your browser:<br/>
+      <a href="${paymentLink}" style="color:#0ea5e9;word-break:break-all;">${paymentLink}</a></p>
+      
+      <p>We look forward to hosting you!</p>
+      <p>Regards,<br/><strong>The EuOnTour Team</strong></p>
+    ` + getFooter()
   })
 };
